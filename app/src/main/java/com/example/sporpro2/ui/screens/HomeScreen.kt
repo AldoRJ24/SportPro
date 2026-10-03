@@ -5,14 +5,17 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -54,14 +57,28 @@ fun HomeScreen(
     }
 
     Scaffold(
+        containerColor = Color(0xFFF5F7FA), // Fondo claro
         topBar = {
             TopAppBar(
-                title = { Text("SportPro Hub - $role") },
+                title = { Text("SportPro Hub - $role", color = Color.White, fontWeight = FontWeight.Bold) },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    containerColor = Color(0xFF1976D2) // TopBar azul oscuro
                 )
             )
+        },
+        bottomBar = {
+            Box(modifier = Modifier.padding(16.dp)) {
+                Button(
+                    onClick = { viewModel.logout() },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F)), // Rojo intenso
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth().height(56.dp)
+                ) {
+                    Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "Cerrar Sesión", tint = Color.White)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Cerrar Sesión", color = Color.White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                }
+            }
         }
     ) { innerPadding ->
         LazyVerticalGrid(
@@ -74,15 +91,16 @@ fun HomeScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             items(menuItems) { item ->
-                Card(
+                ElevatedCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(1f)
                         .clickable { onNavigateTo(item.route) },
-                    elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
+                    elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp),
+                    colors = CardDefaults.elevatedCardColors(
+                        containerColor = Color.White // Tarjetas blancas
+                    ),
+                    shape = RoundedCornerShape(16.dp)
                 ) {
                     Column(
                         modifier = Modifier
@@ -95,7 +113,7 @@ fun HomeScreen(
                             imageVector = item.icon,
                             contentDescription = item.title,
                             modifier = Modifier.size(48.dp),
-                            tint = MaterialTheme.colorScheme.primary
+                            tint = Color(0xFF1976D2) // Iconos azules
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
@@ -103,7 +121,7 @@ fun HomeScreen(
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = Color.Black // Texto negro de alto contraste
                         )
                     }
                 }

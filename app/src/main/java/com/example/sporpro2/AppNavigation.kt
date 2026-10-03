@@ -11,7 +11,13 @@ import androidx.navigation.compose.rememberNavController
 import com.example.sporpro2.ui.screens.LoginScreen
 import com.example.sporpro2.ui.screens.RegisterScreen
 import com.example.sporpro2.ui.screens.HomeScreen
-import com.example.sporpro2.ui.screens.EquiposScreen
+import com.example.sporpro2.ui.screens.AdminDashboardScreen
+import com.example.sporpro2.ui.screens.DtDashboardScreen
+import com.example.sporpro2.ui.screens.JugadorDashboardScreen
+import com.example.sporpro2.ui.screens.PadreDashboardScreen
+import com.example.sporpro2.ui.screens.TeamsScreen
+import com.example.sporpro2.ui.screens.LineupScreen
+import com.example.sporpro2.ui.screens.PlayerProfileScreen
 import com.example.sporpro2.ui.screens.EnConstruccionScreen
 import com.example.sporpro2.viewmodel.AuthViewModel
 import io.github.jan.supabase.auth.status.SessionStatus
@@ -22,12 +28,21 @@ fun AppNavigation() {
     val authViewModel: AuthViewModel = viewModel()
     
     val sessionStatus by authViewModel.sessionStatus.collectAsState()
-    
+    val userRole by authViewModel.userRole.collectAsState()
+
     // Automatically navigate depending on authentication state
-    LaunchedEffect(sessionStatus) {
+    LaunchedEffect(sessionStatus, userRole) {
         when (sessionStatus) {
             is SessionStatus.Authenticated -> {
-                navController.navigate("home") {
+                // Dependiendo del rol, mandamos a la ruta específica
+                val destination = when (userRole) {
+                    "ADM" -> "dashboard_admin"
+                    "DT" -> "dashboard_dt"
+                    "PAD" -> "dashboard_padre"
+                    "JUG" -> "dashboard_jugador"
+                    else -> "home" // Fallback general
+                }
+                navController.navigate(destination) {
                     popUpTo(0)
                 }
             }
@@ -55,20 +70,54 @@ fun AppNavigation() {
                 viewModel = authViewModel
             )
         }
+        // Fallback genérico (se conservará por si acaso, aunque los de rol son los principales ahora)
         composable("home") {
             HomeScreen(
                 viewModel = authViewModel,
                 onNavigateTo = { route -> navController.navigate(route) }
             )
         }
-        // Modulo principal (Semana 7)
+        
+        // --- Dashboards Específicos por Rol ---
+        composable("dashboard_admin") {
+            AdminDashboardScreen(
+                viewModel = authViewModel,
+                onNavigateTo = { route -> navController.navigate(route) }
+            )
+        }
+        composable("dashboard_dt") {
+            DtDashboardScreen(
+                viewModel = authViewModel,
+                onNavigateTo = { route -> navController.navigate(route) }
+            )
+        }
+        composable("dashboard_padre") {
+            PadreDashboardScreen(
+                viewModel = authViewModel,
+                onNavigateTo = { route -> navController.navigate(route) }
+            )
+        }
+        composable("dashboard_jugador") {
+            JugadorDashboardScreen(
+                viewModel = authViewModel,
+                onNavigateTo = { route -> navController.navigate(route) }
+            )
+        }
+
+        // --- Pantallas de Usuario (US) Finalizadas ---
         composable("equipos") {
-            EquiposScreen(onBackClick = { navController.navigateUp() })
+            TeamsScreen(onBackClick = { navController.navigateUp() })
+        }
+        composable("alineacion") {
+            LineupScreen(onBackClick = { navController.navigateUp() })
+        }
+        composable("perfil_jugador") {
+            PlayerProfileScreen(onBackClick = { navController.navigateUp() })
         }
         
-        // --- Placeholders para el 60% ---
+        // --- Placeholders para el resto (60%) ---
         composable("pagos") {
-            EnConstruccionScreen("Control de Pagos (US-10)", onBackClick = { navController.navigateUp() })
+            EnConstruccionScreen("Control de Mensualidades (US-10)", onBackClick = { navController.navigateUp() })
         }
         composable("documentos") {
             EnConstruccionScreen("Validar Documentos (US-16)", onBackClick = { navController.navigateUp() })
@@ -76,17 +125,29 @@ fun AppNavigation() {
         composable("partido_vivo") {
             EnConstruccionScreen("Partido en Vivo (US-01)", onBackClick = { navController.navigateUp() })
         }
-        composable("alineacion") {
-            EnConstruccionScreen("Armar Alineación (US-09)", onBackClick = { navController.navigateUp() })
-        }
         composable("convocatorias") {
             EnConstruccionScreen("Convocatorias (US-04)", onBackClick = { navController.navigateUp() })
         }
         composable("calendario") {
             EnConstruccionScreen("Calendario (US-13)", onBackClick = { navController.navigateUp() })
         }
-        composable("perfil_hijo") {
-            EnConstruccionScreen("Perfil de mi Hijo (US-15)", onBackClick = { navController.navigateUp() })
+        composable("estadisticas") {
+            EnConstruccionScreen("Mis Estadísticas (US-11)", onBackClick = { navController.navigateUp() })
+        }
+        composable("muro") {
+            EnConstruccionScreen("Muro de la Comunidad (US-06)", onBackClick = { navController.navigateUp() })
+        }
+        composable("resumen_ia") {
+            EnConstruccionScreen("Resumen con IA (US-02)", onBackClick = { navController.navigateUp() })
+        }
+        composable("entrenamientos") {
+            EnConstruccionScreen("Entrenamientos (US-05)", onBackClick = { navController.navigateUp() })
+        }
+        composable("anuncios") {
+            EnConstruccionScreen("Enviar Anuncios (US-07)", onBackClick = { navController.navigateUp() })
+        }
+        composable("pruebas") {
+            EnConstruccionScreen("Pruebas de Talento (US-12)", onBackClick = { navController.navigateUp() })
         }
     }
 }

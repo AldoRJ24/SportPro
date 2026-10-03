@@ -89,4 +89,14 @@ class AuthViewModel : ViewModel() {
     fun resetRegistrationState() {
         _isRegistrationSuccessCheckEmail.value = false
     }
+
+    fun logout() {
+        viewModelScope.launch {
+            try {
+                auth.signOut()
+            } catch (e: Exception) {
+                _errorMessage.value = e.message
+            }
+        }
+    }
 }
