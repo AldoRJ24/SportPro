@@ -136,9 +136,16 @@ fun PlayerProfileScreen(
                 onClick = { photoPickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
                 modifier = Modifier.fillMaxWidth().height(50.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF455A64)),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                enabled = !uiState.isUploadingPhoto
             ) {
-                Text("Subir Foto de Perfil", color = Color.White, fontWeight = FontWeight.Bold)
+                if (uiState.isUploadingPhoto) {
+                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Subiendo imagen...", color = Color.White, fontWeight = FontWeight.Bold)
+                } else {
+                    Text("Subir Foto de Perfil", color = Color.White, fontWeight = FontWeight.Bold)
+                }
             }
 
             HorizontalDivider(color = Color(0xFFE0E0E0), thickness = 1.dp)

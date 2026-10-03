@@ -64,12 +64,14 @@ fun ComunidadScreen(
                     OutlinedTextField(
                         value = newMessage,
                         onValueChange = { newMessage = it },
-                        placeholder = { Text("Escribe un mensaje a la comunidad...") },
+                        placeholder = { Text("Escribe un mensaje a la comunidad...", color = Color.Gray) },
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(24.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedTextColor = Color.Black,
                             unfocusedTextColor = Color.Black,
+                            focusedPlaceholderColor = Color.Gray,
+                            unfocusedPlaceholderColor = Color.Gray,
                             focusedContainerColor = Color.White,
                             unfocusedContainerColor = Color.White,
                             focusedBorderColor = Color(0xFF1976D2),
@@ -143,9 +145,9 @@ fun ComunidadScreen(
                                         }
                                         Spacer(modifier = Modifier.height(12.dp))
                                         Text(
-                                            text = anuncio.mensaje,
+                                            text = anuncio.mensaje.ifEmpty { "Sin contenido" },
                                             style = MaterialTheme.typography.bodyLarge,
-                                            color = Color.DarkGray
+                                            color = Color.Black // Texto en color negro explícito
                                         )
                                         Spacer(modifier = Modifier.height(16.dp))
                                         HorizontalDivider(color = Color(0xFFE0E0E0))

@@ -106,7 +106,7 @@ fun AppNavigation() {
         }
         composable("dashboard_jugador") {
             JugadorDashboardScreen(
-                viewModel = authViewModel,
+                authViewModel = authViewModel,
                 onNavigateTo = { route -> navController.navigate(route) }
             )
         }
@@ -142,7 +142,10 @@ fun AppNavigation() {
             com.example.sporpro2.ui.screens.MisEstadisticasScreen(onBackClick = { navController.navigateUp() })
         }
         composable("muro") {
-            com.example.sporpro2.ui.screens.ComunidadScreen(onBackClick = { navController.navigateUp() })
+            com.example.sporpro2.ui.screens.ComunidadScreen(
+                userRole = userRole,
+                onBackClick = { navController.navigateUp() }
+            )
         }
         composable("partidos_anteriores") {
             com.example.sporpro2.ui.screens.PartidosAnterioresScreen(

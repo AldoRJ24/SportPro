@@ -56,6 +56,7 @@ dependencies {
     implementation("io.github.jan-tennert.supabase:postgrest-kt")
     implementation("io.github.jan-tennert.supabase:auth-kt")
     implementation("io.github.jan-tennert.supabase:realtime-kt")
+    implementation("io.github.jan-tennert.supabase:storage-kt")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
     
     // Ktor client (Requerido por el SDK de Supabase)

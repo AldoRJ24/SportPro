@@ -1,31 +1,47 @@
 package com.example.sporpro2.ui.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Campaign
 import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.automirrored.filled.ExitToApp
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.example.sporpro2.viewmodel.AuthViewModel
+import com.example.sporpro2.viewmodel.JugadorDashboardViewModel
 
 @Composable
 fun JugadorDashboardScreen(
-    viewModel: AuthViewModel,
+    authViewModel: AuthViewModel,
+    dashboardViewModel: JugadorDashboardViewModel = viewModel(),
     onNavigateTo: (String) -> Unit
 ) {
+    val uiState by dashboardViewModel.uiState.collectAsState()
+
+    // Cargar/actualizar los datos reales de Supabase automáticamente al entrar a la pantalla
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        dashboardViewModel.loadJugadorProfile()
+    }
+
     Scaffold(
         containerColor = Color.White
     ) { paddingValues ->
@@ -34,7 +50,7 @@ fun JugadorDashboardScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(horizontal = 24.dp)
-                .verticalScroll(androidx.compose.foundation.rememberScrollState()),
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -42,31 +58,42 @@ fun JugadorDashboardScreen(
             
             // 1. Foto de perfil circular
             Surface(
-                shape = androidx.compose.foundation.shape.CircleShape,
-                color = Color(0xFFE3F2FD), // Azul muy claro
+                shape = CircleShape,
+                color = Color(0xFFE3F2FD), // Azul muy claro por defecto
                 modifier = Modifier.size(100.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = "Foto de perfil por defecto",
-                        modifier = Modifier.size(60.dp),
-                        tint = Color(0xFF1976D2)
-                    )
+                    if (uiState.fotoUrl.isNotEmpty()) {
+                        AsyncImage(
+                            model = uiState.fotoUrl,
+                            contentDescription = "Foto de perfil real",
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = "Foto de perfil por defecto",
+                            modifier = Modifier.size(60.dp),
+                            tint = Color(0xFF1976D2)
+                        )
+                    }
                 }
             }
             
             Spacer(modifier = Modifier.height(12.dp))
             
-            // 2. Nombre del Jugador
+            // 2. Nombre y Posición Traídos desde Supabase
             Text(
-                text = "Carlos Sánchez", // Nombre de ejemplo
+                text = uiState.nombre,
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.ExtraBold,
                 color = Color.Black
             )
             Text(
-                text = "Delantero Centro",
+                text = uiState.posicionPrincipal,
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color.Gray
             )
@@ -86,7 +113,7 @@ fun JugadorDashboardScreen(
             Spacer(modifier = Modifier.height(48.dp))
 
             Button(
-                onClick = { viewModel.logout() },
+                onClick = { authViewModel.logout() },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F)),
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth().height(56.dp)

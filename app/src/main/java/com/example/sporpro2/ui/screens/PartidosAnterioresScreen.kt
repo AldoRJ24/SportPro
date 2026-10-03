@@ -88,7 +88,7 @@ fun PartidosAnterioresScreen(
                                     ) {
                                         // Equipo Local
                                         Text(
-                                            text = partido.equipoLocal,
+                                            text = partido.nombreLocal,
                                             style = MaterialTheme.typography.titleMedium,
                                             fontWeight = FontWeight.ExtraBold,
                                             color = Color.Black,
@@ -96,23 +96,23 @@ fun PartidosAnterioresScreen(
                                             modifier = Modifier.weight(1f)
                                         )
                                         
-                                        // Score Box
+                                        // Score Box con marcador_favor y marcador_contra reales de Supabase
                                         Box(
                                             modifier = Modifier
                                                 .background(Color(0xFF263238), RoundedCornerShape(8.dp))
                                                 .padding(horizontal = 20.dp, vertical = 8.dp)
                                         ) {
                                             Text(
-                                                text = "${partido.marcadorLocal} - ${partido.marcadorVisitante}",
+                                                text = "${partido.marcadorFavor} - ${partido.marcadorContra}",
                                                 style = MaterialTheme.typography.headlineMedium,
                                                 fontWeight = FontWeight.Black,
                                                 color = Color.White
                                             )
                                         }
                                         
-                                        // Equipo Visitante
+                                        // Rival de Supabase
                                         Text(
-                                            text = partido.equipoVisitante,
+                                            text = partido.nombreVisitante,
                                             style = MaterialTheme.typography.titleMedium,
                                             fontWeight = FontWeight.ExtraBold,
                                             color = Color.Black,

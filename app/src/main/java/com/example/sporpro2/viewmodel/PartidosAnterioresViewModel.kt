@@ -14,14 +14,19 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class PartidoRecord(
     val id: String = "",
+    val rival: String = "Rival FC",
+    @SerialName("marcador_favor") val marcadorFavor: Int = 0,
+    @SerialName("marcador_contra") val marcadorContra: Int = 0,
     @SerialName("equipo_local") val equipoLocal: String = "SportPro",
-    @SerialName("equipo_visitante") val equipoVisitante: String = "Rival FC",
-    @SerialName("marcador_local") val marcadorLocal: Int = 0,
-    @SerialName("marcador_visitante") val marcadorVisitante: Int = 0,
+    @SerialName("equipo_visitante") val equipoVisitante: String = "",
     val fecha: String = "Hoy",
     val competicion: String = "Liga",
     val estado: String = "Finalizado"
-)
+) {
+    // Propiedades calculadas para facilitar la renderización en UI
+    val nombreLocal: String get() = equipoLocal.ifEmpty { "SportPro" }
+    val nombreVisitante: String get() = rival.ifEmpty { equipoVisitante.ifEmpty { "Rival FC" } }
+}
 
 sealed interface PartidosAnterioresState {
     data object Loading : PartidosAnterioresState
@@ -41,7 +46,7 @@ class PartidosAnterioresViewModel : ViewModel() {
         viewModelScope.launch {
             _uiState.value = PartidosAnterioresState.Loading
             try {
-                // Consulta real a Supabase a la tabla 'partidos'
+                // Consulta real a Supabase leyendo los campos marcador_favor, marcador_contra y rival
                 val result = SupabaseClient.client.postgrest["partidos"]
                     .select()
                     .decodeList<PartidoRecord>()
@@ -49,20 +54,20 @@ class PartidosAnterioresViewModel : ViewModel() {
                 if (result.isEmpty()) {
                     // Datos de respaldo si la tabla en Supabase está vacía
                     val fallback = listOf(
-                        PartidoRecord("1", "SportPro Sub-15", "Halcones FC", 3, 1, "05 Oct 2023", "Liga Regional", "Finalizado"),
-                        PartidoRecord("2", "SportPro Sub-17", "Tigres del Norte", 2, 2, "06 Oct 2023", "Torneo de Verano", "Finalizado"),
-                        PartidoRecord("3", "SportPro Mayores", "Deportivo Sur", 1, 0, "08 Oct 2023", "Liga Nacional", "Finalizado")
+                        PartidoRecord("1", rival = "Halcones FC", marcadorFavor = 3, marcadorContra = 1, fecha = "05 Oct 2023", competicion = "Liga Regional", estado = "Finalizado"),
+                        PartidoRecord("2", rival = "Tigres del Norte", marcadorFavor = 2, marcadorContra = 2, fecha = "06 Oct 2023", competicion = "Torneo de Verano", estado = "Finalizado"),
+                        PartidoRecord("3", rival = "Deportivo Sur", marcadorFavor = 1, marcadorContra = 0, fecha = "08 Oct 2023", competicion = "Liga Nacional", estado = "Finalizado")
                     )
                     _uiState.value = PartidosAnterioresState.Success(fallback)
                 } else {
                     _uiState.value = PartidosAnterioresState.Success(result)
                 }
             } catch (e: Exception) {
-                // Si la tabla aún no existe o hay error de red, emitimos datos de respaldo
+                // Si la tabla en Supabase no existe o hay error de conexión
                 val fallback = listOf(
-                    PartidoRecord("1", "SportPro Sub-15", "Halcones FC", 3, 1, "05 Oct 2023", "Liga Regional", "Finalizado"),
-                    PartidoRecord("2", "SportPro Sub-17", "Tigres del Norte", 2, 2, "06 Oct 2023", "Torneo de Verano", "Finalizado"),
-                    PartidoRecord("3", "SportPro Mayores", "Deportivo Sur", 1, 0, "08 Oct 2023", "Liga Nacional", "Finalizado")
+                    PartidoRecord("1", rival = "Halcones FC", marcadorFavor = 3, marcadorContra = 1, fecha = "05 Oct 2023", competicion = "Liga Regional", estado = "Finalizado"),
+                    PartidoRecord("2", rival = "Tigres del Norte", marcadorFavor = 2, marcadorContra = 2, fecha = "06 Oct 2023", competicion = "Torneo de Verano", estado = "Finalizado"),
+                    PartidoRecord("3", rival = "Deportivo Sur", marcadorFavor = 1, marcadorContra = 0, fecha = "08 Oct 2023", competicion = "Liga Nacional", estado = "Finalizado")
                 )
                 _uiState.value = PartidosAnterioresState.Success(fallback)
             }
