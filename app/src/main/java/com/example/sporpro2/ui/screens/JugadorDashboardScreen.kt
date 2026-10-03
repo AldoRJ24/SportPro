@@ -35,16 +35,43 @@ fun JugadorDashboardScreen(
                 .padding(paddingValues)
                 .padding(horizontal = 24.dp)
                 .verticalScroll(androidx.compose.foundation.rememberScrollState()),
-            verticalArrangement = Arrangement.Center,
+            verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            // 1. Foto de perfil circular
+            Surface(
+                shape = androidx.compose.foundation.shape.CircleShape,
+                color = Color(0xFFE3F2FD), // Azul muy claro
+                modifier = Modifier.size(100.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = "Foto de perfil por defecto",
+                        modifier = Modifier.size(60.dp),
+                        tint = Color(0xFF1976D2)
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            // 2. Nombre del Jugador
             Text(
-                text = "¡Bienvenido, Jugador!",
-                style = MaterialTheme.typography.headlineMedium,
+                text = "Carlos Sánchez", // Nombre de ejemplo
+                style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.ExtraBold,
-                color = Color.Black,
-                modifier = Modifier.padding(bottom = 32.dp)
+                color = Color.Black
             )
+            Text(
+                text = "Delantero Centro",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.Gray
+            )
+            
+            Spacer(modifier = Modifier.height(32.dp))
 
             ModernMenuButton(title = "Mi Perfil", icon = Icons.Default.Person) { onNavigateTo("perfil_jugador") }
             Spacer(modifier = Modifier.height(16.dp))

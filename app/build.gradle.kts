@@ -61,6 +61,9 @@ dependencies {
     // Ktor client (Requerido por el SDK de Supabase)
     implementation("io.ktor:ktor-client-android:3.0.0")
 
+    // Coil para Compose (Cargar imágenes de perfil)
+    implementation("io.coil-kt:coil-compose:2.7.0")
+
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)

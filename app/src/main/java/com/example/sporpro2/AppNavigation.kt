@@ -130,7 +130,7 @@ fun AppNavigation() {
             EnConstruccionScreen("Validar Documentos (US-16)", onBackClick = { navController.navigateUp() })
         }
         composable("partido_vivo") {
-            EnConstruccionScreen("Partido en Vivo (US-01)", onBackClick = { navController.navigateUp() })
+            com.example.sporpro2.ui.screens.MatchDetailsScreen(onBackClick = { navController.navigateUp() })
         }
         composable("convocatorias") {
             EnConstruccionScreen("Convocatorias (US-04)", onBackClick = { navController.navigateUp() })
@@ -139,13 +139,26 @@ fun AppNavigation() {
             EnConstruccionScreen("Calendario (US-13)", onBackClick = { navController.navigateUp() })
         }
         composable("estadisticas") {
-            EnConstruccionScreen("Mis Estadísticas (US-11)", onBackClick = { navController.navigateUp() })
+            com.example.sporpro2.ui.screens.MisEstadisticasScreen(onBackClick = { navController.navigateUp() })
         }
         composable("muro") {
             com.example.sporpro2.ui.screens.ComunidadScreen(onBackClick = { navController.navigateUp() })
         }
         composable("partidos_anteriores") {
-            com.example.sporpro2.ui.screens.PartidosAnterioresScreen(onBackClick = { navController.navigateUp() })
+            com.example.sporpro2.ui.screens.PartidosAnterioresScreen(
+                onBackClick = { navController.navigateUp() },
+                onMatchClick = { matchId -> 
+                    // Pasamos el ID exacto a la pantalla de vivo/detalles
+                    navController.navigate("partido_vivo/$matchId")
+                }
+            )
+        }
+        composable("partido_vivo/{matchId}") { backStackEntry ->
+            val matchId = backStackEntry.arguments?.getString("matchId") ?: ""
+            com.example.sporpro2.ui.screens.MatchDetailsScreen(
+                matchId = matchId, 
+                onBackClick = { navController.navigateUp() }
+            )
         }
         composable("resumen_ia") {
             EnConstruccionScreen("Resumen con IA (US-02)", onBackClick = { navController.navigateUp() })
