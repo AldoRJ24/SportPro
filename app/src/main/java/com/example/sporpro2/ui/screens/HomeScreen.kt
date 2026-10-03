@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -36,27 +37,48 @@ fun HomeScreen(
     val menuItems = when (role) {
         "ADM" -> listOf(
             HubMenu("Gestión de Equipos", "equipos", Icons.Default.Group),
+            HubMenu("Directorio", "directorio", Icons.Default.Contacts),
             HubMenu("Control de Pagos", "pagos", Icons.Default.AttachMoney),
-            HubMenu("Validar Documentos", "documentos", Icons.Default.FactCheck)
+            HubMenu("Validar Docs", "documentos", Icons.Default.FactCheck),
+            HubMenu("Avisos Internos", "anuncios", Icons.Default.Campaign)
         )
         "DT" -> listOf(
-            HubMenu("Partido en Vivo", "partido_vivo", Icons.Default.SportsScore),
+            HubMenu("MODO DT: Partido en Vivo", "partido_vivo", Icons.Default.SportsScore),
             HubMenu("Armar Alineación", "alineacion", Icons.Default.FormatListNumbered),
             HubMenu("Convocatorias", "convocatorias", Icons.Default.Campaign),
             HubMenu("Calendario", "calendario", Icons.Default.CalendarMonth)
         )
         "PAD" -> listOf(
-            HubMenu("Perfil de mi Hijo", "perfil_hijo", Icons.Default.ChildCare),
+            HubMenu("Mi Perfil / Vínculo", "perfil_padre", Icons.Default.ChildCare),
             HubMenu("Mensualidades", "pagos", Icons.Default.AttachMoney),
+            HubMenu("Calendario", "calendario", Icons.Default.CalendarMonth),
+            HubMenu("Avisos Internos", "anuncios", Icons.Default.Campaign),
+            HubMenu("Notificaciones", "notificaciones", Icons.Default.Notifications)
+        )
+        "JUG" -> listOf(
+            HubMenu("Mi Perfil", "perfil_jugador", Icons.Default.Person),
+            HubMenu("Entrenamientos", "entrenamientos", Icons.Default.Timer),
+            HubMenu("Comunidad", "comunidad", Icons.Default.Forum),
+            HubMenu("Historial", "historial_partidos", Icons.Default.History),
             HubMenu("Calendario", "calendario", Icons.Default.CalendarMonth)
         )
         else -> emptyList() // Fallback
     }
 
+    val isBlocked by viewModel.isBlockedMinor.collectAsState()
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("SportPro Hub - $role") },
+                actions = {
+                    IconButton(onClick = { viewModel.logout() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Logout,
+                            contentDescription = "Cerrar sesión"
+                        )
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -64,6 +86,26 @@ fun HomeScreen(
             )
         }
     ) { innerPadding ->
+        if (isBlocked) {
+            Box(modifier = Modifier.fillMaxSize().padding(innerPadding), contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        imageVector = Icons.Default.Lock, 
+                        contentDescription = null, 
+                        modifier = Modifier.size(64.dp), 
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                    Spacer(Modifier.height(16.dp))
+                    Text(
+                        text = "Esperando confirmación del apoderado", 
+                        style = MaterialTheme.typography.titleLarge, 
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+            return@Scaffold
+        }
+        
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
             modifier = Modifier

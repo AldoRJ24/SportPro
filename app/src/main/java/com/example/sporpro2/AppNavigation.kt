@@ -13,6 +13,19 @@ import com.example.sporpro2.ui.screens.RegisterScreen
 import com.example.sporpro2.ui.screens.HomeScreen
 import com.example.sporpro2.ui.screens.EquiposScreen
 import com.example.sporpro2.ui.screens.EnConstruccionScreen
+import com.example.sporpro2.ui.screens.ComunidadScreen
+import com.example.sporpro2.ui.screens.PartidosScreen
+import com.example.sporpro2.ui.screens.PerfilScreen
+import com.example.sporpro2.ui.screens.EntrenamientosScreen
+import com.example.sporpro2.ui.screens.DirectorioScreen
+import com.example.sporpro2.ui.screens.PagosScreen
+import com.example.sporpro2.ui.screens.DocumentosScreen
+import com.example.sporpro2.ui.screens.AnunciosScreen
+import com.example.sporpro2.ui.screens.CalendarioScreen
+import com.example.sporpro2.ui.screens.NotificacionesScreen
+import com.example.sporpro2.ui.screens.PartidoEnVivoScreen
+import com.example.sporpro2.ui.screens.PerfilPadreScreen
+import com.example.sporpro2.ui.screens.DetallePartidoScreen
 import com.example.sporpro2.viewmodel.AuthViewModel
 import io.github.jan.supabase.auth.status.SessionStatus
 
@@ -61,32 +74,40 @@ fun AppNavigation() {
                 onNavigateTo = { route -> navController.navigate(route) }
             )
         }
-        // Modulo principal (Semana 7)
-        composable("equipos") {
-            EquiposScreen(onBackClick = { navController.navigateUp() })
+        // Modulos Reales (Avance al 80%)
+        composable("equipos") { EquiposScreen(onBackClick = { navController.navigateUp() }) }
+        composable("comunidad") { ComunidadScreen(onBackClick = { navController.navigateUp() }) }
+        composable("historial_partidos") { 
+            PartidosScreen(
+                onBackClick = { navController.navigateUp() },
+                onNavigateToDetail = { navController.navigate("detalle_partido") }
+            ) 
         }
+        composable("detalle_partido") { DetallePartidoScreen(onBackClick = { navController.navigateUp() }) }
+        composable("perfil_jugador") { PerfilScreen(onBackClick = { navController.navigateUp() }) }
+        composable("entrenamientos") { EntrenamientosScreen(onBackClick = { navController.navigateUp() }) }
         
-        // --- Placeholders para el 60% ---
-        composable("pagos") {
-            EnConstruccionScreen("Control de Pagos (US-10)", onBackClick = { navController.navigateUp() })
+        // --- 5 Nuevos Módulos Funcionales (Avance al 100%) ---
+        composable("directorio") { DirectorioScreen(onBackClick = { navController.navigateUp() }) }
+        composable("pagos") { PagosScreen(onBackClick = { navController.navigateUp() }) }
+        composable("documentos") { DocumentosScreen(onBackClick = { navController.navigateUp() }) }
+        composable("anuncios") { AnunciosScreen(onBackClick = { navController.navigateUp() }) }
+        composable("calendario") { CalendarioScreen(onBackClick = { navController.navigateUp() }) }
+        composable("notificaciones") { NotificacionesScreen(onBackClick = { navController.navigateUp() }) }
+        composable("partido_vivo") { PartidoEnVivoScreen(onBackClick = { navController.navigateUp() }) }
+        composable("perfil_padre") { 
+            PerfilPadreScreen(
+                onBackClick = { navController.navigateUp() },
+                onNavigateToChildProfile = { navController.navigate("perfil_jugador") }
+            ) 
         }
-        composable("documentos") {
-            EnConstruccionScreen("Validar Documentos (US-16)", onBackClick = { navController.navigateUp() })
-        }
-        composable("partido_vivo") {
-            EnConstruccionScreen("Partido en Vivo (US-01)", onBackClick = { navController.navigateUp() })
-        }
+
+        // --- Placeholders (solo para los que faltan) ---
         composable("alineacion") {
             EnConstruccionScreen("Armar Alineación (US-09)", onBackClick = { navController.navigateUp() })
         }
         composable("convocatorias") {
             EnConstruccionScreen("Convocatorias (US-04)", onBackClick = { navController.navigateUp() })
-        }
-        composable("calendario") {
-            EnConstruccionScreen("Calendario (US-13)", onBackClick = { navController.navigateUp() })
-        }
-        composable("perfil_hijo") {
-            EnConstruccionScreen("Perfil de mi Hijo (US-15)", onBackClick = { navController.navigateUp() })
         }
     }
 }
