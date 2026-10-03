@@ -7,7 +7,10 @@ import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Campaign
 import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -30,7 +33,8 @@ fun JugadorDashboardScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = 24.dp)
+                .verticalScroll(androidx.compose.foundation.rememberScrollState()),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -46,9 +50,11 @@ fun JugadorDashboardScreen(
             Spacer(modifier = Modifier.height(16.dp))
             ModernMenuButton(title = "Mis Estadísticas", icon = Icons.Default.BarChart) { onNavigateTo("estadisticas") }
             Spacer(modifier = Modifier.height(16.dp))
-            ModernMenuButton(title = "Muro de la Comunidad", icon = Icons.Default.Forum) { onNavigateTo("muro") }
+            ModernMenuButton(title = "Comunidad", icon = Icons.Default.Forum) { onNavigateTo("muro") }
             Spacer(modifier = Modifier.height(16.dp))
             ModernMenuButton(title = "Convocatorias", icon = Icons.Default.Campaign) { onNavigateTo("convocatorias") }
+            Spacer(modifier = Modifier.height(16.dp))
+            ModernMenuButton(title = "Partidos Anteriores", icon = Icons.Default.Star) { onNavigateTo("partidos_anteriores") }
 
             Spacer(modifier = Modifier.height(48.dp))
 

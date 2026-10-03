@@ -10,6 +10,8 @@ import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.FormatListNumbered
 import androidx.compose.material.icons.filled.SmartToy
 import androidx.compose.material.icons.filled.SportsScore
+import androidx.compose.material.icons.filled.Forum
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -64,6 +66,12 @@ fun DtDashboardScreen(
                 }
                 item {
                     DtMenuCard("Convocatorias", Icons.Default.Campaign) { onNavigateTo("convocatorias") }
+                }
+                item {
+                    DtMenuCard("Comunidad", Icons.Default.Forum) { onNavigateTo("muro") }
+                }
+                item {
+                    DtMenuCard("Partidos Anteriores", Icons.Default.Star) { onNavigateTo("partidos_anteriores") }
                 }
             }
 

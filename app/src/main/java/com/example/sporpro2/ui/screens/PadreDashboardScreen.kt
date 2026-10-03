@@ -6,7 +6,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.automirrored.filled.FactCheck
 import androidx.compose.material.icons.filled.Forum
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -30,7 +33,8 @@ fun PadreDashboardScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = 24.dp)
+                .verticalScroll(androidx.compose.foundation.rememberScrollState()),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -49,7 +53,7 @@ fun PadreDashboardScreen(
             )
             Spacer(modifier = Modifier.height(16.dp))
             PadreMenuButton(
-                title = "Muro de la Comunidad",
+                title = "Comunidad",
                 icon = Icons.Default.Forum,
                 onClick = { onNavigateTo("muro") }
             )
@@ -58,6 +62,12 @@ fun PadreDashboardScreen(
                 title = "Responder Convocatoria",
                 icon = Icons.AutoMirrored.Filled.FactCheck,
                 onClick = { onNavigateTo("convocatorias") }
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            PadreMenuButton(
+                title = "Partidos Anteriores",
+                icon = Icons.Default.Star,
+                onClick = { onNavigateTo("partidos_anteriores") }
             )
 
             Spacer(modifier = Modifier.height(48.dp))

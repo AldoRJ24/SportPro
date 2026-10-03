@@ -7,7 +7,10 @@ import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.Campaign
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -31,7 +34,8 @@ fun AdminDashboardScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = 24.dp)
+                .verticalScroll(androidx.compose.foundation.rememberScrollState()),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -59,6 +63,18 @@ fun AdminDashboardScreen(
                 title = "Enviar Anuncios",
                 icon = Icons.Default.Campaign,
                 onClick = { onNavigateTo("anuncios") }
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            AdminMenuButton(
+                title = "Comunidad",
+                icon = Icons.Default.Forum,
+                onClick = { onNavigateTo("muro") }
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            AdminMenuButton(
+                title = "Partidos Anteriores",
+                icon = Icons.Default.Star,
+                onClick = { onNavigateTo("partidos_anteriores") }
             )
             Spacer(modifier = Modifier.height(16.dp))
             AdminMenuButton(

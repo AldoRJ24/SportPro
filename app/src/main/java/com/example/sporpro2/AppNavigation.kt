@@ -34,21 +34,28 @@ fun AppNavigation() {
     LaunchedEffect(sessionStatus, userRole) {
         when (sessionStatus) {
             is SessionStatus.Authenticated -> {
-                // Dependiendo del rol, mandamos a la ruta específica
-                val destination = when (userRole) {
-                    "ADM" -> "dashboard_admin"
-                    "DT" -> "dashboard_dt"
-                    "PAD" -> "dashboard_padre"
-                    "JUG" -> "dashboard_jugador"
-                    else -> "home" // Fallback general
-                }
-                navController.navigate(destination) {
-                    popUpTo(0)
+                // Esperar a que el rol se cargue antes de navegar
+                if (userRole.isNotEmpty()) {
+                    val destination = when (userRole.uppercase()) {
+                        "ADM" -> "dashboard_admin"
+                        "DT" -> "dashboard_dt"
+                        "PAD" -> "dashboard_padre"
+                        "JUG" -> "dashboard_jugador"
+                        else -> "home" // Fallback general
+                    }
+                    // Solo navegamos si no estamos ya en el destino (evita recomposiciones infinitas)
+                    if (navController.currentDestination?.route != destination) {
+                        navController.navigate(destination) {
+                            popUpTo(0)
+                        }
+                    }
                 }
             }
             is SessionStatus.NotAuthenticated -> {
-                navController.navigate("login") {
-                    popUpTo(0)
+                if (navController.currentDestination?.route != "login" && navController.currentDestination?.route != "register") {
+                    navController.navigate("login") {
+                        popUpTo(0)
+                    }
                 }
             }
             else -> {
@@ -135,7 +142,10 @@ fun AppNavigation() {
             EnConstruccionScreen("Mis Estadísticas (US-11)", onBackClick = { navController.navigateUp() })
         }
         composable("muro") {
-            EnConstruccionScreen("Muro de la Comunidad (US-06)", onBackClick = { navController.navigateUp() })
+            com.example.sporpro2.ui.screens.ComunidadScreen(onBackClick = { navController.navigateUp() })
+        }
+        composable("partidos_anteriores") {
+            com.example.sporpro2.ui.screens.PartidosAnterioresScreen(onBackClick = { navController.navigateUp() })
         }
         composable("resumen_ia") {
             EnConstruccionScreen("Resumen con IA (US-02)", onBackClick = { navController.navigateUp() })
