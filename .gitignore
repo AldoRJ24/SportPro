@@ -13,3 +13,15 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# SportPro - archivos locales y privados
+/.idea/
+/.gradle/
+/.kotlin/
+/build/
+**/build/
+/local.properties
+/.env
+/.env.local
+*.jks
+*.keystore
