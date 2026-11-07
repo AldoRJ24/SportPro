@@ -121,6 +121,12 @@ insert into public.match_lineup_players (match_id, team_side, player_id, is_star
 select 'e0000000-0000-0000-0000-000000000001','home', player_id, true from public.team_players where team_id='c0000000-0000-0000-0000-000000000001' and jersey_number <= 7;
 insert into public.match_lineup_players (match_id, team_side, player_id, is_starter)
 select 'e0000000-0000-0000-0000-000000000001','away', player_id, true from public.team_players where team_id='c0000000-0000-0000-0000-000000000002' and jersey_number <= 7;
+-- Migración 002: sin arquero titular no se puede iniciar
+select pg_temp.expect_fail($$select public.change_match_state('e0000000-0000-0000-0000-000000000001','start')$$, 'no inicia sin arquero titular (002)');
+select pg_temp.expect_fail($$update public.match_lineup_players set field_position='XXX' where match_id='e0000000-0000-0000-0000-000000000001'$$, 'posición inválida rechazada (002)');
+update public.match_lineup_players l set field_position = case when tp.jersey_number = 1 then 'POR' when tp.jersey_number <= 3 then 'DEF' when tp.jersey_number <= 6 then 'MED' else 'DEL' end
+  from public.team_players tp where tp.player_id = l.player_id and l.match_id='e0000000-0000-0000-0000-000000000001';
+select pg_temp.expect_eq((select field_position from public.get_match_lineup('e0000000-0000-0000-0000-000000000001') where jersey_number = 1 and team_side='home'), 'POR', 'lineup RPC devuelve posición (002)');
 select public.set_match_operator('e0000000-0000-0000-0000-000000000001','a0000000-0000-0000-0000-000000000004');
 select pg_temp.expect_fail($$select public.set_match_operator('e0000000-0000-0000-0000-000000000001','a0000000-0000-0000-0000-000000000007')$$, 'operador debe ser de la academia');
 

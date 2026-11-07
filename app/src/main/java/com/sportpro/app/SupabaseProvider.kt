@@ -15,6 +15,17 @@ import io.github.jan.supabase.storage.Storage
  */
 object SupabaseProvider {
 
+    const val DEEPLINK_SCHEME = "sportpro"
+    const val DEEPLINK_AUTH_HOST = "auth-callback"
+
+    /** Public URL of an avatar stored in the «avatars» bucket. */
+    fun avatarUrl(path: String?): String? =
+        path?.takeIf { it.isNotBlank() }?.let { "${BuildConfig.SUPABASE_URL}/storage/v1/object/public/avatars/$it" }
+
+    /** URL pública de la foto de una academia (bucket «academy-logos»); sus equipos usan la misma. */
+    fun academyLogoUrl(path: String?): String? =
+        path?.takeIf { it.isNotBlank() }?.let { "${BuildConfig.SUPABASE_URL}/storage/v1/object/public/academy-logos/$it" }
+
     val isConfigured: Boolean
         get() = BuildConfig.SUPABASE_URL.isNotBlank() && BuildConfig.SUPABASE_PUBLISHABLE_KEY.isNotBlank()
 
@@ -24,7 +35,11 @@ object SupabaseProvider {
             supabaseUrl = BuildConfig.SUPABASE_URL,
             supabaseKey = BuildConfig.SUPABASE_PUBLISHABLE_KEY,
         ) {
-            install(Auth)
+            install(Auth) {
+                // Deep link: el botón del correo de verificación abre la app ya con sesión iniciada
+                scheme = DEEPLINK_SCHEME
+                host = DEEPLINK_AUTH_HOST
+            }
             install(Postgrest)
             install(Realtime)
             install(Storage)

@@ -1,0 +1,108 @@
+<!-- SportPro · Plantilla «Confirm signup» (Supabase → Authentication → Emails → Templates).
+     Asunto sugerido: ⚽ Confirma tu cuenta de SportPro
+     Variables de Supabase: {{ .ConfirmationURL }}, {{ .Email }}, {{ .Token }} -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark light">
+  <title>Confirma tu cuenta de SportPro</title>
+</head>
+<body style="margin:0;padding:0;background-color:#071012;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#071012;">
+    <tr>
+      <td align="center" style="padding:32px 12px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:560px;">
+
+          <!-- Marca -->
+          <tr>
+            <td align="center" style="padding:0 0 20px 0;font-family:Arial,Helvetica,sans-serif;">
+              <span style="display:inline-block;width:44px;height:44px;line-height:44px;border-radius:22px;background-color:#3DDC97;color:#00382A;font-size:24px;text-align:center;vertical-align:middle;">&#9917;</span>
+              <span style="font-size:30px;font-weight:900;color:#3DDC97;letter-spacing:0.5px;vertical-align:middle;padding-left:8px;">SportPro</span>
+            </td>
+          </tr>
+
+          <!-- Tarjeta principal (estilo «tarjeta de partido») -->
+          <tr>
+            <td style="background-color:#102022;border:1px solid #203A3C;border-radius:24px;overflow:hidden;">
+              <!-- Franja de cancha -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                  <td style="height:8px;background-color:#3DDC97;font-size:0;line-height:0;">&nbsp;</td>
+                </tr>
+                <tr>
+                  <td align="center" style="padding:28px 28px 8px 28px;font-family:Arial,Helvetica,sans-serif;">
+                    <span style="display:inline-block;background-color:#FF3B30;color:#ffffff;font-size:11px;font-weight:bold;letter-spacing:1px;padding:4px 10px;border-radius:12px;">&#9679; NUEVO JUGADOR EN EL CAMPO</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="padding:12px 28px 0 28px;font-family:Arial,Helvetica,sans-serif;color:#E8F3F0;font-size:24px;font-weight:bold;line-height:1.3;">
+                    ¡Bienvenido a SportPro!
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="padding:12px 28px 0 28px;font-family:Arial,Helvetica,sans-serif;color:#A9C2BD;font-size:15px;line-height:1.6;">
+                    Estás a un pitazo de entrar a la cancha. Confirma que
+                    <strong style="color:#E8F3F0;">{{ .Email }}</strong> es tu correo para activar tu cuenta.
+                  </td>
+                </tr>
+
+                <!-- Marcador decorativo -->
+                <tr>
+                  <td align="center" style="padding:22px 28px 6px 28px;">
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                      <tr>
+                        <td align="center" style="width:64px;height:64px;border-radius:32px;background-color:#1E88E5;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:22px;font-weight:900;">TÚ</td>
+                        <td align="center" style="padding:0 18px;font-family:Arial,Helvetica,sans-serif;color:#E8F3F0;font-size:34px;font-weight:900;letter-spacing:1px;">1 - 0</td>
+                        <td align="center" style="width:64px;height:64px;border-radius:32px;background-color:#3DDC97;color:#00382A;font-family:Arial,Helvetica,sans-serif;font-size:26px;">&#9917;</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+                <!-- Botón -->
+                <tr>
+                  <td align="center" style="padding:22px 28px 8px 28px;">
+                    <a href="{{ .ConfirmationURL }}"
+                       style="display:inline-block;background-color:#3DDC97;color:#00382A;font-family:Arial,Helvetica,sans-serif;font-size:17px;font-weight:bold;text-decoration:none;padding:16px 34px;border-radius:28px;">
+                      Confirmar mi cuenta
+                    </a>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="padding:6px 28px 0 28px;font-family:Arial,Helvetica,sans-serif;color:#A9C2BD;font-size:12px;line-height:1.6;">
+                    Ábrelo desde el celular donde instalaste SportPro: el botón abre la app con tu sesión iniciada.
+                  </td>
+                </tr>
+
+                <!-- Enlace alternativo -->
+                <tr>
+                  <td style="padding:22px 28px 28px 28px;font-family:Arial,Helvetica,sans-serif;">
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#16292B;border-radius:14px;">
+                      <tr>
+                        <td style="padding:14px 16px;color:#A9C2BD;font-size:12px;line-height:1.6;">
+                          ¿El botón no funciona? Copia este enlace en el navegador de tu celular:<br>
+                          <a href="{{ .ConfirmationURL }}" style="color:#7DEBB9;word-break:break-all;">{{ .ConfirmationURL }}</a>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Pie -->
+          <tr>
+            <td align="center" style="padding:20px 20px 0 20px;font-family:Arial,Helvetica,sans-serif;color:#6F8A85;font-size:11px;line-height:1.6;">
+              Si no creaste una cuenta en SportPro, ignora este correo: no se activará nada.<br>
+              SportPro · Gestión de academias de fútbol y partidos en vivo
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

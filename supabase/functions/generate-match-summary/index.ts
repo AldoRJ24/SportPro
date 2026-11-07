@@ -1,19 +1,34 @@
 // Edge Function: genera el BORRADOR del resumen del partido con Gemini.
-// ⚠️ SIN PROBAR (la base de datos sí está probada; esta función no se pudo ejecutar fuera de Supabase).
-// Claude Code debe desplegarla, ejecutarla con un partido finalizado y corregir lo que haga falta.
-//
-// Despliegue (con el CLI de Supabase):  supabase functions deploy generate-match-summary --no-verify-jwt
-//   (se valida al usuario dentro de la función; así funciona con claves publishable)
-// Secretos (NUNCA en el APK ni en el repo):
-//   supabase secrets set GEMINI_API_KEY=xxxx GEMINI_MODEL=<modelo Flash vigente en AI Studio>
-// Variables que Supabase inyecta solas: SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY
-//   (verifica en el dashboard → Edge Functions → Secrets los nombres disponibles en tu proyecto).
+// Despliegue sin CLI: Dashboard → Edge Functions → Deploy a new function → Via Editor,
+//   nombre «generate-match-summary», pegar este archivo y Deploy. Desactivar «Verify JWT»:
+//   la función valida al usuario por su cuenta.
+// Secretos (NUNCA en el APK ni en el repo), en Edge Functions → Secrets:
+//   GEMINI_API_KEY = clave de Google AI Studio
+//   GEMINI_MODEL   = gemini-3.6-flash   (opcional; es el valor por defecto)
+// Variables que Supabase inyecta solas: SUPABASE_URL y las claves nuevas en JSON
+//   (SUPABASE_SECRET_KEYS / SUPABASE_PUBLISHABLE_KEYS). Se aceptan también las heredadas
+//   SUPABASE_SERVICE_ROLE_KEY / SUPABASE_ANON_KEY si el proyecto aún las tiene.
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+// Lee una clave nueva (diccionario JSON, entrada "default") o la heredada.
+function projectKey(newVar: string, legacyVar: string): string {
+  const raw = Deno.env.get(newVar);
+  if (raw) {
+    try {
+      const dict = JSON.parse(raw) as Record<string, string>;
+      const k = dict["default"] ?? Object.values(dict)[0];
+      if (k) return k;
+    } catch { /* no es JSON: se ignora */ }
+  }
+  const legacy = Deno.env.get(legacyVar);
+  if (legacy) return legacy;
+  throw new Error(`Falta la clave del proyecto (${newVar} / ${legacyVar})`);
+}
+
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...CORS, "Content-Type": "application/json" } });
 
@@ -32,7 +47,9 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   try {
     const url = Deno.env.get("SUPABASE_URL")!;
-    const admin = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const admin = createClient(url, projectKey("SUPABASE_SECRET_KEYS", "SUPABASE_SERVICE_ROLE_KEY"), {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
 
     // 1) Autenticación del usuario que llama
     const authHeader = req.headers.get("Authorization") ?? "";
@@ -44,10 +61,12 @@ Deno.serve(async (req) => {
     if (!match_id) return json({ error: "Falta match_id" }, 400);
 
     // 2) Autorización: solo el DT del equipo y solo si el partido está finalizado
-    const userClient = createClient(url, Deno.env.get("SUPABASE_ANON_KEY")!, {
+    const userClient = createClient(url, projectKey("SUPABASE_PUBLISHABLE_KEYS", "SUPABASE_ANON_KEY"), {
       global: { headers: { Authorization: authHeader } },
+      auth: { persistSession: false, autoRefreshToken: false },
     });
-    const { data: ok } = await userClient.rpc("can_generate_summary", { p_match: match_id });
+    const { data: ok, error: oe } = await userClient.rpc("can_generate_summary", { p_match: match_id });
+    if (oe) return json({ error: `No se pudo verificar el permiso: ${oe.message}` }, 500);
     if (ok !== true) return json({ error: "Solo el DT puede generar el resumen de un partido finalizado" }, 403);
 
     // 3) Datos para la IA: SIN nombres (seudónimos J1.. / R1..)
@@ -56,21 +75,32 @@ Deno.serve(async (req) => {
     if (!payload.events?.length) return json({ error: "El partido no tiene eventos registrados" }, 422);
 
     // 4) Llamada a Gemini (REST)
-    const model = Deno.env.get("GEMINI_MODEL")!;
+    const model = Deno.env.get("GEMINI_MODEL") || "gemini-3.6-flash";
+    const apiKey = Deno.env.get("GEMINI_API_KEY");
+    if (!apiKey) return json({ error: "Falta el secreto GEMINI_API_KEY en Edge Functions → Secrets" }, 500);
     const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", "x-goog-api-key": Deno.env.get("GEMINI_API_KEY")! },
+      headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
         contents: [{ role: "user", parts: [{ text: JSON.stringify(payload) }] }],
-        generationConfig: { temperature: 0.3, maxOutputTokens: 600 },
+        // Gemini 3.x: los parámetros de muestreo se ignoran y el razonamiento interno consume
+        // del límite de salida; por eso el límite es amplio (el prompt pide 1–2 párrafos).
+        generationConfig: { maxOutputTokens: 4096 },
       }),
     });
     if (r.status === 429) return json({ error: "La IA está saturada. Intenta de nuevo en un minuto." }, 429);
-    if (!r.ok) return json({ error: "Error del proveedor de IA", detail: await r.text() }, 502);
+    if (!r.ok) {
+      const detail = await r.text();
+      return json({ error: `Error del proveedor de IA (${r.status}). Revisa GEMINI_API_KEY y GEMINI_MODEL.`, detail }, 502);
+    }
     const g = await r.json();
-    const text: string = g?.candidates?.[0]?.content?.parts?.map((p: { text?: string }) => p.text ?? "").join("").trim() ?? "";
-    if (!text) return json({ error: "La IA no devolvió texto" }, 502);
+    const parts: { text?: string; thought?: boolean }[] = g?.candidates?.[0]?.content?.parts ?? [];
+    const text = parts.filter((p) => !p.thought).map((p) => p.text ?? "").join("").trim();
+    if (!text) {
+      const reason = g?.candidates?.[0]?.finishReason ?? "desconocido";
+      return json({ error: `La IA no devolvió texto (motivo: ${reason}). Intenta de nuevo.` }, 502);
+    }
 
     // 5) Verificación anti-alucinación (mínima): los seudónimos citados deben existir en los eventos
     const known = new Set<string>();

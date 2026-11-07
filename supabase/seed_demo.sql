@@ -9,8 +9,8 @@
 -- =====================================================================
 do $seed$
 declare
-  v_main_email   text := 'aldoriosjuro2403@gmail.com';   -- <<< EDITAR
-  v_second_email text := '23100792@ue.edu.pe';  -- <<< EDITAR
+  v_main_email   text := 'cuenta-principal@ejemplo.com';   -- <<< EDITAR
+  v_second_email text := 'cuenta-secundaria@ejemplo.com';  -- <<< EDITAR
   v_main uuid; v_second uuid;
   v_academy uuid; v_home uuid; v_away uuid; v_match uuid; v_child uuid;
   v_firsts text[] := array['Mateo','Luis','Diego','Joaquín','Thiago','Bruno','Sebastián','Adrián','Gael'];
@@ -71,6 +71,15 @@ begin
   insert into public.match_lineup_players (match_id, team_side, player_id, is_starter)
     select v_match, 'away', player_id, jersey_number <= 7 from public.team_players where team_id = v_away;
   insert into public.match_operators (match_id, user_id, assigned_by) values (v_match, v_main, v_main);
+
+  -- Posiciones (requiere la migración 002): plantel y alineación del partido demo
+  update public.team_players tp set position = case
+           when p.position = 'Portero' then 'POR' when p.position = 'Defensa' then 'DEF'
+           when p.position = 'Mediocampista' then 'MED' else 'DEL' end
+    from public.players p where p.id = tp.player_id and tp.team_id in (v_home, v_away);
+  update public.match_lineup_players l set field_position = tp.position
+    from public.team_players tp
+   where l.match_id = v_match and tp.player_id = l.player_id and tp.team_id in (v_home, v_away);
 
   if v_second is not null then
     insert into public.follows (user_id, team_id) values (v_second, v_home) on conflict do nothing;
