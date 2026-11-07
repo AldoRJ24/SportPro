@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">SportPro</string>
+    <string name="check_title">Prueba de conexión con Supabase</string>
+    <string name="field_email">Correo</string>
+    <string name="field_password">Contraseña</string>
+    <string name="check_button">Iniciar sesión y leer catálogo</string>
+    <string name="check_running">Conectando…</string>
+    <string name="check_not_configured">Falta SUPABASE_URL o SUPABASE_PUBLISHABLE_KEY en local.properties. Agrégalas y vuelve a sincronizar Gradle.</string>
 </resources>
