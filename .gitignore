@@ -25,3 +25,7 @@ local.properties
 /.env.local
 *.jks
 *.keystore
+
+# Notas de trabajo locales (no se publican)
+SUPERPROMPT_*.md
+ANDROID_CONEXION_SUPABASE.md

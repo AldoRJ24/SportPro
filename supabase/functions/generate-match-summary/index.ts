@@ -111,7 +111,7 @@ Deno.serve(async (req) => {
     const cited = text.match(/\b[JR]\d+\b/g) ?? [];
     const invented = cited.filter((a) => !known.has(a));
     if (invented.length) return json({ error: "La IA citó jugadores inexistentes; reintenta", invented }, 422);
-    // TODO (Claude Code): validar también minutos y marcador citados contra payload.events / payload.match.
+    // Pendiente: validar también minutos y marcador citados contra payload.events / payload.match.
 
     // 6) Restituir nombres (menores = "Nombre + inicial") y guardar el borrador (máx. 3 regeneraciones)
     const { data: rendered, error: re } = await admin.rpc("render_ai_text", { p_match: match_id, p_text: text });
