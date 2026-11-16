@@ -29,3 +29,6 @@ local.properties
 # Notas de trabajo locales (no se publican)
 SUPERPROMPT_*.md
 ANDROID_CONEXION_SUPABASE.md
+
+# Archivos generados por el asistente (no se publican)
+Claude outputs/

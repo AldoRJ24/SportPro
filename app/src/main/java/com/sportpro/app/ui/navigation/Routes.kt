@@ -25,3 +25,9 @@ import kotlinx.serialization.Serializable
 @Serializable data class AcademyTeamsRoute(val academyId: String, val name: String)
 @Serializable data object EditProfileRoute
 @Serializable data object JoinTeamRoute
+
+// Mensualidades (migración 008)
+@Serializable data object FeesOverviewRoute
+@Serializable data class TeamFeesRoute(val teamId: String, val name: String)
+// teamId y playerId nulos = «Mis mensualidades» (lo que paga el usuario)
+@Serializable data class FeeStatementRoute(val teamId: String? = null, val playerId: String? = null, val title: String? = null)

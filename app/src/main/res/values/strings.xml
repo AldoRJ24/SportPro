@@ -6,4 +6,134 @@
     <string name="check_button">Iniciar sesión y leer catálogo</string>
     <string name="check_running">Conectando…</string>
     <string name="check_not_configured">Falta SUPABASE_URL o SUPABASE_PUBLISHABLE_KEY en local.properties. Agrégalas y vuelve a sincronizar Gradle.</string>
+
+    <!-- ===== Textos comunes ===== -->
+    <string name="common_cancel">Cancelar</string>
+    <string name="common_save">Guardar</string>
+    <string name="common_open">Abrir</string>
+
+    <!-- ===== Mensualidades (migración 008) ===== -->
+    <string name="fees_title">Mensualidades</string>
+    <string name="fees_my_title">Mis mensualidades</string>
+    <string name="fees_team_title">Mensualidades · %1$s</string>
+    <string name="fees_movements_title">Movimientos · %1$s</string>
+    <string name="fees_simulated_notice">Modo simulación: SportPro no mueve dinero real. Solo registra los pagos que se hacen fuera de la app.</string>
+
+    <!-- Entradas desde el perfil -->
+    <string name="fees_profile_staff_title">Mensualidades de mis equipos</string>
+    <string name="fees_profile_staff_subtitle">Elige qué jugadores pagan, genera los cobros del mes y revisa quién está al día.</string>
+    <string name="fees_profile_payer_title">Mis mensualidades</string>
+    <string name="fees_profile_payer_subtitle">Mira lo que debes y lo que ya pagaste, e informa tus pagos.</string>
+
+    <!-- Lista de equipos -->
+    <string name="fees_overview_empty_title">Sin equipos</string>
+    <string name="fees_overview_empty_body">Cuando gestiones un equipo, aquí verás sus mensualidades.</string>
+    <string name="fees_no_plan">Sin mensualidad definida</string>
+    <string name="fees_plan_line">%1$s al mes · vence el día %2$d</string>
+    <string name="fees_debt_line">Deuda: %1$s</string>
+    <string name="fees_up_to_date">Al día</string>
+    <plurals name="fees_enrolled_count">
+        <item quantity="one">%d jugador paga</item>
+        <item quantity="other">%d jugadores pagan</item>
+    </plurals>
+    <plurals name="fees_overdue_count">
+        <item quantity="one">%d vencido</item>
+        <item quantity="other">%d vencidos</item>
+    </plurals>
+    <plurals name="fees_reported_count">
+        <item quantity="one">%d pago por confirmar</item>
+        <item quantity="other">%d pagos por confirmar</item>
+    </plurals>
+    <plurals name="fees_pending_count">
+        <item quantity="one">%d cobro pendiente</item>
+        <item quantity="other">%d cobros pendientes</item>
+    </plurals>
+
+    <!-- Pantalla del equipo -->
+    <string name="fees_plan_header">Plan del equipo</string>
+    <string name="fees_plan_define">Definir monto</string>
+    <string name="fees_plan_change">Cambiar monto</string>
+    <string name="fees_plan_ask_admin">Pídele al administrador de la academia que defina el monto.</string>
+    <string name="fees_plan_dialog_title">Mensualidad del equipo</string>
+    <string name="fees_plan_amount_label">Monto mensual (S/)</string>
+    <string name="fees_plan_amount_error">Escribe un monto entre 0.01 y 10000, con 2 decimales como máximo</string>
+    <string name="fees_plan_day_label">Día de vencimiento (1 a 28)</string>
+    <string name="fees_plan_day_error">Escribe un día entre 1 y 28</string>
+    <string name="fees_plan_saved">Mensualidad guardada. Los cobros ya generados no cambian.</string>
+    <string name="fees_generate">Generar cobros de este mes</string>
+    <string name="fees_remind">Enviar recordatorios</string>
+    <string name="fees_view_movements">Ver movimientos</string>
+    <string name="fees_players_header">Jugadores del plantel</string>
+    <string name="fees_players_hint">Activa el interruptor de los jugadores que pagan mensualidad. Toca un jugador para ver sus movimientos.</string>
+    <string name="fees_players_empty_title">Plantel vacío</string>
+    <string name="fees_players_empty_body">Primero invita jugadores al equipo desde «Plantel e invitar».</string>
+    <string name="fees_player_not_enrolled">No paga mensualidad</string>
+    <string name="fees_player_last_paid">Último pago: %1$s</string>
+    <string name="fees_player_switch_cd">Paga mensualidad: %1$s</string>
+    <string name="fees_generated_none">No hay cobros nuevos: los de este mes ya estaban generados.</string>
+    <plurals name="fees_generated">
+        <item quantity="one">Se generó %d cobro y se avisó a la familia.</item>
+        <item quantity="other">Se generaron %d cobros y se avisó a las familias.</item>
+    </plurals>
+    <string name="fees_reminders_none">No hay recordatorios por enviar hoy.</string>
+    <plurals name="fees_reminders_sent">
+        <item quantity="one">Se envió %d recordatorio.</item>
+        <item quantity="other">Se enviaron %d recordatorios.</item>
+    </plurals>
+
+    <!-- Estado de cuenta -->
+    <string name="fees_statement_empty_title">Sin cobros</string>
+    <string name="fees_statement_empty_payer">Aquí aparecerán las mensualidades de tus hijos cuando el entrenador las genere. Si eres jugador menor de edad, las ve y las paga tu apoderado.</string>
+    <string name="fees_statement_empty_staff">Todavía no hay cobros. Genera los del mes desde la pantalla del equipo.</string>
+    <string name="fees_total_due">Total por pagar: %1$s</string>
+    <string name="fees_total_none">No tienes pagos pendientes.</string>
+    <string name="fees_due_on">Vence el %1$s</string>
+    <string name="fees_status_pending">PENDIENTE</string>
+    <string name="fees_status_overdue">VENCIDO</string>
+    <string name="fees_status_paid">PAGADO</string>
+    <string name="fees_status_waived">EXONERADO</string>
+    <string name="fees_status_reported">POR CONFIRMAR</string>
+    <string name="fees_waived_reason">Motivo de la exoneración: %1$s</string>
+    <string name="fees_payment_line">Pago: %1$s · %2$s</string>
+    <string name="fees_payment_reference">N.º de operación: %1$s</string>
+    <string name="fees_payment_note">Nota: %1$s</string>
+    <string name="fees_payment_reported_by">Informado por %1$s</string>
+    <string name="fees_payment_awaiting">Esperando la confirmación del administrador.</string>
+    <string name="fees_payment_confirmed_by">Confirmado por %1$s</string>
+    <string name="fees_payment_rejected">Pago rechazado. Motivo: %1$s</string>
+    <string name="fees_payment_voided">Pago anulado. Motivo: %1$s</string>
+    <string name="fees_unknown_person">la academia</string>
+
+    <!-- Métodos de pago -->
+    <string name="fees_method_yape">Yape</string>
+    <string name="fees_method_plin">Plin</string>
+    <string name="fees_method_transfer">Transferencia</string>
+    <string name="fees_method_cash">Efectivo</string>
+
+    <!-- Acciones sobre un cobro -->
+    <string name="fees_action_report">Informar pago</string>
+    <string name="fees_action_register">Registrar pago</string>
+    <string name="fees_action_confirm">Confirmar</string>
+    <string name="fees_action_reject">Rechazar</string>
+    <string name="fees_action_waive">Exonerar</string>
+    <string name="fees_action_void">Anular pago</string>
+    <string name="fees_pay_dialog_report_title">Informar pago de %1$s</string>
+    <string name="fees_pay_dialog_register_title">Registrar pago de %1$s</string>
+    <string name="fees_pay_dialog_report_hint">Paga por fuera de la app y cuéntale al administrador cómo lo hiciste. Él lo confirma.</string>
+    <string name="fees_pay_dialog_register_hint">Usa esto cuando ya recibiste el dinero. El cobro queda pagado de inmediato.</string>
+    <string name="fees_pay_dialog_method">Método de pago</string>
+    <string name="fees_pay_dialog_reference">Número de operación</string>
+    <string name="fees_pay_dialog_reference_error">Mínimo 4 caracteres</string>
+    <string name="fees_pay_dialog_note">Nota (opcional)</string>
+    <string name="fees_reason_reject_title">Rechazar pago</string>
+    <string name="fees_reason_void_title">Anular pago</string>
+    <string name="fees_reason_waive_title">Exonerar cobro</string>
+    <string name="fees_reason_label">Motivo (obligatorio)</string>
+    <string name="fees_reason_hint">El motivo queda guardado en el historial y la familia lo verá.</string>
+    <string name="fees_done_reported">Pago informado. El administrador lo revisará.</string>
+    <string name="fees_done_registered">Pago registrado.</string>
+    <string name="fees_done_confirmed">Pago confirmado.</string>
+    <string name="fees_done_rejected">Pago rechazado.</string>
+    <string name="fees_done_voided">Pago anulado. El cobro volvió a pendiente.</string>
+    <string name="fees_done_waived">Cobro exonerado.</string>
 </resources>

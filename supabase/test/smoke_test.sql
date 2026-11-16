@@ -244,5 +244,112 @@ select pg_temp.as_user('a0000000-0000-0000-0000-000000000006');
 select pg_temp.expect_fail($$select public.approve_summary('e0000000-0000-0000-0000-000000000001','public')$$, 'seguidor no aprueba resúmenes');
 select pg_temp.expect_fail($$select public.change_match_state('e0000000-0000-0000-0000-000000000001','finish')$$, 'seguidor no controla el partido');
 
+-- =====================================================================
+-- MENSUALIDADES (migración 008). Actores: ADM = …002, DT de Halcones = …003,
+-- apoderada de Mateo = …005, extraño = …007. Jugador1 no tiene apoderado.
+-- =====================================================================
+-- Plan: solo el admin
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+select pg_temp.expect_fail($$select public.fee_set_plan('c0000000-0000-0000-0000-000000000001', 120, 10)$$, 'DT no define el monto de la mensualidad');
+select pg_temp.expect_fail($$select public.fee_generate_charges('c0000000-0000-0000-0000-000000000001')$$, 'no se generan cobros sin plan');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000002');
+select pg_temp.expect_fail($$select public.fee_set_plan('c0000000-0000-0000-0000-000000000001', 0, 10)$$, 'monto 0 rechazado');
+select pg_temp.expect_fail($$select public.fee_set_plan('c0000000-0000-0000-0000-000000000001', 120, 31)$$, 'día de vencimiento 31 rechazado');
+select public.fee_set_plan('c0000000-0000-0000-0000-000000000001', 120, 10);
+
+-- Selección de jugadores: el DT elige; un extraño no; solo jugadores del plantel
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000007');
+select pg_temp.expect_fail($$select public.fee_set_player('c0000000-0000-0000-0000-000000000001','d0000001-0000-0000-0000-000000000001', true)$$, 'extraño no elige quién paga');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+select pg_temp.expect_fail($$select public.fee_set_player('c0000000-0000-0000-0000-000000000001','d0000001-0000-0000-0000-000000000002', true)$$, 'jugador de otro equipo no entra a la mensualidad');
+select public.fee_set_player('c0000000-0000-0000-0000-000000000001', current_setting('t.child')::uuid, true);
+select public.fee_set_player('c0000000-0000-0000-0000-000000000001', 'd0000001-0000-0000-0000-000000000001', true);
+select public.fee_set_player('c0000000-0000-0000-0000-000000000001', 'd0000002-0000-0000-0000-000000000001', true);
+select public.fee_set_player('c0000000-0000-0000-0000-000000000001', 'd0000002-0000-0000-0000-000000000001', false);
+
+-- Generar cobros: solo para los 2 seleccionados y sin duplicar al repetir
+select pg_temp.expect_eq(public.fee_generate_charges('c0000000-0000-0000-0000-000000000001'), 2, 'cobros solo para los 2 jugadores seleccionados');
+select pg_temp.expect_eq(public.fee_generate_charges('c0000000-0000-0000-0000-000000000001'), 0, 'generar otra vez no duplica (idempotente)');
+select pg_temp.expect_fail($$select public.fee_generate_charges('c0000000-0000-0000-0000-000000000001', (current_date + interval '6 months')::date)$$, 'no se generan cobros de meses lejanos');
+select pg_temp.as_su();
+select set_config('t.c_mateo', (select id::text from public.fee_charges where player_id = current_setting('t.child')::uuid), false) is not null;
+select set_config('t.c_j1', (select id::text from public.fee_charges where player_id = 'd0000001-0000-0000-0000-000000000001'), false) is not null;
+select pg_temp.expect_eq((select count(*) from public.notifications where kind = 'fee_charge' and user_id = 'a0000000-0000-0000-0000-000000000005')::int, 1, 'apoderada recibe aviso de la nueva mensualidad');
+
+-- Quién ve qué
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000005');
+select pg_temp.expect_eq((select count(*) from public.fee_statement())::int, 1, 'apoderada ve solo la mensualidad de su hijo');
+select pg_temp.expect_eq((select count(*) from public.fee_charges)::int, 1, 'RLS: apoderada lee solo el cobro de su hijo');
+select pg_temp.expect_eq((select count(*) from public.fee_statement('c0000000-0000-0000-0000-000000000001'))::int, 1, 'apoderada no ve cobros ajenos aunque pida el equipo');
+select pg_temp.expect_fail($$select * from public.fee_team_players('c0000000-0000-0000-0000-000000000001')$$, 'apoderada no ve la deuda del equipo');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000007');
+select pg_temp.expect_eq((select count(*) from public.fee_charges)::int, 0, 'extraño NO ve cobros');
+select pg_temp.expect_eq((select count(*) from public.fee_statement('c0000000-0000-0000-0000-000000000001'))::int, 0, 'extraño NO ve el estado de cuenta del equipo');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+select pg_temp.expect_eq((select count(*) from public.fee_statement())::int, 0, 'el DT no es pagador: su estado de cuenta propio está vacío');
+select pg_temp.expect_eq((select count(*) from public.fee_statement('c0000000-0000-0000-0000-000000000001'))::int, 2, 'DT ve los movimientos de su equipo');
+select pg_temp.expect_eq((select debt from public.fee_summary_for_me() where team_id = 'c0000000-0000-0000-0000-000000000001'), 240::numeric, 'DT ve la deuda total de su equipo');
+
+-- Pagar: solo quien corresponde, y con número de operación
+select pg_temp.expect_fail(format($$select public.fee_report_payment(%L, 'yape', '123456')$$, current_setting('t.c_mateo')), 'el DT no paga por el jugador');
+select pg_temp.expect_fail(format($$select public.fee_register_payment(%L, 'cash')$$, current_setting('t.c_mateo')), 'el DT no registra pagos (el dinero va al admin)');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000005');
+select pg_temp.expect_fail(format($$select public.fee_report_payment(%L, 'yape', '123456')$$, current_setting('t.c_j1')), 'apoderada no paga la mensualidad de otro niño');
+select pg_temp.expect_fail(format($$select public.fee_report_payment(%L, 'yape', '')$$, current_setting('t.c_mateo')), 'Yape exige número de operación');
+select pg_temp.expect_fail(format($$select public.fee_report_payment(%L, 'bitcoin', '123456')$$, current_setting('t.c_mateo')), 'método de pago inválido rechazado');
+select pg_temp.expect_fail(format($$insert into public.fee_payments (charge_id, amount, method, paid_on, status) values (%L, 120, 'cash', current_date, 'confirmed')$$, current_setting('t.c_mateo')), 'cliente no inserta pagos directo en la tabla');
+select pg_temp.expect_fail(format($$update public.fee_charges set status = 'paid' where id = %L$$, current_setting('t.c_mateo')), 'cliente no marca cobros como pagados');
+select public.fee_report_payment(current_setting('t.c_mateo')::uuid, 'yape', '123456', 'Pagado desde el Yape de Paola') is not null;
+select pg_temp.expect_fail(format($$select public.fee_report_payment(%L, 'plin', '999999')$$, current_setting('t.c_mateo')), 'no se informa dos veces el mismo cobro');
+select pg_temp.expect_eq((select payment_status from public.fee_statement()), 'reported', 'pago informado queda por confirmar');
+select pg_temp.as_su();
+select set_config('t.pay1', (select id::text from public.fee_payments where status = 'reported'), false) is not null;
+select pg_temp.expect_eq((select count(*) from public.notifications where kind = 'fee_payment_reported' and user_id = 'a0000000-0000-0000-0000-000000000002')::int, 1, 'el admin recibe el aviso de pago por confirmar');
+
+-- Confirmar / rechazar: solo el admin
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+select pg_temp.expect_fail(format($$select public.fee_decide_payment(%L, true)$$, current_setting('t.pay1')), 'el DT no confirma pagos');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000005');
+select pg_temp.expect_fail(format($$select public.fee_decide_payment(%L, true)$$, current_setting('t.pay1')), 'la apoderada no confirma su propio pago');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000002');
+select pg_temp.expect_fail(format($$select public.fee_decide_payment(%L, false, '')$$, current_setting('t.pay1')), 'rechazar exige motivo');
+select pg_temp.expect_fail(format($$select public.fee_register_payment(%L, 'cash')$$, current_setting('t.c_mateo')), 'no se registra otro pago mientras hay uno informado');
+select public.fee_decide_payment(current_setting('t.pay1')::uuid, true);
+select pg_temp.expect_eq((select status from public.fee_charges where id = current_setting('t.c_mateo')::uuid), 'paid', 'admin confirma y el cobro queda pagado');
+select pg_temp.expect_fail(format($$select public.fee_decide_payment(%L, false, 'me equivoqué')$$, current_setting('t.pay1')), 'un pago ya revisado no se decide otra vez');
+
+-- Anular (nada se borra) y registrar directo
+select pg_temp.expect_fail(format($$select public.fee_void_payment(%L, '')$$, current_setting('t.pay1')), 'anular exige motivo');
+select public.fee_void_payment(current_setting('t.pay1')::uuid, 'El Yape no llegó a la cuenta');
+select pg_temp.expect_eq((select status from public.fee_charges where id = current_setting('t.c_mateo')::uuid), 'pending', 'anular el pago devuelve el cobro a pendiente');
+select pg_temp.expect_eq((select count(*) from public.fee_payments where status = 'voided')::int, 1, 'el pago anulado se conserva con su motivo');
+select pg_temp.expect_fail(format($$select public.fee_register_payment(%L, 'cash', (current_date + 5))$$, current_setting('t.c_mateo')), 'fecha de pago futura rechazada');
+select public.fee_register_payment(current_setting('t.c_mateo')::uuid, 'cash', null, null, 'Pagó en efectivo en la academia') is not null;
+select pg_temp.expect_eq((select status from public.fee_statement(null, current_setting('t.child')::uuid)), 'paid', 'admin registra un pago directo y queda pagado');
+
+-- Vencidos, recordatorio y exoneración
+select pg_temp.as_su();
+update public.fee_charges set due_date = current_date - 5 where id = current_setting('t.c_j1')::uuid;
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+select pg_temp.expect_eq((select status from public.fee_statement('c0000000-0000-0000-0000-000000000001', 'd0000001-0000-0000-0000-000000000001')), 'overdue', 'cobro pendiente con fecha pasada se muestra vencido');
+select pg_temp.expect_eq((select overdue_count from public.fee_team_players('c0000000-0000-0000-0000-000000000001') where player_id = 'd0000001-0000-0000-0000-000000000001'), 1, 'DT ve qué jugador está vencido');
+select pg_temp.expect_eq(public.fee_send_reminders('c0000000-0000-0000-0000-000000000001'), 1, 'recordatorio enviado al cobro vencido');
+select pg_temp.expect_eq(public.fee_send_reminders('c0000000-0000-0000-0000-000000000001'), 0, 'no se repite el recordatorio el mismo día');
+select pg_temp.expect_fail(format($$select public.fee_waive_charge(%L, 'Beca deportiva')$$, current_setting('t.c_j1')), 'el DT no exonera cobros');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000002');
+select pg_temp.expect_fail(format($$select public.fee_waive_charge(%L, '')$$, current_setting('t.c_j1')), 'exonerar exige motivo');
+select public.fee_waive_charge(current_setting('t.c_j1')::uuid, 'Beca deportiva');
+select pg_temp.expect_eq((select debt from public.fee_summary_for_me() where team_id = 'c0000000-0000-0000-0000-000000000001'), 0::numeric, 'deuda del equipo en 0 tras pago y exoneración');
+select pg_temp.expect_fail(format($$select public.fee_waive_charge(%L, 'otra vez')$$, current_setting('t.c_mateo')), 'un cobro pagado no se exonera');
+
+-- Auditoría y rol anónimo
+select pg_temp.as_su();
+select pg_temp.expect_eq((select count(*) from public.audit_log where action like 'fee_%') >= 12, true, 'las acciones de mensualidades quedan en audit_log');
+set role anon;
+select pg_temp.expect_fail($$select count(*) from public.fee_charges$$, 'anon no lee cobros');
+select pg_temp.expect_fail($$select count(*) from public.fee_payments$$, 'anon no lee pagos');
+select pg_temp.expect_fail($$select * from public.fee_statement()$$, 'anon no ejecuta el estado de cuenta');
+reset role;
+
 select pg_temp.as_su();
 \echo '=== TODAS LAS PRUEBAS PASARON ==='

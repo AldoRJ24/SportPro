@@ -6,6 +6,7 @@ import com.sportpro.app.core.data.offline.PendingEventQueue
 import com.sportpro.app.core.data.repo.AccountRepository
 import com.sportpro.app.core.data.repo.AuthRepository
 import com.sportpro.app.core.data.repo.ClubRepository
+import com.sportpro.app.core.data.repo.FeeRepository
 import com.sportpro.app.core.data.repo.FeedRepository
 import com.sportpro.app.core.data.repo.MatchRepository
 import kotlinx.coroutines.CoroutineScope
@@ -27,5 +28,6 @@ class AppContainer(context: Context) {
     val matches: MatchRepository = MatchRepository(client)
     val account: AccountRepository = AccountRepository(client)
     val feed: FeedRepository = FeedRepository(client)
+    val fees: FeeRepository = FeeRepository(client)
     val queue: PendingEventQueue = PendingEventQueue(context.applicationContext, matches, appScope)
 }

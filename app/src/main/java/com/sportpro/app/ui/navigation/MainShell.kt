@@ -46,6 +46,9 @@ import com.sportpro.app.ui.calendar.CalendarScreen
 import com.sportpro.app.ui.creatematch.CreateMatchScreen
 import com.sportpro.app.ui.creatematch.MatchSetupScreen
 import com.sportpro.app.ui.explore.ExploreScreen
+import com.sportpro.app.ui.fees.FeeStatementScreen
+import com.sportpro.app.ui.fees.FeesOverviewScreen
+import com.sportpro.app.ui.fees.TeamFeesScreen
 import com.sportpro.app.ui.home.HomeScreen
 import com.sportpro.app.ui.match.MatchDetailScreen
 import com.sportpro.app.ui.matches.MatchesScreen
@@ -156,7 +159,29 @@ fun MainShell(session: SessionViewModel) {
                         onEditProfile = { nav.navigate(EditProfileRoute) },
                         onBell = onBell,
                         onJoinTeam = { nav.navigate(JoinTeamRoute) },
+                        onTeamFees = { nav.navigate(FeesOverviewRoute) },
+                        onMyFees = { nav.navigate(FeeStatementRoute()) },
                     )
+                }
+                // ---- Mensualidades: equipos → un equipo → movimientos ----
+                composable<FeesOverviewRoute> {
+                    FeesOverviewScreen(
+                        onBack = { nav.popBackStack() },
+                        onOpenTeam = { id, name -> nav.navigate(TeamFeesRoute(id, name)) },
+                    )
+                }
+                composable<TeamFeesRoute> { entry ->
+                    val r = entry.toRoute<TeamFeesRoute>()
+                    TeamFeesScreen(
+                        teamId = r.teamId,
+                        name = r.name,
+                        onBack = { nav.popBackStack() },
+                        onOpenStatement = { playerId, title -> nav.navigate(FeeStatementRoute(r.teamId, playerId, title)) },
+                    )
+                }
+                composable<FeeStatementRoute> { entry ->
+                    val r = entry.toRoute<FeeStatementRoute>()
+                    FeeStatementScreen(r.teamId, r.playerId, r.title, onBack = { nav.popBackStack() })
                 }
                 composable<MatchDetailRoute> { entry ->
                     val r = entry.toRoute<MatchDetailRoute>()

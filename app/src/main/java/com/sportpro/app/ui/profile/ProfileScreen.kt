@@ -29,7 +29,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.res.stringResource
+import com.sportpro.app.R
 import com.sportpro.app.core.data.Callup
+import com.sportpro.app.core.data.Fees
 import com.sportpro.app.core.data.PlayerRef
 import com.sportpro.app.core.data.formatDayTime
 import com.sportpro.app.ui.components.Avatar
@@ -64,6 +67,8 @@ fun ProfileScreen(
     onEditProfile: () -> Unit,
     onBell: () -> Unit,
     onJoinTeam: () -> Unit = {},
+    onTeamFees: () -> Unit = {},
+    onMyFees: () -> Unit = {},
 ) {
     val container = LocalAppContainer.current
     val ctx by session.context.collectAsStateWithLifecycle()
@@ -221,6 +226,19 @@ fun ProfileScreen(
                 }
             }
 
+            // ---- Mis mensualidades: las paga el apoderado; el jugador solo si ya es mayor de edad ----
+            // (es solo para mostrar u ocultar la tarjeta: el servidor decide qué cobros ve cada uno)
+            if (ctx?.isGuardian == true || Fees.isAdult(ctx?.ownPlayer?.birthDate)) {
+                item {
+                    ActionCard(
+                        title = stringResource(R.string.fees_profile_payer_title),
+                        subtitle = stringResource(R.string.fees_profile_payer_subtitle),
+                        action = stringResource(R.string.common_open),
+                        onClick = onMyFees,
+                    )
+                }
+            }
+
             // ---- Equipos que gestiono (DT/ADM) ----
             val managed = ctx?.managedTeams.orEmpty()
             if (managed.isNotEmpty()) {
@@ -250,12 +268,21 @@ fun ProfileScreen(
                         }
                     }
                 }
+                // Mensualidades de esos equipos (el admin fija el monto y confirma pagos; el DT elige jugadores y mira)
+                item {
+                    ActionCard(
+                        title = stringResource(R.string.fees_profile_staff_title),
+                        subtitle = stringResource(R.string.fees_profile_staff_subtitle),
+                        action = stringResource(R.string.common_open),
+                        onClick = onTeamFees,
+                    )
+                }
             }
 
             item { Spacer(Modifier.padding(8.dp)) }
             item {
                 PrototypeBanner(
-                    "Mensualidades (modo simulación), documentos y ajustes de notificaciones: próxima migración.",
+                    "Documentos y ajustes de notificaciones: próxima migración.",
                     Modifier.padding(horizontal = 16.dp),
                 )
             }
