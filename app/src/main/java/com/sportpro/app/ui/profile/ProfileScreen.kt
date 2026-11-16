@@ -69,6 +69,8 @@ fun ProfileScreen(
     onJoinTeam: () -> Unit = {},
     onTeamFees: () -> Unit = {},
     onMyFees: () -> Unit = {},
+    onPlayerDocs: (String, String) -> Unit = { _, _ -> },
+    onTeamDocs: (String, String) -> Unit = { _, _ -> },
 ) {
     val container = LocalAppContainer.current
     val ctx by session.context.collectAsStateWithLifecycle()
@@ -193,6 +195,8 @@ fun ProfileScreen(
                         player = child,
                         teamsText = teams.joinToString { "${it.team?.name ?: "Equipo"} · #${it.jerseyNumber ?: "-"}" },
                         onStats = { onPlayerStats(child.id, child.fullName) },
+                        // El apoderado sube y consulta los documentos de su hijo
+                        onDocs = { onPlayerDocs(child.id, child.fullName) },
                     )
                 }
                 item {
@@ -210,6 +214,8 @@ fun ProfileScreen(
                         player = p,
                         teamsText = ui.memberships.filter { it.playerId == p.id }.joinToString { it.team?.name ?: "" },
                         onStats = { onPlayerStats(p.id, p.fullName) },
+                        // Un jugador menor no gestiona sus documentos: lo hace su apoderado
+                        onDocs = if (Fees.isAdult(p.birthDate)) ({ onPlayerDocs(p.id, p.fullName) }) else null,
                     )
                 }
             }
@@ -264,6 +270,7 @@ fun ProfileScreen(
                             Column {
                                 TextButton(onClick = { onTeamRoster(t.id, t.name) }) { Text("Plantel e invitar") }
                                 TextButton(onClick = { onTeamStats(t.id, t.name) }) { Text("Estadísticas") }
+                                TextButton(onClick = { onTeamDocs(t.id, t.name) }) { Text(stringResource(R.string.docs_button)) }
                             }
                         }
                     }
@@ -282,7 +289,7 @@ fun ProfileScreen(
             item { Spacer(Modifier.padding(8.dp)) }
             item {
                 PrototypeBanner(
-                    "Documentos y ajustes de notificaciones: próxima migración.",
+                    "Ajustes de notificaciones: próxima migración.",
                     Modifier.padding(horizontal = 16.dp),
                 )
             }
@@ -321,7 +328,7 @@ fun CallupCard(c: Callup, onOpenMatch: (String) -> Unit, onRespond: (Boolean) ->
 }
 
 @Composable
-private fun PlayerCard(player: PlayerRef, teamsText: String, onStats: () -> Unit) {
+private fun PlayerCard(player: PlayerRef, teamsText: String, onStats: () -> Unit, onDocs: (() -> Unit)? = null) {
     Card(
         Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 5.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
@@ -337,7 +344,10 @@ private fun PlayerCard(player: PlayerRef, teamsText: String, onStats: () -> Unit
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            TextButton(onClick = onStats) { Text("Estadísticas") }
+            Column {
+                TextButton(onClick = onStats) { Text("Estadísticas") }
+                if (onDocs != null) TextButton(onClick = onDocs) { Text(stringResource(R.string.docs_button)) }
+            }
         }
     }
 }

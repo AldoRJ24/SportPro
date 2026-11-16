@@ -46,6 +46,8 @@ import com.sportpro.app.ui.profile.FamilyViewModel
 import com.sportpro.app.ui.calendar.CalendarScreen
 import com.sportpro.app.ui.creatematch.CreateMatchScreen
 import com.sportpro.app.ui.creatematch.MatchSetupScreen
+import com.sportpro.app.ui.docs.PlayerDocsScreen
+import com.sportpro.app.ui.docs.TeamDocsScreen
 import com.sportpro.app.ui.explore.ExploreScreen
 import com.sportpro.app.ui.fees.FeeStatementScreen
 import com.sportpro.app.ui.fees.FeesOverviewScreen
@@ -178,7 +180,23 @@ fun MainShell(session: SessionViewModel) {
                         onJoinTeam = { nav.navigate(JoinTeamRoute) },
                         onTeamFees = { nav.navigate(FeesOverviewRoute) },
                         onMyFees = { nav.navigate(FeeStatementRoute()) },
+                        onPlayerDocs = { id, name -> nav.navigate(PlayerDocsRoute(id, name)) },
+                        onTeamDocs = { id, name -> nav.navigate(TeamDocsRoute(id, name)) },
                     )
+                }
+                // ---- Documentos: plantel del equipo → documentos de un jugador ----
+                composable<TeamDocsRoute> { entry ->
+                    val r = entry.toRoute<TeamDocsRoute>()
+                    TeamDocsScreen(
+                        teamId = r.teamId,
+                        name = r.name,
+                        onBack = { nav.popBackStack() },
+                        onOpenPlayer = { id, name -> nav.navigate(PlayerDocsRoute(id, name)) },
+                    )
+                }
+                composable<PlayerDocsRoute> { entry ->
+                    val r = entry.toRoute<PlayerDocsRoute>()
+                    PlayerDocsScreen(r.playerId, r.name, onBack = { nav.popBackStack() })
                 }
                 // ---- Mensualidades: equipos → un equipo → movimientos ----
                 composable<FeesOverviewRoute> {

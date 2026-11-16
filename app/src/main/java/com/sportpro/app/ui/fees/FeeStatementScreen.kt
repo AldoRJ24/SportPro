@@ -42,7 +42,9 @@ import com.sportpro.app.ui.components.EmptyState
 import com.sportpro.app.ui.components.ErrorBox
 import com.sportpro.app.ui.components.LoadingBox
 import com.sportpro.app.ui.components.Pill
+import com.sportpro.app.ui.components.ReasonDialog
 import com.sportpro.app.ui.components.SpScaffold
+import com.sportpro.app.ui.components.UiMessageEffect
 import com.sportpro.app.ui.navigation.LocalAppContainer
 import com.sportpro.app.ui.theme.LiveRed
 import com.sportpro.app.ui.theme.Mint400
@@ -77,7 +79,7 @@ fun FeeStatementScreen(teamId: String?, playerId: String?, title: String?, onBac
     val ui by vm.ui.collectAsStateWithLifecycle()
     val snack = remember { SnackbarHostState() }
     var dialog by remember { mutableStateOf<FeeDialog?>(null) }
-    FeeMessageEffect(ui.message, snack, vm::consumeMessage)
+    UiMessageEffect(ui.message, snack, vm::consumeMessage)
 
     val isMine = teamId == null && playerId == null
     val screenTitle = if (isMine || title == null) stringResource(R.string.fees_my_title)
@@ -324,36 +326,6 @@ private fun PaymentDialog(
                 onClick = { onSubmit(method, if (needsReference) reference.trim() else "", note.trim()) },
                 enabled = valid,
             ) { Text(stringResource(R.string.common_save)) }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
-    )
-}
-
-/** Diálogo que exige un motivo (rechazar, anular, exonerar): nada se cambia sin dejar por qué. */
-@Composable
-private fun ReasonDialog(title: String, onDismiss: () -> Unit, onSubmit: (String) -> Unit) {
-    var reason by rememberSaveable { mutableStateOf("") }
-    val valid = reason.trim().length >= 3
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(title) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(
-                    stringResource(R.string.fees_reason_hint),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                OutlinedTextField(
-                    value = reason,
-                    onValueChange = { reason = it.take(200) },
-                    label = { Text(stringResource(R.string.fees_reason_label)) },
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = { onSubmit(reason.trim()) }, enabled = valid) { Text(stringResource(R.string.common_save)) }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )

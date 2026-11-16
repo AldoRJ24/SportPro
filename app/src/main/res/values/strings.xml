@@ -12,6 +12,66 @@
     <string name="common_save">Guardar</string>
     <string name="common_open">Abrir</string>
 
+    <!-- ===== Documentos del jugador (migración 009) ===== -->
+    <string name="docs_title">Documentos · %1$s</string>
+    <string name="docs_team_title">Documentos del plantel · %1$s</string>
+    <string name="docs_button">Documentos</string>
+    <string name="docs_privacy_notice">Archivos privados: solo los ven el apoderado, el DT del equipo y el administrador de la academia. Cada enlace para abrirlos vence en 5 minutos.</string>
+    <string name="docs_type_dni">DNI</string>
+    <string name="docs_type_medical">Ficha médica</string>
+    <string name="docs_type_insurance">Seguro</string>
+    <string name="docs_type_travel">Autorización de viaje</string>
+    <string name="docs_state_missing">FALTA</string>
+    <string name="docs_state_optional">OPCIONAL</string>
+    <string name="docs_state_pending">EN REVISIÓN</string>
+    <string name="docs_state_approved">APROBADO</string>
+    <string name="docs_state_rejected">RECHAZADO</string>
+    <string name="docs_state_expired">VENCIDO</string>
+    <string name="docs_not_uploaded">Aún no se ha subido.</string>
+    <string name="docs_expires_on">Vence el %1$s</string>
+    <string name="docs_no_expiry">Sin fecha de vencimiento</string>
+    <string name="docs_uploaded_by">Subido por %1$s</string>
+    <string name="docs_approved_by">Aprobado por %1$s</string>
+    <string name="docs_rejected_reason">Motivo del rechazo: %1$s</string>
+    <string name="docs_someone">un usuario</string>
+    <string name="docs_action_view">Ver</string>
+    <string name="docs_action_upload">Subir</string>
+    <string name="docs_action_replace">Subir nueva versión</string>
+    <string name="docs_action_approve">Aprobar</string>
+    <string name="docs_action_reject">Rechazar</string>
+    <string name="docs_reject_title">Rechazar documento</string>
+    <string name="docs_upload_title">Subir %1$s</string>
+    <string name="docs_upload_hint">Elige una foto (JPG o PNG) o un PDF de hasta 5 MB. Si el documento vence, escribe la fecha.</string>
+    <string name="docs_upload_expiry_label">Vencimiento (DD/MM/AAAA), opcional</string>
+    <string name="docs_upload_expiry_invalid">La fecha no es válida</string>
+    <string name="docs_upload_expiry_past">La fecha ya pasó</string>
+    <string name="docs_upload_choose">Elegir archivo</string>
+    <string name="docs_error_format">Solo se aceptan fotos JPG o PNG, o archivos PDF.</string>
+    <string name="docs_error_size">El archivo pesa más de 5 MB. Elige uno más liviano.</string>
+    <string name="docs_error_read">No se pudo leer el archivo. Elige otro.</string>
+    <string name="docs_error_no_viewer">No hay una app para abrir este archivo.</string>
+    <string name="docs_done_uploaded">Documento subido. El DT o el administrador lo revisará.</string>
+    <string name="docs_done_approved">Documento aprobado.</string>
+    <string name="docs_done_rejected">Documento rechazado.</string>
+    <string name="docs_uploading">Procesando…</string>
+    <string name="docs_team_hint">Toca a un jugador para ver y revisar sus documentos. Obligatorios: DNI, ficha médica y seguro.</string>
+    <string name="docs_team_empty_title">Plantel vacío</string>
+    <string name="docs_team_empty_body">Cuando el equipo tenga jugadores, aquí verás qué documentos le faltan a cada uno.</string>
+    <string name="docs_team_complete">Documentos completos</string>
+    <string name="docs_team_missing">Falta: %1$s</string>
+    <plurals name="docs_team_pending">
+        <item quantity="one">%d por revisar</item>
+        <item quantity="other">%d por revisar</item>
+    </plurals>
+    <plurals name="docs_team_rejected">
+        <item quantity="one">%d rechazado</item>
+        <item quantity="other">%d rechazados</item>
+    </plurals>
+    <plurals name="docs_team_expired">
+        <item quantity="one">%d vencido</item>
+        <item quantity="other">%d vencidos</item>
+    </plurals>
+
     <!-- ===== Mensualidades (migración 008) ===== -->
     <string name="fees_title">Mensualidades</string>
     <string name="fees_my_title">Mis mensualidades</string>
@@ -128,8 +188,8 @@
     <string name="fees_reason_reject_title">Rechazar pago</string>
     <string name="fees_reason_void_title">Anular pago</string>
     <string name="fees_reason_waive_title">Exonerar cobro</string>
-    <string name="fees_reason_label">Motivo (obligatorio)</string>
-    <string name="fees_reason_hint">El motivo queda guardado en el historial y la familia lo verá.</string>
+    <string name="common_reason_label">Motivo (obligatorio)</string>
+    <string name="common_reason_hint">El motivo queda guardado en el historial y la familia lo verá.</string>
     <string name="fees_done_reported">Pago informado. El administrador lo revisará.</string>
     <string name="fees_done_registered">Pago registrado.</string>
     <string name="fees_done_confirmed">Pago confirmado.</string>

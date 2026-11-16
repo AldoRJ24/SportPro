@@ -55,30 +55,11 @@ import com.sportpro.app.ui.components.ErrorBox
 import com.sportpro.app.ui.components.LoadingBox
 import com.sportpro.app.ui.components.SectionHeader
 import com.sportpro.app.ui.components.SpScaffold
+import com.sportpro.app.ui.components.UiMessageEffect
 import com.sportpro.app.ui.navigation.LocalAppContainer
 import com.sportpro.app.ui.theme.LiveRed
 import com.sportpro.app.ui.theme.Mint400
 import com.sportpro.app.ui.theme.WarnAmber
-
-/**
- * Muestra un [FeeMessage] en el snackbar y avisa al ViewModel de que ya se mostró.
- * Aquí se convierte el id de strings.xml en texto, porque el ViewModel no tiene Context.
- */
-@Composable
-fun FeeMessageEffect(message: FeeMessage?, snack: SnackbarHostState, onConsumed: () -> Unit) {
-    val resources = LocalResources.current
-    LaunchedEffect(message) {
-        val m = message ?: return@LaunchedEffect
-        val text = when {
-            m.text != null -> m.text
-            m.plural != null -> resources.getQuantityString(m.plural, m.quantity, m.quantity)
-            m.res != null -> resources.getString(m.res)
-            else -> null
-        }
-        if (text != null) snack.showSnackbar(text)
-        onConsumed()
-    }
-}
 
 /** Aviso fijo y honesto: esta parte registra pagos, no cobra de verdad. */
 @Composable
@@ -201,7 +182,7 @@ fun TeamFeesScreen(
     val snack = remember { SnackbarHostState() }
     var showPlanDialog by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(Unit) { vm.load(silent = true) }   // refresca al volver del estado de cuenta
-    FeeMessageEffect(ui.message, snack, vm::consumeMessage)
+    UiMessageEffect(ui.message, snack, vm::consumeMessage)
 
     val summary = ui.summary
     SpScaffold(title = stringResource(R.string.fees_team_title, name), onBack = onBack, snackbarHostState = snack) { pad ->

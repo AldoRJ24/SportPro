@@ -1,6 +1,5 @@
 package com.sportpro.app.ui.fees
 
-import androidx.annotation.PluralsRes
 import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,6 +9,7 @@ import com.sportpro.app.core.data.FeeStatementRow
 import com.sportpro.app.core.data.FeeTeamPlayer
 import com.sportpro.app.core.data.FeeTeamSummary
 import com.sportpro.app.core.data.friendlyMessage
+import com.sportpro.app.ui.components.UiMessage
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,20 +18,6 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-
-/**
- * Mensaje breve para el usuario (snackbar).
- * - [text]: mensaje ya escrito, normalmente el error en español que devolvió el servidor.
- * - [res]: texto fijo de strings.xml.
- * - [plural] + [quantity]: texto con plural («Se generaron 3 cobros»).
- * El ViewModel no conoce el Context, por eso guarda el id del recurso y la pantalla lo traduce.
- */
-data class FeeMessage(
-    val text: String? = null,
-    @StringRes val res: Int? = null,
-    @PluralsRes val plural: Int? = null,
-    val quantity: Int = 0,
-)
 
 // ---------------------------------------------------------------------
 // 1) Lista de equipos que gestiono (admin o DT)
@@ -73,7 +59,7 @@ data class TeamFeesUi(
     val players: List<FeeTeamPlayer> = emptyList(),
     /** true mientras se envía una acción: desactiva los botones para no enviarla dos veces. */
     val busy: Boolean = false,
-    val message: FeeMessage? = null,
+    val message: UiMessage? = null,
 )
 
 class TeamFeesViewModel(private val container: AppContainer, private val teamId: String) : ViewModel() {
@@ -98,11 +84,11 @@ class TeamFeesViewModel(private val container: AppContainer, private val teamId:
     }
 
     /** Ejecuta una acción del servidor, muestra el resultado y recarga los datos. */
-    private fun act(block: suspend () -> FeeMessage) {
+    private fun act(block: suspend () -> UiMessage) {
         if (_ui.value.busy) return
         viewModelScope.launch {
             _ui.update { it.copy(busy = true) }
-            val message = try { block() } catch (e: Exception) { FeeMessage(text = e.friendlyMessage()) }
+            val message = try { block() } catch (e: Exception) { UiMessage(text = e.friendlyMessage()) }
             _ui.update { it.copy(busy = false, message = message) }
             load(silent = true)
         }
@@ -110,7 +96,7 @@ class TeamFeesViewModel(private val container: AppContainer, private val teamId:
 
     fun setPlan(amount: Double, dueDay: Int) = act {
         container.fees.setPlan(teamId, amount, dueDay)
-        FeeMessage(res = R.string.fees_plan_saved)
+        UiMessage(res = R.string.fees_plan_saved)
     }
 
     /**
@@ -123,7 +109,7 @@ class TeamFeesViewModel(private val container: AppContainer, private val teamId:
             try {
                 container.fees.setPlayer(teamId, player.playerId, enabled)
             } catch (e: Exception) {
-                _ui.update { it.copy(message = FeeMessage(text = e.friendlyMessage())) }
+                _ui.update { it.copy(message = UiMessage(text = e.friendlyMessage())) }
             }
             load(silent = true)
         }
@@ -131,14 +117,14 @@ class TeamFeesViewModel(private val container: AppContainer, private val teamId:
 
     fun generate() = act {
         val created = container.fees.generateCharges(teamId)
-        if (created == 0) FeeMessage(res = R.string.fees_generated_none)
-        else FeeMessage(plural = R.plurals.fees_generated, quantity = created)
+        if (created == 0) UiMessage(res = R.string.fees_generated_none)
+        else UiMessage(plural = R.plurals.fees_generated, quantity = created)
     }
 
     fun remind() = act {
         val sent = container.fees.sendReminders(teamId)
-        if (sent == 0) FeeMessage(res = R.string.fees_reminders_none)
-        else FeeMessage(plural = R.plurals.fees_reminders_sent, quantity = sent)
+        if (sent == 0) UiMessage(res = R.string.fees_reminders_none)
+        else UiMessage(plural = R.plurals.fees_reminders_sent, quantity = sent)
     }
 
     fun consumeMessage() = _ui.update { it.copy(message = null) }
@@ -153,7 +139,7 @@ data class FeeStatementUi(
     val error: String? = null,
     val rows: List<FeeStatementRow> = emptyList(),
     val busy: Boolean = false,
-    val message: FeeMessage? = null,
+    val message: UiMessage? = null,
 ) {
     /** Suma de lo pendiente y vencido. */
     val totalDue: Double get() = rows.filter { it.isOpen }.sumOf { it.amount }
@@ -200,9 +186,9 @@ class FeeStatementViewModel(
             _ui.update { it.copy(busy = true) }
             val message = try {
                 block()
-                FeeMessage(res = done)
+                UiMessage(res = done)
             } catch (e: Exception) {
-                FeeMessage(text = e.friendlyMessage())
+                UiMessage(text = e.friendlyMessage())
             }
             _ui.update { it.copy(busy = false, message = message) }
             load(silent = true)

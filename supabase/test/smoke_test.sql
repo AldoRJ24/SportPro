@@ -351,5 +351,110 @@ select pg_temp.expect_fail($$select count(*) from public.fee_payments$$, 'anon n
 select pg_temp.expect_fail($$select * from public.fee_statement()$$, 'anon no ejecuta el estado de cuenta');
 reset role;
 
+-- =====================================================================
+-- DOCUMENTOS (migración 009). Mateo (hijo de la apoderada …005) juega en Halcones.
+-- DT de Halcones = …003, ADM = …002, …004 es miembro de la academia pero NO staff.
+-- storage.objects es la tabla real donde Storage guarda cada archivo: insertar ahí
+-- como un usuario equivale a subir un archivo con su sesión.
+-- =====================================================================
+select pg_temp.as_su();
+select set_config('t.f1', current_setting('t.child') || '/doc-dni-1.pdf', false) is not null;
+select set_config('t.f2', current_setting('t.child') || '/doc-dni-2.jpg', false) is not null;
+select set_config('t.f3', current_setting('t.child') || '/doc-med-1.pdf', false) is not null;
+select set_config('t.f4', current_setting('t.child') || '/doc-seg-1.pdf', false) is not null;
+
+-- Storage: solo el apoderado sube, y solo en la carpeta de su hijo
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000007');
+select pg_temp.expect_fail(format($$insert into storage.objects (bucket_id, name) values ('documents', %L)$$, current_setting('t.f1')), 'extraño no sube archivos a la carpeta de un jugador');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+select pg_temp.expect_fail(format($$insert into storage.objects (bucket_id, name) values ('documents', %L)$$, current_setting('t.f1')), 'el DT no sube documentos por la familia');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000005');
+select pg_temp.expect_fail($$insert into storage.objects (bucket_id, name) values ('documents', 'd0000001-0000-0000-0000-000000000001/x.pdf')$$, 'apoderada no sube a la carpeta de otro niño');
+select pg_temp.expect_fail($$insert into storage.objects (bucket_id, name) values ('documents', 'carpeta-rara/x.pdf')$$, 'carpeta que no es un jugador rechazada');
+insert into storage.objects (bucket_id, name)
+select 'documents', unnest(array[current_setting('t.f1'), current_setting('t.f2'), current_setting('t.f3'), current_setting('t.f4')]);
+
+-- Registrar el documento: validaciones
+select pg_temp.expect_fail(format($$select public.doc_register(%L, 'dni', %L, 'application/pdf')$$, current_setting('t.child'), current_setting('t.child') || '/no-existe.pdf'), 'no se registra un archivo que no se subió');
+select pg_temp.expect_fail(format($$select public.doc_register(%L, 'dni', 'd0000001-0000-0000-0000-000000000001/x.pdf', 'application/pdf')$$, current_setting('t.child')), 'no se registra una ruta de otra carpeta');
+select pg_temp.expect_fail(format($$select public.doc_register(%L, 'pasaporte', %L, 'application/pdf')$$, current_setting('t.child'), current_setting('t.f1')), 'tipo de documento inválido rechazado');
+select pg_temp.expect_fail(format($$select public.doc_register(%L, 'dni', %L, 'application/zip')$$, current_setting('t.child'), current_setting('t.f1')), 'formato de archivo no permitido rechazado');
+select pg_temp.expect_fail(format($$select public.doc_register(%L, 'dni', %L, 'application/pdf', (current_date - 3))$$, current_setting('t.child'), current_setting('t.f1')), 'documento ya vencido rechazado');
+select pg_temp.expect_fail(format($$select public.doc_register('d0000001-0000-0000-0000-000000000001', 'dni', %L, 'application/pdf')$$, current_setting('t.f1')), 'apoderada no registra documentos de otro niño');
+select pg_temp.expect_fail(format($$insert into public.player_documents (player_id, doc_type, file_path, mime_type, status) values (%L, 'dni', 'x/y.pdf', 'application/pdf', 'approved')$$, current_setting('t.child')), 'cliente no inserta documentos directo en la tabla');
+select public.doc_register(current_setting('t.child')::uuid, 'dni', current_setting('t.f1'), 'application/pdf') is not null;
+select pg_temp.expect_eq((public.doc_list(current_setting('t.child')::uuid)->>'can_upload')::boolean, true, 'apoderada puede subir documentos de su hijo');
+select pg_temp.expect_eq((public.doc_list(current_setting('t.child')::uuid)->>'can_review')::boolean, false, 'apoderada no puede aprobar documentos');
+
+-- Los archivos no se modifican ni se borran (no hay política de UPDATE ni DELETE)
+with u as (update storage.objects set name = name || '.x' where bucket_id = 'documents' returning 1) select pg_temp.expect_eq((select count(*) from u)::int, 0, 'un archivo subido no se puede modificar');
+with u as (delete from storage.objects where bucket_id = 'documents' returning 1) select pg_temp.expect_eq((select count(*) from u)::int, 0, 'un archivo subido no se puede borrar');
+
+-- Quién ve los documentos
+select pg_temp.as_su();
+select set_config('t.d1', (select id::text from public.player_documents where file_path = current_setting('t.f1')), false) is not null;
+select pg_temp.expect_eq((select count(*) from public.notifications where kind = 'document_uploaded' and user_id in ('a0000000-0000-0000-0000-000000000003','a0000000-0000-0000-0000-000000000002'))::int, 2, 'DT y admin reciben aviso del documento por revisar');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+select pg_temp.expect_eq((select count(*) from public.player_documents)::int, 1, 'DT del equipo ve el documento');
+select pg_temp.expect_eq((select count(*) from storage.objects where bucket_id = 'documents')::int, 4, 'DT del equipo puede abrir los archivos');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000002');
+select pg_temp.expect_eq((select count(*) from public.player_documents)::int, 1, 'admin de la academia ve el documento');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000004');
+select pg_temp.expect_eq((select count(*) from public.player_documents)::int, 0, 'miembro de la academia que no es staff NO ve documentos');
+select pg_temp.expect_eq((select count(*) from storage.objects where bucket_id = 'documents')::int, 0, 'miembro que no es staff NO abre archivos');
+select pg_temp.expect_fail(format($$select public.doc_list(%L)$$, current_setting('t.child')), 'miembro que no es staff no lista documentos');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000007');
+select pg_temp.expect_eq((select count(*) from public.player_documents)::int, 0, 'extraño NO ve documentos');
+select pg_temp.expect_eq((select count(*) from storage.objects where bucket_id = 'documents')::int, 0, 'extraño NO abre archivos');
+
+-- Revisar: solo DT / admin, con motivo al rechazar
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000005');
+select pg_temp.expect_fail(format($$select public.doc_review(%L, true)$$, current_setting('t.d1')), 'la apoderada no aprueba su propio documento');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000004');
+select pg_temp.expect_fail(format($$select public.doc_review(%L, true)$$, current_setting('t.d1')), 'miembro que no es staff no aprueba documentos');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+select pg_temp.expect_fail(format($$select public.doc_review(%L, false, ' ')$$, current_setting('t.d1')), 'rechazar un documento exige motivo');
+select public.doc_review(current_setting('t.d1')::uuid, false, 'La foto está borrosa');
+select pg_temp.expect_eq((select status from public.player_documents where id = current_setting('t.d1')::uuid), 'rejected', 'DT rechaza el documento con motivo');
+select pg_temp.expect_fail(format($$select public.doc_review(%L, true)$$, current_setting('t.d1')), 'un documento ya revisado no se revisa otra vez');
+select pg_temp.as_su();
+select pg_temp.expect_eq((select count(*) from public.notifications where kind = 'document_rejected' and user_id = 'a0000000-0000-0000-0000-000000000005')::int, 1, 'la apoderada recibe el aviso del rechazo');
+
+-- Nueva versión: la anterior queda en el historial como reemplazada
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000005');
+select public.doc_register(current_setting('t.child')::uuid, 'dni', current_setting('t.f2'), 'image/jpeg') is not null;
+select pg_temp.expect_eq(jsonb_array_length(public.doc_list(current_setting('t.child')::uuid)->'docs'), 1, 'solo hay un DNI vigente tras subir la versión nueva');
+select pg_temp.expect_eq((select count(*) from public.player_documents where doc_type = 'dni')::int, 2, 'la versión anterior se conserva en el historial');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+select pg_temp.expect_fail(format($$select public.doc_review(%L, true)$$, current_setting('t.d1')), 'no se revisa una versión reemplazada');
+select public.doc_review((select id from public.player_documents where file_path = current_setting('t.f2')), true);
+select pg_temp.expect_eq((select missing from public.doc_team_status('c0000000-0000-0000-0000-000000000001') where player_id = current_setting('t.child')::uuid), array['insurance','medical'], 'DT ve qué documentos le faltan al jugador');
+select pg_temp.expect_eq((select count(*) from public.doc_team_status('c0000000-0000-0000-0000-000000000001') where complete)::int, 0, 'ningún jugador está completo todavía');
+
+-- Completar y vencimiento
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000005');
+select public.doc_register(current_setting('t.child')::uuid, 'medical', current_setting('t.f3'), 'application/pdf') is not null;
+select public.doc_register(current_setting('t.child')::uuid, 'insurance', current_setting('t.f4'), 'application/pdf', (current_date + 30)) is not null;
+select pg_temp.expect_fail($$select * from public.doc_team_status('c0000000-0000-0000-0000-000000000001')$$, 'la apoderada no ve los documentos del plantel');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000002');
+select pg_temp.expect_eq((select pending_count from public.doc_team_status('c0000000-0000-0000-0000-000000000001') where player_id = current_setting('t.child')::uuid), 2, 'admin ve 2 documentos por revisar');
+select public.doc_review((select id from public.player_documents where file_path = current_setting('t.f3')), true);
+select public.doc_review((select id from public.player_documents where file_path = current_setting('t.f4')), true);
+select pg_temp.expect_eq((select complete from public.doc_team_status('c0000000-0000-0000-0000-000000000001') where player_id = current_setting('t.child')::uuid), true, 'jugador completo con DNI, ficha médica y seguro aprobados');
+select pg_temp.as_su();
+update public.player_documents set expires_on = current_date - 3 where file_path = current_setting('t.f4');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+select pg_temp.expect_eq((select missing from public.doc_team_status('c0000000-0000-0000-0000-000000000001') where player_id = current_setting('t.child')::uuid), array['insurance'], 'un seguro vencido vuelve a figurar como faltante');
+select pg_temp.expect_eq((select expired_count from public.doc_team_status('c0000000-0000-0000-0000-000000000001') where player_id = current_setting('t.child')::uuid), 1, 'DT ve el documento vencido');
+
+-- Auditoría y rol anónimo
+select pg_temp.as_su();
+select pg_temp.expect_eq((select count(*) from public.audit_log where action like 'document_%') >= 8, true, 'las acciones de documentos quedan en audit_log');
+select pg_temp.expect_eq((select public from storage.buckets where id = 'documents'), false, 'el bucket de documentos es privado');
+set role anon;
+select pg_temp.expect_fail($$select count(*) from public.player_documents$$, 'anon no lee documentos');
+select pg_temp.expect_fail(format($$select public.doc_list(%L)$$, current_setting('t.child')), 'anon no lista documentos');
+reset role;
+
 select pg_temp.as_su();
 \echo '=== TODAS LAS PRUEBAS PASARON ==='
