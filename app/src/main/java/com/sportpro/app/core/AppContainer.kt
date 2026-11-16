@@ -10,6 +10,7 @@ import com.sportpro.app.core.data.repo.DocumentRepository
 import com.sportpro.app.core.data.repo.FeeRepository
 import com.sportpro.app.core.data.repo.FeedRepository
 import com.sportpro.app.core.data.repo.MatchRepository
+import com.sportpro.app.core.data.repo.TryoutRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -31,5 +32,6 @@ class AppContainer(context: Context) {
     val feed: FeedRepository = FeedRepository(client)
     val fees: FeeRepository = FeeRepository(client)
     val documents: DocumentRepository = DocumentRepository(client)
+    val tryouts: TryoutRepository = TryoutRepository(client)
     val queue: PendingEventQueue = PendingEventQueue(context.applicationContext, matches, appScope)
 }

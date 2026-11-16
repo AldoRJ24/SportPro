@@ -12,6 +12,101 @@
     <string name="common_save">Guardar</string>
     <string name="common_open">Abrir</string>
 
+    <!-- ===== Avisos de pruebas (migración 011) ===== -->
+    <string name="tryouts_title">Avisos de pruebas</string>
+    <string name="tryouts_detail_title">Aviso de prueba</string>
+    <string name="tryouts_entry_subtitle">Busca pruebas de academias por categoría, posición, fecha y distrito, e inscribe a tu hijo.</string>
+    <string name="tryouts_entry_action">Ver</string>
+    <string name="tryouts_publish">Publicar</string>
+    <string name="tryouts_filter_date">Fecha</string>
+    <string name="tryouts_filter_position">Posición</string>
+    <string name="tryouts_filter_category">Categoría</string>
+    <string name="tryouts_filter_district">Distrito</string>
+    <string name="tryouts_filter_clear">Quitar filtros</string>
+    <string name="tryouts_date_all">Todas</string>
+    <string name="tryouts_date_week">Próximos 7 días</string>
+    <string name="tryouts_date_month">Próximos 30 días</string>
+    <plurals name="tryouts_results">
+        <item quantity="one">%d aviso</item>
+        <item quantity="other">%d avisos</item>
+    </plurals>
+    <string name="tryouts_empty_title">Sin avisos</string>
+    <string name="tryouts_empty_body">Cuando una academia publique una prueba aparecerá aquí.</string>
+    <string name="tryouts_empty_filtered">Ningún aviso coincide con esos filtros. Prueba quitando alguno.</string>
+    <string name="tryouts_positions_all">Todas las posiciones</string>
+    <string name="tryouts_positions_wanted">Se busca: %1$s</string>
+    <string name="tryouts_ages">De %1$d a %2$d años</string>
+    <plurals name="tryouts_slots_left">
+        <item quantity="one">%1$d cupo libre de %2$d</item>
+        <item quantity="other">%1$d cupos libres de %2$d</item>
+    </plurals>
+    <plurals name="tryouts_pending">
+        <item quantity="one">%d inscripción por responder</item>
+        <item quantity="other">%d inscripciones por responder</item>
+    </plurals>
+    <plurals name="tryouts_applicants">
+        <item quantity="one">%d inscrito</item>
+        <item quantity="other">%d inscritos</item>
+    </plurals>
+    <plurals name="tryouts_years">
+        <item quantity="one">%d año</item>
+        <item quantity="other">%d años</item>
+    </plurals>
+    <string name="tryouts_status_cancelled">CANCELADO</string>
+    <string name="tryouts_status_closed">CERRADO</string>
+    <string name="tryouts_status_applied">INSCRITO</string>
+    <string name="tryouts_app_pending">PENDIENTE</string>
+    <string name="tryouts_app_approved">ACEPTADA</string>
+    <string name="tryouts_app_rejected">RECHAZADA</string>
+    <string name="tryouts_app_withdrawn">RETIRADA</string>
+    <string name="tryouts_mine_header">Mis inscripciones</string>
+    <string name="tryouts_gone_title">Aviso no disponible</string>
+    <string name="tryouts_gone_body">Esta prueba se cerró, se canceló o ya pasó.</string>
+    <string name="tryouts_apply_header">Inscribir</string>
+    <string name="tryouts_apply_action">Enviar inscripción</string>
+    <string name="tryouts_apply_age_error">La prueba es para jugadores de %1$d a %2$d años el día de la prueba.</string>
+    <string name="tryouts_apply_full">Ya no quedan cupos.</string>
+    <string name="tryouts_withdraw">Retirar inscripción</string>
+    <string name="tryouts_reason">Motivo: %1$s</string>
+    <string name="tryouts_manage_header">Gestión del aviso</string>
+    <string name="tryouts_manage_close">Cerrar inscripciones</string>
+    <string name="tryouts_manage_reopen">Reabrir inscripciones</string>
+    <string name="tryouts_manage_cancel">Cancelar la prueba</string>
+    <string name="tryouts_applicants_empty">Todavía no hay inscritos.</string>
+    <string name="tryouts_applied_by_guardian">Lo inscribió %1$s (apoderado/a)</string>
+    <string name="tryouts_applied_by_player">Se inscribió %1$s</string>
+    <string name="tryouts_accept">Aceptar</string>
+    <string name="tryouts_reject">Rechazar</string>
+    <string name="tryouts_reject_title">Rechazar inscripción</string>
+    <string name="tryouts_done_applied">Inscripción enviada. La academia te responderá.</string>
+    <string name="tryouts_done_withdrawn">Inscripción retirada.</string>
+    <string name="tryouts_done_accepted">Inscripción aceptada.</string>
+    <string name="tryouts_done_rejected">Inscripción rechazada.</string>
+    <string name="tryouts_done_status">Aviso actualizado.</string>
+    <string name="tryouts_create_title">Publicar aviso de prueba</string>
+    <string name="tryouts_create_action">Publicar aviso</string>
+    <string name="tryouts_create_academy">Academia</string>
+    <string name="tryouts_create_no_academy">Solo el administrador o un DT de una academia verificada puede publicar avisos.</string>
+    <string name="tryouts_form_title">Título (por ejemplo: Prueba de arqueros)</string>
+    <string name="tryouts_form_category">Categoría (por ejemplo: Sub-12)</string>
+    <string name="tryouts_form_min_age">Edad mínima</string>
+    <string name="tryouts_form_max_age">Edad máxima</string>
+    <string name="tryouts_form_positions">Posiciones que se buscan (ninguna = todas)</string>
+    <string name="tryouts_form_date">Fecha (DD/MM/AAAA)</string>
+    <string name="tryouts_form_time">Hora (HH:MM)</string>
+    <string name="tryouts_form_venue">Lugar</string>
+    <string name="tryouts_form_district">Distrito</string>
+    <string name="tryouts_form_slots">Cupos</string>
+    <string name="tryouts_form_notes">Notas (opcional)</string>
+    <string name="tryouts_form_error_title">Escribe un título de al menos 3 letras.</string>
+    <string name="tryouts_form_error_category">Escribe la categoría.</string>
+    <string name="tryouts_form_error_ages">Revisa las edades: de 4 a 60 años, y la mínima no puede ser mayor que la máxima.</string>
+    <string name="tryouts_form_error_date">Escribe la fecha y la hora completas.</string>
+    <string name="tryouts_form_error_past">La fecha y la hora deben ser futuras.</string>
+    <string name="tryouts_form_error_venue">Escribe el lugar de la prueba.</string>
+    <string name="tryouts_form_error_district">Escribe el distrito.</string>
+    <string name="tryouts_form_error_slots">Los cupos deben estar entre 1 y 200.</string>
+
     <!-- ===== Notificaciones (migración 010) ===== -->
     <string name="notif_title">Notificaciones</string>
     <string name="notif_mark_all">Marcar todo</string>

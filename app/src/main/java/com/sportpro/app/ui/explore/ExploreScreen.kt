@@ -44,7 +44,7 @@ import com.sportpro.app.ui.components.EmptyState
 import com.sportpro.app.ui.components.ErrorBox
 import com.sportpro.app.ui.components.LoadingBox
 import com.sportpro.app.ui.components.Pill
-import com.sportpro.app.ui.components.PrototypeBanner
+import com.sportpro.app.ui.tryouts.TryoutsEntryCard
 import com.sportpro.app.ui.components.SectionHeader
 import com.sportpro.app.ui.components.SpScaffold
 import com.sportpro.app.ui.navigation.LocalAppContainer
@@ -111,9 +111,12 @@ class ExploreViewModel(private val container: AppContainer) : ViewModel() {
     }
 }
 
-/** Explorar (US-27/US-18 parcial): buscar academias y equipos verificados y seguirlos (D-19). */
+/**
+ * Explorar: entrada a los avisos de pruebas (con filtros reales) y buscador de academias y
+ * equipos verificados para seguirlos.
+ */
 @Composable
-fun ExploreScreen(onBell: () -> Unit, onFollowChanged: () -> Unit) {
+fun ExploreScreen(onBell: () -> Unit, onFollowChanged: () -> Unit, onTryouts: () -> Unit = {}) {
     val container = LocalAppContainer.current
     val vm: ExploreViewModel = viewModel { ExploreViewModel(container) }
     val ui by vm.ui.collectAsStateWithLifecycle()
@@ -138,6 +141,8 @@ fun ExploreScreen(onBell: () -> Unit, onFollowChanged: () -> Unit) {
                             modifier = Modifier.fillMaxWidth().padding(16.dp),
                         )
                     }
+                    // Avisos de pruebas: pantalla propia con filtros por categoría, posición, fecha y distrito
+                    item { TryoutsEntryCard(onClick = onTryouts) }
                     ui.message?.let { item { Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(horizontal = 16.dp)) } }
                     item { SectionHeader("Academias") }
                     if (academies.isEmpty()) item { EmptyState("Sin resultados", "Prueba con otro nombre.") }
@@ -162,12 +167,6 @@ fun ExploreScreen(onBell: () -> Unit, onFollowChanged: () -> Unit) {
                             following = following,
                             onToggle = { vm.toggleTeam(t, onFollowChanged) },
                             crestPath = t.crestPath,
-                        )
-                    }
-                    item {
-                        PrototypeBanner(
-                            "Avisos de pruebas con filtros (categoría, posición, fecha, ubicación) llegan con la migración de comunidad.",
-                            Modifier.padding(16.dp),
                         )
                     }
                 }

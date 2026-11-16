@@ -524,5 +524,95 @@ select pg_temp.expect_fail($$select * from public.my_notification_prefs()$$, 'an
 select pg_temp.expect_fail($$select public.mark_all_notifications_read()$$, 'anon no marca notificaciones');
 reset role;
 
+-- =====================================================================
+-- AVISOS DE PRUEBAS (migración 011). Academia Demo está verificada.
+-- DT = …003 publica T1; ADM = …002 publica T2; apoderada = …005 (Mateo, nacido en 2016);
+-- extraño = …007 solo busca. La apoderada apagó «mensualidades», no «solicitudes».
+-- =====================================================================
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000007');
+select pg_temp.expect_fail($$select public.tryout_create('b0000000-0000-0000-0000-000000000001','Prueba pirata','Sub-12',9,12,'{}', now() + interval '5 days','Cancha X','Lima',10)$$, 'extraño no publica avisos de pruebas');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000005');
+select pg_temp.expect_fail($$select public.tryout_create('b0000000-0000-0000-0000-000000000001','Prueba','Sub-12',9,12,'{}', now() + interval '5 days','Cancha X','Lima',10)$$, 'apoderada no publica avisos de pruebas');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+select pg_temp.expect_fail($$select public.tryout_create('b0000000-0000-0000-0000-000000000001','Prueba','Sub-12',9,12,'{}', now() - interval '1 day','Cancha X','Lima',10)$$, 'fecha de prueba pasada rechazada');
+select pg_temp.expect_fail($$select public.tryout_create('b0000000-0000-0000-0000-000000000001','Prueba','Sub-12',12,9,'{}', now() + interval '5 days','Cancha X','Lima',10)$$, 'rango de edad invertido rechazado');
+select pg_temp.expect_fail($$select public.tryout_create('b0000000-0000-0000-0000-000000000001','Prueba','Sub-12',9,12,'{LIBERO}', now() + interval '5 days','Cancha X','Lima',10)$$, 'posición inválida rechazada');
+select pg_temp.expect_fail($$select public.tryout_create('b0000000-0000-0000-0000-000000000001','Prueba','Sub-12',9,12,'{}', now() + interval '5 days','Cancha X','Lima',0)$$, 'cero cupos rechazado');
+select set_config('t.t1', public.tryout_create('b0000000-0000-0000-0000-000000000001','Prueba de delanteros','Sub-12',9,12,'{DEL,DEL}', now() + interval '10 days','Cancha 1 de la academia','surco',1,'Traer canilleras')::text, false) is not null;
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000002');
+select set_config('t.t2', public.tryout_create('b0000000-0000-0000-0000-000000000001','Prueba Sub-17','Sub-17',15,17,'{}', now() + interval '20 days','Estadio municipal','Miraflores',5)::text, false) is not null;
+select pg_temp.expect_fail($$insert into public.tryouts (academy_id, title, category, min_age, max_age, event_at, venue, district, slots) values ('b0000000-0000-0000-0000-000000000001','Directo','Sub-12',9,12, now() + interval '5 days','Cancha','Lima',5)$$, 'cliente no inserta avisos directo en la tabla');
+
+-- Buscar con filtros (se aplican en el servidor)
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000007');
+select pg_temp.expect_eq((select count(*) from public.tryout_search())::int, 2, 'cualquier usuario ve los avisos abiertos');
+select pg_temp.expect_eq((select count(*) from public.tryout_search('sub-12'))::int, 1, 'filtro por categoría (sin distinguir mayúsculas)');
+select pg_temp.expect_eq((select count(*) from public.tryout_search(null, 'DEL'))::int, 2, 'filtro por posición: incluye avisos que buscan todas');
+select pg_temp.expect_eq((select title from public.tryout_search(null, 'POR')), 'Prueba Sub-17', 'filtro por posición: excluye avisos que buscan otra');
+select pg_temp.expect_eq((select count(*) from public.tryout_search(null, null, (current_date + 15)))::int, 1, 'filtro por fecha desde');
+select pg_temp.expect_eq((select count(*) from public.tryout_search(null, null, null, (current_date + 15)))::int, 1, 'filtro por fecha hasta');
+select pg_temp.expect_eq((select title from public.tryout_search(null, null, null, null, 'SURCO')), 'Prueba de delanteros', 'filtro por distrito');
+select pg_temp.expect_eq((select count(*) from public.tryout_search('Sub-12', 'DEL', null, null, 'Miraflores'))::int, 0, 'los filtros se combinan');
+select pg_temp.expect_eq((select positions from public.tryout_search('Sub-12')), array['DEL'], 'posiciones repetidas se guardan una sola vez');
+select pg_temp.expect_eq((select bool_or(can_manage) from public.tryout_search()), false, 'un extraño no gestiona ningún aviso');
+
+-- Inscribir: solo a mi hijo y con la edad del aviso
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000005');
+select pg_temp.expect_fail(format($$select public.tryout_apply(%L, %L)$$, current_setting('t.t2'), current_setting('t.child')), 'la edad del jugador no entra en el rango del aviso');
+select pg_temp.expect_fail(format($$select public.tryout_apply(%L, 'd0000001-0000-0000-0000-000000000001')$$, current_setting('t.t1')), 'apoderada no inscribe al hijo de otra persona');
+select set_config('t.app1', public.tryout_apply(current_setting('t.t1')::uuid, current_setting('t.child')::uuid)::text, false) is not null;
+select pg_temp.expect_fail(format($$select public.tryout_apply(%L, %L)$$, current_setting('t.t1'), current_setting('t.child')), 'no se inscribe dos veces al mismo jugador');
+select set_config('t.child2', public.create_child_player('Luz','Rojas','2015-05-05','Delantera')::text, false) is not null;
+select set_config('t.app2', public.tryout_apply(current_setting('t.t1')::uuid, current_setting('t.child2')::uuid)::text, false) is not null;
+select pg_temp.expect_eq((select count(*) from public.my_tryout_applications())::int, 2, 'la apoderada ve sus 2 inscripciones');
+select pg_temp.expect_eq((select my_applications from public.tryout_search('Sub-12')), 2, 'el aviso muestra cuántas inscripciones mías tiene');
+select pg_temp.expect_fail(format($$select * from public.tryout_applications_list(%L)$$, current_setting('t.t1')), 'la apoderada no ve la lista de inscritos');
+select pg_temp.as_su();
+select pg_temp.expect_eq((select count(distinct user_id) from public.notifications where kind = 'tryout_application' and user_id in ('a0000000-0000-0000-0000-000000000002','a0000000-0000-0000-0000-000000000003'))::int, 2, 'admin y DT que publicó reciben el aviso de inscripción');
+
+-- Privacidad y permisos sobre las inscripciones
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000007');
+select pg_temp.expect_eq((select count(*) from public.tryout_applications)::int, 0, 'extraño NO ve inscripciones');
+select pg_temp.expect_fail(format($$select public.tryout_decide(%L, true)$$, current_setting('t.app1')), 'extraño no responde inscripciones');
+select pg_temp.expect_fail(format($$select public.tryout_withdraw(%L)$$, current_setting('t.app1')), 'extraño no retira la inscripción de otro');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+select pg_temp.expect_eq((select player_name from public.tryout_applications_list(current_setting('t.t1')::uuid) where player_age = public.age_years('2016-04-04')), 'Mateo R.', 'quien revisa ve al menor como Nombre + inicial');
+select pg_temp.expect_eq((select pending_count from public.tryout_search('Sub-12')), 2, 'quien gestiona ve cuántas inscripciones esperan respuesta');
+
+-- Aceptar respetando los cupos (T1 tiene 1 cupo)
+select public.tryout_decide(current_setting('t.app1')::uuid, true);
+select pg_temp.expect_fail(format($$select public.tryout_decide(%L, true)$$, current_setting('t.app2')), 'no se acepta a más jugadores que cupos');
+select pg_temp.expect_fail(format($$select public.tryout_decide(%L, false)$$, current_setting('t.app1')), 'una inscripción ya respondida no se responde otra vez');
+select public.tryout_decide(current_setting('t.app2')::uuid, false, 'Ya no quedan cupos');
+select pg_temp.as_su();
+select pg_temp.expect_eq((select count(*) from public.notifications where kind = 'tryout_answer' and user_id = 'a0000000-0000-0000-0000-000000000005')::int, 2, 'la apoderada recibe la respuesta de cada inscripción');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000005');
+select pg_temp.expect_fail(format($$select public.tryout_apply(%L, %L)$$, current_setting('t.t1'), current_setting('t.child2')), 'no se inscribe en una prueba sin cupos');
+select pg_temp.expect_eq((select reason from public.my_tryout_applications() where status = 'rejected'), 'Ya no quedan cupos', 'la apoderada ve el motivo del rechazo');
+
+-- Retirar, cerrar y cancelar (nada se borra)
+select public.tryout_withdraw(current_setting('t.app1')::uuid);
+select pg_temp.expect_eq((select approved_count from public.tryout_search('Sub-12')), 0, 'al retirar la inscripción se libera el cupo');
+select pg_temp.expect_fail(format($$select public.tryout_withdraw(%L)$$, current_setting('t.app1')), 'una inscripción retirada no se retira otra vez');
+select pg_temp.expect_fail(format($$select public.tryout_set_status(%L, 'closed')$$, current_setting('t.t1')), 'la apoderada no cierra el aviso');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+select pg_temp.expect_fail(format($$select public.tryout_set_status(%L, 'closed')$$, current_setting('t.t2')), 'el DT no cierra un aviso que publicó el admin');
+select public.tryout_set_status(current_setting('t.t1')::uuid, 'closed');
+select pg_temp.expect_eq((select count(*) from public.tryout_search('Sub-12'))::int, 1, 'quien gestiona sigue viendo su aviso cerrado');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000007');
+select pg_temp.expect_eq((select count(*) from public.tryout_search())::int, 1, 'un aviso cerrado ya no aparece en la búsqueda');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000005');
+select pg_temp.expect_fail(format($$select public.tryout_apply(%L, %L)$$, current_setting('t.t1'), current_setting('t.child')), 'no se inscribe en un aviso cerrado');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000002');
+select public.tryout_set_status(current_setting('t.t1')::uuid, 'cancelled');
+select pg_temp.expect_fail(format($$select public.tryout_set_status(%L, 'open')$$, current_setting('t.t1')), 'un aviso cancelado no se reabre');
+select pg_temp.as_su();
+select pg_temp.expect_eq((select count(*) from public.tryout_applications)::int, 2, 'las inscripciones retiradas y rechazadas se conservan');
+select pg_temp.expect_eq((select count(*) from public.audit_log where action like 'tryout_%') >= 8, true, 'las acciones de pruebas quedan en audit_log');
+set role anon;
+select pg_temp.expect_fail($$select * from public.tryout_search()$$, 'anon no busca avisos');
+select pg_temp.expect_fail($$select count(*) from public.tryout_applications$$, 'anon no lee inscripciones');
+reset role;
+
 select pg_temp.as_su();
 \echo '=== TODAS LAS PRUEBAS PASARON ==='

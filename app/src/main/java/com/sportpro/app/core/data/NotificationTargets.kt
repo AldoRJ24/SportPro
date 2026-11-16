@@ -18,6 +18,8 @@ sealed interface NotificationTarget {
     data object MyFees : NotificationTarget
     /** Movimientos de un jugador en un equipo (el admin revisa un pago informado). */
     data class TeamFees(val teamId: String, val playerId: String?) : NotificationTarget
+    /** Aviso de prueba (nueva inscripción, respuesta o cancelación). */
+    data class Tryout(val tryoutId: String) : NotificationTarget
     /** Documentos de un jugador. */
     data class PlayerDocs(val playerId: String) : NotificationTarget
 }
@@ -45,6 +47,9 @@ fun notificationTarget(kind: String, data: (String) -> String?): NotificationTar
 
     kind.startsWith("document_") ->
         data("player_id")?.let { NotificationTarget.PlayerDocs(it) }
+
+    kind.startsWith("tryout_") ->
+        data("tryout_id")?.let { NotificationTarget.Tryout(it) }
 
     kind.startsWith("team_join_") || kind.startsWith("guardian_") || kind == "invite_used" ->
         NotificationTarget.Profile

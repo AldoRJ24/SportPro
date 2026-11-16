@@ -66,6 +66,10 @@ import com.sportpro.app.ui.profile.ProfileScreen
 import com.sportpro.app.ui.profile.TeamRosterScreen
 import com.sportpro.app.ui.profile.TeamStatsScreen
 import com.sportpro.app.ui.teams.JoinTeamScreen
+import com.sportpro.app.ui.tryouts.CreateTryoutScreen
+import com.sportpro.app.ui.tryouts.TryoutDetailScreen
+import com.sportpro.app.ui.tryouts.TryoutsScreen
+import com.sportpro.app.ui.tryouts.publishableAcademies
 import com.sportpro.app.ui.session.SessionViewModel
 import com.sportpro.app.ui.summary.SummaryScreen
 
@@ -165,7 +169,32 @@ fun MainShell(session: SessionViewModel) {
                 composable<MatchesRoute> {
                     MatchesScreen(matchesVm, onOpenMatch = openMatch, onCreate = onCreate, onBell = onBell)
                 }
-                composable<ExploreRoute> { ExploreScreen(onBell = onBell, onFollowChanged = { matchesVm.refresh(true) }) }
+                composable<ExploreRoute> {
+                    ExploreScreen(
+                        onBell = onBell,
+                        onFollowChanged = { matchesVm.refresh(true) },
+                        onTryouts = { nav.navigate(TryoutsRoute) },
+                    )
+                }
+                // ---- Avisos de pruebas: búsqueda → detalle; publicar → detalle del aviso nuevo ----
+                composable<TryoutsRoute> {
+                    TryoutsScreen(
+                        canPublish = ctx.publishableAcademies().isNotEmpty(),
+                        onBack = { nav.popBackStack() },
+                        onOpen = { id -> nav.navigate(TryoutDetailRoute(id)) },
+                        onCreate = { nav.navigate(CreateTryoutRoute) },
+                    )
+                }
+                composable<TryoutDetailRoute> { entry ->
+                    TryoutDetailScreen(entry.toRoute<TryoutDetailRoute>().tryoutId, session, onBack = { nav.popBackStack() })
+                }
+                composable<CreateTryoutRoute> {
+                    CreateTryoutScreen(
+                        session = session,
+                        onBack = { nav.popBackStack() },
+                        onCreated = { id -> nav.navigate(TryoutDetailRoute(id)) { popUpTo<CreateTryoutRoute> { inclusive = true } } },
+                    )
+                }
                 composable<CalendarRoute> { CalendarScreen(matchesVm, onOpenMatch = openMatch, onBell = onBell) }
                 composable<ProfileRoute> {
                     ProfileScreen(
@@ -265,6 +294,7 @@ fun MainShell(session: SessionViewModel) {
                                 is NotificationTarget.TeamFees ->
                                     nav.navigate(FeeStatementRoute(teamId = target.teamId, playerId = target.playerId))
                                 is NotificationTarget.PlayerDocs -> nav.navigate(PlayerDocsRoute(target.playerId))
+                                is NotificationTarget.Tryout -> nav.navigate(TryoutDetailRoute(target.tryoutId))
                             }
                         },
                         onSettings = { nav.navigate(NotificationSettingsRoute) },
