@@ -90,7 +90,36 @@ class ClubRepository(private val client: SupabaseClient) {
                 order("jersey_number", Order.ASCENDING)
             }.decodeRows()
 
-    /** The coach assigns/edits the usual position of a player in the team (POR/DEF/MED/DEL). */
+    // ---- Gestión del plantel (migración 012) ----
+
+    /** Cambia el dorsal (null = sin dorsal). El servidor avisa si otro jugador activo ya lo usa. */
+    suspend fun setJersey(teamPlayerId: String, number: Int?) {
+        client.postgrest.rpc("team_set_jersey", buildJsonObject {
+            put("p_team_player", teamPlayerId)
+            put("p_number", number)
+        })
+    }
+
+    /** Da de baja a un jugador con motivo. No se borra: queda inactivo y se avisa a su familia. */
+    suspend fun removeTeamPlayer(teamPlayerId: String, reason: String) {
+        client.postgrest.rpc("team_remove_player", buildJsonObject {
+            put("p_team_player", teamPlayerId)
+            put("p_reason", reason)
+        })
+    }
+
+    /** Jugadores dados de baja del equipo, con su motivo (los más recientes primero). */
+    suspend fun formerTeamPlayers(teamId: String): List<TeamPlayerRow> =
+        client.from("team_players")
+            .select(Columns.raw("id,team_id,player_id,jersey_number,status,inactive_reason,left_at,player:players($PLAYER_COLS)")) {
+                filter {
+                    eq("team_id", teamId)
+                    eq("status", "inactive")
+                }
+                order("left_at", Order.DESCENDING)
+            }.decodeRows()
+
+    /** El DT asigna o cambia la posición habitual de un jugador en el equipo (POR/DEF/MED/DEL). */
     suspend fun setTeamPlayerPosition(teamPlayerId: String, position: String?) {
         client.from("team_players").update(buildJsonObject { put("position", position) }) {
             filter { eq("id", teamPlayerId) }

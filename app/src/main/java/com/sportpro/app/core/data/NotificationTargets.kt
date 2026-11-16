@@ -51,7 +51,8 @@ fun notificationTarget(kind: String, data: (String) -> String?): NotificationTar
     kind.startsWith("tryout_") ->
         data("tryout_id")?.let { NotificationTarget.Tryout(it) }
 
-    kind.startsWith("team_join_") || kind.startsWith("guardian_") || kind == "invite_used" ->
+    // team_ cubre solicitudes (team_join_*) y la baja del equipo (team_player_removed)
+    kind.startsWith("team_") || kind.startsWith("guardian_") || kind == "invite_used" ->
         NotificationTarget.Profile
 
     else -> null

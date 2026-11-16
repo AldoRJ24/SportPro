@@ -11,6 +11,28 @@
     <string name="common_cancel">Cancelar</string>
     <string name="common_save">Guardar</string>
     <string name="common_open">Abrir</string>
+    <string name="common_loading_error">No se pudo actualizar. Desliza hacia abajo o vuelve a entrar para reintentar.</string>
+
+    <!-- ===== Plantel del equipo (migración 012) ===== -->
+    <string name="roster_title">Plantel · %1$s</string>
+    <string name="roster_code_regenerated">Nuevo código generado: el anterior ya no sirve</string>
+    <string name="roster_empty_title">Aún no hay jugadores</string>
+    <string name="roster_empty_body">Comparte el código o el QR de arriba. Cuando un jugador o su apoderado lo use, te llegará la solicitud para aceptarla.</string>
+    <string name="roster_hint">Toca el dorsal para cambiarlo y elige la posición habitual de cada jugador (se usa para armar la alineación). %1$s</string>
+    <string name="roster_no_jersey">S/N</string>
+    <string name="roster_player_fallback">Jugador</string>
+    <string name="roster_remove">Dar de baja</string>
+    <string name="roster_remove_title">Dar de baja a %1$s</string>
+    <string name="roster_removed">Jugador dado de baja. Se avisó a su familia.</string>
+    <string name="roster_jersey_title">Dorsal de %1$s</string>
+    <string name="roster_jersey_label">Número (0 a 99; vacío = sin dorsal)</string>
+    <string name="roster_jersey_saved">Dorsal actualizado.</string>
+    <string name="roster_former_header">Bajas</string>
+    <string name="roster_former_line">Baja el %1$s · Motivo: %2$s</string>
+
+    <!-- ===== Estados vacíos de pantallas anteriores ===== -->
+    <string name="stats_empty_title">Aún sin partidos finalizados</string>
+    <string name="stats_empty_body">Las estadísticas aparecerán cuando termine el primer partido.</string>
 
     <!-- ===== Avisos de pruebas (migración 011) ===== -->
     <string name="tryouts_title">Avisos de pruebas</string>

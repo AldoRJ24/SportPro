@@ -614,5 +614,42 @@ select pg_temp.expect_fail($$select * from public.tryout_search()$$, 'anon no bu
 select pg_temp.expect_fail($$select count(*) from public.tryout_applications$$, 'anon no lee inscripciones');
 reset role;
 
+-- =====================================================================
+-- PLANTEL (migración 012): dorsal y baja con motivo. Mateo juega en Halcones con el 20;
+-- Jugador1 usa el 1. DT = …003, apoderada = …005.
+-- =====================================================================
+select pg_temp.as_su();
+select set_config('t.tp', (select id::text from public.team_players where team_id = 'c0000000-0000-0000-0000-000000000001' and player_id = current_setting('t.child')::uuid), false) is not null;
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000005');
+select pg_temp.expect_fail(format($$select public.team_set_jersey(%L, 30)$$, current_setting('t.tp')), 'la apoderada no cambia dorsales');
+select pg_temp.expect_fail(format($$select public.team_remove_player(%L, 'porque sí')$$, current_setting('t.tp')), 'la apoderada no da de baja jugadores');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+select pg_temp.expect_fail(format($$select public.team_set_jersey(%L, 1)$$, current_setting('t.tp')), 'dorsal repetido rechazado con mensaje claro');
+select pg_temp.expect_fail(format($$select public.team_set_jersey(%L, 150)$$, current_setting('t.tp')), 'dorsal fuera de 0 a 99 rechazado');
+select public.team_set_jersey(current_setting('t.tp')::uuid, 21);
+select pg_temp.expect_eq((select jersey_number::int from public.team_players where id = current_setting('t.tp')::uuid), 21, 'el DT cambia el dorsal');
+select public.team_set_jersey(current_setting('t.tp')::uuid, null);
+select pg_temp.expect_eq((select jersey_number is null from public.team_players where id = current_setting('t.tp')::uuid), true, 'el DT puede dejar al jugador sin dorsal');
+select public.team_set_jersey(current_setting('t.tp')::uuid, 21);
+
+-- Nada se borra y toda baja lleva motivo, aunque se intente escribir directo en la tabla
+select pg_temp.expect_fail(format($$delete from public.team_players where id = %L$$, current_setting('t.tp')), 'ni el DT puede borrar a un jugador del plantel');
+select pg_temp.expect_fail(format($$update public.team_players set status = 'inactive' where id = %L$$, current_setting('t.tp')), 'baja directa en la tabla sin motivo rechazada');
+select pg_temp.expect_fail(format($$select public.team_remove_player(%L, ' ')$$, current_setting('t.tp')), 'dar de baja exige motivo');
+select public.team_remove_player(current_setting('t.tp')::uuid, 'Se mudó de ciudad');
+select pg_temp.expect_eq((select status || ' / ' || inactive_reason from public.team_players where id = current_setting('t.tp')::uuid), 'inactive / Se mudó de ciudad', 'el jugador queda inactivo con su motivo');
+select pg_temp.expect_eq((select left_at is not null from public.team_players where id = current_setting('t.tp')::uuid), true, 'se guarda la fecha de la baja');
+select pg_temp.expect_fail(format($$select public.team_remove_player(%L, 'otra vez')$$, current_setting('t.tp')), 'no se da de baja dos veces');
+select pg_temp.expect_fail(format($$select public.team_set_jersey(%L, 22)$$, current_setting('t.tp')), 'no se cambia el dorsal de un jugador dado de baja');
+select pg_temp.expect_eq((select count(*) from public.fee_team_players('c0000000-0000-0000-0000-000000000001') where player_id = current_setting('t.child')::uuid)::int, 0, 'el jugador dado de baja sale de la lista de mensualidades');
+select pg_temp.as_su();
+select pg_temp.expect_eq((select active from public.fee_players where team_id = 'c0000000-0000-0000-0000-000000000001' and player_id = current_setting('t.child')::uuid), false, 'deja de generar mensualidades nuevas');
+select pg_temp.expect_eq((select count(*) from public.fee_charges where player_id = current_setting('t.child')::uuid) >= 1, true, 'sus cobros anteriores se conservan');
+select pg_temp.expect_eq((select count(*) from public.notifications where kind = 'team_player_removed' and user_id = 'a0000000-0000-0000-0000-000000000005')::int, 1, 'la apoderada recibe el aviso de la baja con el motivo');
+select pg_temp.expect_eq((select count(*) from public.audit_log where action in ('team_jersey_changed','team_player_removed'))::int, 4, 'cambios de dorsal y baja quedan en audit_log');
+-- Si vuelve a entrar al equipo (solicitud aceptada), el motivo anterior se limpia
+update public.team_players set status = 'active' where id = current_setting('t.tp')::uuid;
+select pg_temp.expect_eq((select inactive_reason is null and left_at is null from public.team_players where id = current_setting('t.tp')::uuid), true, 'al volver al equipo se limpia el motivo de la baja');
+
 select pg_temp.as_su();
 \echo '=== TODAS LAS PRUEBAS PASARON ==='

@@ -158,7 +158,10 @@ data class TeamPlayerRow(
     @SerialName("player_id") val playerId: String,
     @SerialName("jersey_number") val jerseyNumber: Int? = null,
     val status: String = "active",
-    /** Usual position assigned by the coach (POR/DEF/MED/DEL), editable. */
+    /** Motivo y fecha de la baja (solo en jugadores inactivos; migración 012). */
+    @SerialName("inactive_reason") val inactiveReason: String? = null,
+    @SerialName("left_at") val leftAt: String? = null,
+    /** Posición habitual asignada por el DT (POR/DEF/MED/DEL), editable. */
     val position: String? = null,
     val player: PlayerRef? = null,
     val team: TeamRef? = null,

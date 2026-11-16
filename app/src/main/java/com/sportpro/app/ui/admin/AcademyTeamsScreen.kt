@@ -32,6 +32,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.InputChip
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -185,6 +186,8 @@ fun AcademyTeamsScreen(
 
     SpScaffold(title = "Equipos · $academyName", onBack = onBack, snackbarHostState = snack) { pad ->
         LazyColumn(Modifier.padding(pad), contentPadding = PaddingValues(bottom = 32.dp)) {
+            // Mientras llegan los equipos se muestra una barra de progreso (antes la pantalla parecía vacía)
+            if (ui.loading) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
             item { SectionHeader("Foto de la academia") }
             item {
                 Row(Modifier.padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {

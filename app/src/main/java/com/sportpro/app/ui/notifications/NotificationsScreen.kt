@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -96,6 +97,11 @@ fun NotificationsScreen(
         },
     ) { pad ->
         LazyColumn(Modifier.padding(pad), contentPadding = PaddingValues(bottom = 24.dp)) {
+            // Primera carga: barra de progreso. Si falló, se dice en vez de mostrar «Todo al día».
+            if (ui.loading && ui.notifications.isEmpty()) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
+            ui.error?.let { err ->
+                item { Text(err, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(16.dp)) }
+            }
             // ---- Lo que espera una respuesta ----
             if (ui.requests.isNotEmpty()) {
                 item { SectionHeader(stringResource(R.string.notif_section_links)) }
@@ -116,7 +122,7 @@ fun NotificationsScreen(
             }
 
             // ---- Historial agrupado por día ----
-            if (ui.notifications.isEmpty()) {
+            if (ui.notifications.isEmpty() && !ui.loading && ui.error == null) {
                 item {
                     EmptyState(
                         stringResource(R.string.notif_empty_title),

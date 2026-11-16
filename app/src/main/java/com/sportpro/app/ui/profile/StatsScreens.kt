@@ -24,6 +24,9 @@ import androidx.compose.ui.unit.sp
 import com.sportpro.app.core.data.PlayerStats
 import com.sportpro.app.core.data.TeamStats
 import com.sportpro.app.core.data.friendlyMessage
+import androidx.compose.ui.res.stringResource
+import com.sportpro.app.R
+import com.sportpro.app.ui.components.EmptyState
 import com.sportpro.app.ui.components.ErrorBox
 import com.sportpro.app.ui.components.LoadingBox
 import com.sportpro.app.ui.components.SpScaffold
@@ -73,13 +76,19 @@ fun PlayerStatsScreen(playerId: String, name: String, onBack: () -> Unit) {
             when {
                 error != null -> ErrorBox(error!!, onRetry = { attempt++ })
                 s == null -> LoadingBox()
-                else -> StatGrid(
+                else -> {
+                    // Sin partidos finalizados todos los números son 0: se explica por qué
+                    if (s.matchesPlayed == 0) {
+                        EmptyState(stringResource(R.string.stats_empty_title), stringResource(R.string.stats_empty_body))
+                    }
+                    StatGrid(
                     listOf(
                         "Partidos" to s.matchesPlayed, "Goles" to s.goals, "Asistencias" to s.assists,
                         "Amarillas" to s.yellowCards, "Rojas" to s.redCards, "Faltas" to s.fouls,
                         "Atajadas" to s.saves, "Goles en contra" to s.ownGoals,
                     ),
-                )
+                    )
+                }
             }
         }
     }
@@ -101,12 +110,18 @@ fun TeamStatsScreen(teamId: String, name: String, onBack: () -> Unit) {
             when {
                 error != null -> ErrorBox(error!!, onRetry = { attempt++ })
                 s == null -> LoadingBox()
-                else -> StatGrid(
+                else -> {
+                    // Sin partidos finalizados todos los números son 0: se explica por qué
+                    if (s.matchesPlayed == 0) {
+                        EmptyState(stringResource(R.string.stats_empty_title), stringResource(R.string.stats_empty_body))
+                    }
+                    StatGrid(
                     listOf(
                         "Partidos" to s.matchesPlayed, "Ganados" to s.wins, "Empatados" to s.draws,
                         "Perdidos" to s.losses, "Goles a favor" to s.goalsFor, "Goles en contra" to s.goalsAgainst,
                     ),
-                )
+                    )
+                }
             }
         }
     }

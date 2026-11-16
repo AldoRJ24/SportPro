@@ -52,7 +52,7 @@ class NotificationTargetsTest {
 
     @Test
     fun `solicitudes y vinculos llevan al perfil`() {
-        listOf("team_join_request", "team_join_answer", "guardian_request", "guardian_response", "invite_used")
+        listOf("team_join_request", "team_join_answer", "team_player_removed", "guardian_request", "guardian_response", "invite_used")
             .forEach { kind -> assertEquals(kind, NotificationTarget.Profile, target(kind)) }
     }
 

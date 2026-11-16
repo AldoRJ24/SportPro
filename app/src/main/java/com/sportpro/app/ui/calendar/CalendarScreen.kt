@@ -13,8 +13,9 @@ import com.sportpro.app.core.data.formatDay
 import com.sportpro.app.core.data.parseInstant
 import com.sportpro.app.ui.components.BellAction
 import com.sportpro.app.ui.components.EmptyState
+import com.sportpro.app.ui.components.ErrorBox
+import com.sportpro.app.ui.components.LoadingBox
 import com.sportpro.app.ui.components.MatchCard
-import com.sportpro.app.ui.components.PrototypeBanner
 import com.sportpro.app.ui.components.SectionHeader
 import com.sportpro.app.ui.components.SpScaffold
 import com.sportpro.app.ui.components.rememberNowMs
@@ -29,13 +30,10 @@ fun CalendarScreen(vm: MatchesViewModel, onOpenMatch: (String) -> Unit, onBell: 
     val byDay = upcoming.groupBy { formatDay(it.scheduledAt) }
     val past = ui.finished.take(15).groupBy { formatDay(it.scheduledAt) }
     SpScaffold(title = "Calendario", isTab = true, actions = { BellAction(onBell) }) { pad ->
+        // Primera carga o fallo sin datos: pantalla completa de carga / error con «Reintentar»
+        if (ui.all.isEmpty() && ui.loading) { LoadingBox(Modifier.padding(pad)); return@SpScaffold }
+        if (ui.all.isEmpty() && ui.error != null) { ErrorBox(ui.error!!, onRetry = { vm.refresh() }, modifier = Modifier.padding(pad)); return@SpScaffold }
         LazyColumn(Modifier.padding(pad), contentPadding = PaddingValues(bottom = 24.dp)) {
-            item {
-                PrototypeBanner(
-                    "Entrenamientos y reuniones se suman con la migración de entrenamientos. Los partidos ya son datos reales.",
-                    Modifier.padding(16.dp),
-                )
-            }
             if (byDay.isEmpty()) item { EmptyState("Sin partidos próximos", "Cuando tu equipo programe un partido aparecerá aquí.") }
             byDay.forEach { (day, list) ->
                 item { SectionHeader(day) }
