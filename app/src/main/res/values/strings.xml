@@ -12,6 +12,31 @@
     <string name="common_save">Guardar</string>
     <string name="common_open">Abrir</string>
 
+    <!-- ===== Notificaciones (migración 010) ===== -->
+    <string name="notif_title">Notificaciones</string>
+    <string name="notif_mark_all">Marcar todo</string>
+    <string name="notif_section_links">Solicitudes de vinculación</string>
+    <string name="notif_section_callups">Convocatorias por responder</string>
+    <string name="notif_empty_title">Todo al día</string>
+    <string name="notif_empty_body">Aquí verás convocatorias, partidos en vivo, solicitudes, pagos y comentarios.</string>
+    <string name="notif_day_today">Hoy</string>
+    <string name="notif_day_yesterday">Ayer</string>
+    <string name="notif_day_unknown">Sin fecha</string>
+    <string name="notif_open_cd">Abrir</string>
+    <string name="notif_realtime_note">Las notificaciones llegan al instante mientras SportPro está abierto.</string>
+    <string name="notif_settings_title">Ajustes de notificaciones</string>
+    <string name="notif_settings_hint">Elige qué avisos quieres recibir. Si apagas uno, dejarás de recibirlo en todos tus dispositivos.</string>
+    <string name="notif_cat_callups">Convocatorias</string>
+    <string name="notif_cat_callups_desc">Cuando convocan a tu hijo, o a ti, a un partido.</string>
+    <string name="notif_cat_live">Partido en vivo</string>
+    <string name="notif_cat_live_desc">Cuando empieza un partido de un equipo que sigues o donde juega tu hijo.</string>
+    <string name="notif_cat_comments">Comentarios</string>
+    <string name="notif_cat_comments_desc">Comentarios en los resúmenes que publicas y avisos de moderación.</string>
+    <string name="notif_cat_requests">Solicitudes y documentos</string>
+    <string name="notif_cat_requests_desc">Solicitudes para unirse a un equipo, vínculos familiares, invitaciones y revisión de documentos.</string>
+    <string name="notif_cat_payments">Mensualidades</string>
+    <string name="notif_cat_payments_desc">Cobros nuevos, pagos confirmados o rechazados y recordatorios de vencimiento.</string>
+
     <!-- ===== Documentos del jugador (migración 009) ===== -->
     <string name="docs_title">Documentos · %1$s</string>
     <string name="docs_team_title">Documentos del plantel · %1$s</string>

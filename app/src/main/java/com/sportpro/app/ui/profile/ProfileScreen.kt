@@ -42,7 +42,6 @@ import com.sportpro.app.ui.components.TeamCrest
 import com.sportpro.app.ui.teams.TeamJoinRequestsBlock
 import com.sportpro.app.ui.components.EmptyState
 import com.sportpro.app.ui.components.Pill
-import com.sportpro.app.ui.components.PrototypeBanner
 import com.sportpro.app.ui.components.SectionHeader
 import com.sportpro.app.ui.components.SpScaffold
 import com.sportpro.app.ui.components.roleLabel
@@ -286,13 +285,6 @@ fun ProfileScreen(
                 }
             }
 
-            item { Spacer(Modifier.padding(8.dp)) }
-            item {
-                PrototypeBanner(
-                    "Ajustes de notificaciones: próxima migración.",
-                    Modifier.padding(horizontal = 16.dp),
-                )
-            }
             item {
                 OutlinedButton(onClick = { session.signOut() }, modifier = Modifier.padding(16.dp)) { Text("Cerrar sesión") }
             }

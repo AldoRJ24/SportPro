@@ -82,7 +82,9 @@ fun FeeStatementScreen(teamId: String?, playerId: String?, title: String?, onBac
     UiMessageEffect(ui.message, snack, vm::consumeMessage)
 
     val isMine = teamId == null && playerId == null
-    val screenTitle = if (isMine || title == null) stringResource(R.string.fees_my_title)
+    // Sin nombre (se llegó desde una notificación) el título es solo «Mensualidades»
+    val screenTitle = if (isMine) stringResource(R.string.fees_my_title)
+    else if (title == null) stringResource(R.string.fees_title)
     else stringResource(R.string.fees_movements_title, title)
 
     SpScaffold(title = screenTitle, onBack = onBack, snackbarHostState = snack) { pad ->

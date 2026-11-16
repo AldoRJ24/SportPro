@@ -56,6 +56,8 @@ import com.sportpro.app.ui.home.HomeScreen
 import com.sportpro.app.ui.match.MatchDetailScreen
 import com.sportpro.app.ui.matches.MatchesScreen
 import com.sportpro.app.ui.matches.MatchesViewModel
+import com.sportpro.app.core.data.NotificationTarget
+import com.sportpro.app.ui.notifications.NotificationSettingsScreen
 import com.sportpro.app.ui.notifications.NotificationsScreen
 import com.sportpro.app.ui.profile.AddChildScreen
 import com.sportpro.app.ui.profile.EditProfileScreen
@@ -248,7 +250,28 @@ fun MainShell(session: SessionViewModel) {
                     )
                 }
                 composable<NotificationsRoute> {
-                    NotificationsScreen(session, onBack = { nav.popBackStack() }, onOpenMatch = openMatch)
+                    NotificationsScreen(
+                        session,
+                        onBack = { nav.popBackStack() },
+                        onOpenMatch = openMatch,
+                        // Tocar una notificación abre su pantalla. El destino lo decide la función pura
+                        // notificationTarget(); aquí solo se traduce a una ruta de navegación.
+                        onOpenTarget = { target ->
+                            when (target) {
+                                is NotificationTarget.Match -> openMatch(target.matchId)
+                                NotificationTarget.Feed -> nav.navigateToTab(HomeRoute)
+                                NotificationTarget.Profile -> nav.navigateToTab(ProfileRoute)
+                                NotificationTarget.MyFees -> nav.navigate(FeeStatementRoute())
+                                is NotificationTarget.TeamFees ->
+                                    nav.navigate(FeeStatementRoute(teamId = target.teamId, playerId = target.playerId))
+                                is NotificationTarget.PlayerDocs -> nav.navigate(PlayerDocsRoute(target.playerId))
+                            }
+                        },
+                        onSettings = { nav.navigate(NotificationSettingsRoute) },
+                    )
+                }
+                composable<NotificationSettingsRoute> {
+                    NotificationSettingsScreen(onBack = { nav.popBackStack() })
                 }
                 composable<InvitesRoute> { entry ->
                     val r = entry.toRoute<InvitesRoute>()

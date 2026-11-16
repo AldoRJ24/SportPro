@@ -6,6 +6,7 @@ import com.sportpro.app.core.data.CreatedInvitation
 import com.sportpro.app.core.data.GuardianRequest
 import com.sportpro.app.core.data.InvitationCheck
 import com.sportpro.app.core.data.InvitationRow
+import com.sportpro.app.core.data.NotificationPref
 import com.sportpro.app.core.data.NotificationRow
 import com.sportpro.app.core.data.TeamRef
 import com.sportpro.app.core.data.TeamStaffMember
@@ -84,6 +85,24 @@ class AccountRepository(private val client: SupabaseClient) {
             order("created_at", Order.DESCENDING)
             limit(50)
         }.decodeRows()
+
+    // ---- Ajustes de notificaciones (migración 010) ----
+
+    /** Marca TODAS mis notificaciones como leídas en una sola llamada. Devuelve cuántas marcó. */
+    suspend fun markAllRead(): Int =
+        client.postgrest.rpc("mark_all_notifications_read").decodeScalar()
+
+    /** Mis 5 categorías con su interruptor (las que nunca toqué llegan encendidas). */
+    suspend fun notificationPrefs(): List<NotificationPref> =
+        client.postgrest.rpc("my_notification_prefs").decodeRows()
+
+    /** Enciende o apaga una categoría. Desde ese momento el servidor deja de crear esos avisos. */
+    suspend fun setNotificationPref(category: String, enabled: Boolean) {
+        client.postgrest.rpc("set_notification_pref", buildJsonObject {
+            put("p_category", category)
+            put("p_enabled", enabled)
+        })
+    }
 
     // Marca como leídas (pone read_at); el contador de la campana baja.
     suspend fun markRead(ids: List<String>) {

@@ -456,5 +456,73 @@ select pg_temp.expect_fail($$select count(*) from public.player_documents$$, 'an
 select pg_temp.expect_fail(format($$select public.doc_list(%L)$$, current_setting('t.child')), 'anon no lista documentos');
 reset role;
 
+-- =====================================================================
+-- NOTIFICACIONES (migración 010): preferencias, convocatoria y partido en vivo.
+-- Apoderada de Mateo = …005, seguidor de Halcones = …006, DT = …003, ADM = …002.
+-- =====================================================================
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000005');
+select pg_temp.expect_eq((select count(*) from public.my_notification_prefs() where enabled)::int, 5, 'las 5 categorías empiezan encendidas');
+select pg_temp.expect_fail($$select public.set_notification_pref('spam', false)$$, 'categoría de notificación inválida rechazada');
+select pg_temp.expect_fail($$insert into public.notification_prefs (user_id, category, enabled) values (auth.uid(), 'live', false)$$, 'cliente no escribe preferencias directo en la tabla');
+
+-- Convocatoria: llega al apoderado con el partido en «data»
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+insert into public.matches (id, home_team_id, away_external_name, format_players, half_minutes, visibility, venue)
+values ('e0000000-0000-0000-0000-000000000002','c0000000-0000-0000-0000-000000000001','Rival Externo', 7, 25, 'followers', 'Cancha 2');
+insert into public.match_callups (match_id, team_id, player_id)
+values ('e0000000-0000-0000-0000-000000000002','c0000000-0000-0000-0000-000000000001', current_setting('t.child')::uuid);
+select pg_temp.as_su();
+select pg_temp.expect_eq((select data->>'match_id' from public.notifications where kind = 'callup' and user_id = 'a0000000-0000-0000-0000-000000000005'), 'e0000000-0000-0000-0000-000000000002', 'la apoderada recibe la convocatoria con el partido para abrirlo');
+
+-- Partido en vivo: avisa a la familia del convocado y al seguidor del equipo.
+-- (Solo en esta prueba se apaga la validación de alineación para poder poner el partido en vivo
+--  sin armar los dos equipos otra vez; se vuelve a encender más abajo.)
+alter table public.matches disable trigger trg_matches_start_formation;
+update public.matches set status = 'live' where id = 'e0000000-0000-0000-0000-000000000002';
+select pg_temp.expect_eq((select count(*) from public.notifications where kind = 'match_live' and data->>'match_id' = 'e0000000-0000-0000-0000-000000000002' and user_id = 'a0000000-0000-0000-0000-000000000005')::int, 1, 'la familia del convocado recibe partido en vivo');
+select pg_temp.expect_eq((select count(*) from public.notifications where kind = 'match_live' and data->>'match_id' = 'e0000000-0000-0000-0000-000000000002' and user_id = 'a0000000-0000-0000-0000-000000000006')::int, 1, 'el seguidor del equipo recibe partido en vivo');
+select pg_temp.expect_eq((select count(*) from public.notifications where kind = 'match_live' and user_id = 'a0000000-0000-0000-0000-000000000007')::int, 0, 'quien no sigue al equipo no recibe partido en vivo');
+update public.matches set status = 'halftime' where id = 'e0000000-0000-0000-0000-000000000002';
+update public.matches set status = 'live' where id = 'e0000000-0000-0000-0000-000000000002';
+select pg_temp.expect_eq((select count(*) from public.notifications where kind = 'match_live' and data->>'match_id' = 'e0000000-0000-0000-0000-000000000002' and user_id = 'a0000000-0000-0000-0000-000000000006')::int, 1, 'al reanudar el segundo tiempo no se repite el aviso');
+
+-- Apagar una categoría: _notify deja de crear esos avisos, y solo esos
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000005');
+select public.set_notification_pref('payments', false);
+select public.set_notification_pref('callups', false);
+select pg_temp.expect_eq((select enabled from public.my_notification_prefs() where category = 'payments'), false, 'la apoderada apaga los avisos de mensualidades');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+select pg_temp.expect_eq(public.fee_generate_charges('c0000000-0000-0000-0000-000000000001', (date_trunc('month', current_date) + interval '1 month')::date) >= 1, true, 'se generan los cobros del mes siguiente');
+insert into public.matches (id, home_team_id, away_external_name, format_players, half_minutes, visibility, venue)
+values ('e0000000-0000-0000-0000-000000000003','c0000000-0000-0000-0000-000000000001','Otro Rival', 7, 25, 'followers', 'Cancha 3');
+insert into public.match_callups (match_id, team_id, player_id)
+values ('e0000000-0000-0000-0000-000000000003','c0000000-0000-0000-0000-000000000001', current_setting('t.child')::uuid);
+select pg_temp.as_su();
+select pg_temp.expect_eq((select count(*) from public.notifications where kind = 'fee_charge' and user_id = 'a0000000-0000-0000-0000-000000000005')::int, 1, 'con mensualidades apagadas no llega el aviso del cobro nuevo');
+select pg_temp.expect_eq((select count(*) from public.notifications where kind = 'callup' and user_id = 'a0000000-0000-0000-0000-000000000005')::int, 1, 'con convocatorias apagadas no llega la convocatoria nueva');
+update public.matches set status = 'live' where id = 'e0000000-0000-0000-0000-000000000003';
+select pg_temp.expect_eq((select count(*) from public.notifications where kind = 'match_live' and data->>'match_id' = 'e0000000-0000-0000-0000-000000000003' and user_id = 'a0000000-0000-0000-0000-000000000005')::int, 1, 'las demás categorías siguen llegando');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000005');
+select public.set_notification_pref('callups', true);
+select pg_temp.expect_eq((select count(*) from public.notification_prefs)::int, 2, 'cada usuario ve solo sus preferencias');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+select pg_temp.expect_eq((select count(*) from public.notification_prefs)::int, 0, 'el DT no ve las preferencias de la apoderada');
+
+-- Marcar todo como leído: solo lo mío
+select pg_temp.as_su();
+alter table public.matches enable trigger trg_matches_start_formation;
+select pg_temp.as_su();
+select set_config('t.unread_adm', (select count(*)::text from public.notifications where user_id = 'a0000000-0000-0000-0000-000000000002' and read_at is null), false) is not null;
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000005');
+select pg_temp.expect_eq(public.mark_all_notifications_read() > 0, true, 'marcar todo como leído devuelve cuántas marcó');
+select pg_temp.expect_eq((select count(*) from public.notifications where read_at is null)::int, 0, 'no me quedan notificaciones sin leer');
+select pg_temp.expect_eq(public.mark_all_notifications_read(), 0, 'marcar otra vez no cambia nada');
+select pg_temp.as_su();
+select pg_temp.expect_eq((select count(*)::text from public.notifications where user_id = 'a0000000-0000-0000-0000-000000000002' and read_at is null), current_setting('t.unread_adm'), 'las notificaciones de otra persona no se tocan');
+set role anon;
+select pg_temp.expect_fail($$select * from public.my_notification_prefs()$$, 'anon no lee preferencias');
+select pg_temp.expect_fail($$select public.mark_all_notifications_read()$$, 'anon no marca notificaciones');
+reset role;
+
 select pg_temp.as_su();
 \echo '=== TODAS LAS PRUEBAS PASARON ==='

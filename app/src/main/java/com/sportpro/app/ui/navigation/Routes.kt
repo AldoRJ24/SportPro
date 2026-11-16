@@ -33,5 +33,9 @@ import kotlinx.serialization.Serializable
 @Serializable data class FeeStatementRoute(val teamId: String? = null, val playerId: String? = null, val title: String? = null)
 
 // Documentos del jugador (migración 009)
-@Serializable data class PlayerDocsRoute(val playerId: String, val name: String)
+// name vacío = se llegó desde una notificación (no se conoce el nombre)
+@Serializable data class PlayerDocsRoute(val playerId: String, val name: String = "")
 @Serializable data class TeamDocsRoute(val teamId: String, val name: String)
+
+// Ajustes de notificaciones (migración 010)
+@Serializable data object NotificationSettingsRoute

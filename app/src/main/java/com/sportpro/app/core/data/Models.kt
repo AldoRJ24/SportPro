@@ -458,3 +458,13 @@ data class MyTeamJoinRequest(
     val status: String = "pending",
     @SerialName("created_at") val createdAt: String? = null,
 )
+
+// ---------------- Ajustes de notificaciones (migración 010) ----------------
+
+/** Una categoría de avisos y si el usuario la tiene encendida (my_notification_prefs). */
+@Serializable
+data class NotificationPref(
+    /** callups | live | comments | requests | payments */
+    val category: String,
+    val enabled: Boolean = true,
+)

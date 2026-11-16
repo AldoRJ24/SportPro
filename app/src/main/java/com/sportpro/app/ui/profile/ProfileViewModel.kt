@@ -110,13 +110,23 @@ class FamilyViewModel(private val container: AppContainer) : ViewModel() {
         }
     }
 
+    /**
+     * Marca TODO como leído con una sola llamada al servidor (también las que no están cargadas
+     * en pantalla, porque la lista solo trae las 50 más recientes).
+     */
     fun markAllRead() {
-        val ids = _ui.value.notifications.filter { it.isUnread }.map { it.id }
-        if (ids.isEmpty()) return
+        if (_ui.value.notifications.none { it.isUnread }) return
         viewModelScope.launch {
-            runCatching { container.account.markRead(ids) }
-            _ui.update { s -> s.copy(notifications = s.notifications.map { if (it.id in ids) it.copy(readAt = "now") else it }) }
+            runCatching { container.account.markAllRead() }
+            _ui.update { s -> s.copy(notifications = s.notifications.map { if (it.isUnread) it.copy(readAt = "now") else it }) }
         }
+    }
+
+    /** Marca UNA notificación como leída (al tocarla). El punto verde desaparece al instante. */
+    fun markRead(id: String) {
+        if (_ui.value.notifications.none { it.id == id && it.isUnread }) return
+        _ui.update { s -> s.copy(notifications = s.notifications.map { if (it.id == id) it.copy(readAt = "now") else it }) }
+        viewModelScope.launch { runCatching { container.account.markRead(listOf(id)) } }
     }
 
     fun consumeMessage() = _ui.update { it.copy(message = null) }

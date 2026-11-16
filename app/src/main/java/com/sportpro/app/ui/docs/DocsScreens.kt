@@ -208,7 +208,8 @@ fun PlayerDocsScreen(playerId: String, name: String, onBack: () -> Unit) {
         }
     }
 
-    SpScaffold(title = stringResource(R.string.docs_title, name), onBack = onBack, snackbarHostState = snack) { pad ->
+    val screenTitle = if (name.isBlank()) stringResource(R.string.docs_button) else stringResource(R.string.docs_title, name)
+    SpScaffold(title = screenTitle, onBack = onBack, snackbarHostState = snack) { pad ->
         val data = ui.data
         when {
             ui.loading && data == null -> LoadingBox(Modifier.padding(pad))
