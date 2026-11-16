@@ -48,6 +48,25 @@ data class CreateMatchForm(
      * exactamente 1 arquero titular, nombre y dorsal en cada fila, dorsales sin repetir y posición
      * asignada. Lista vacía = válido.
      */
+    /**
+     * Primer problema del formulario en el orden en que se llena, o null si se puede crear el partido.
+     * Está aquí (y no en el ViewModel) para poder probarlo con tests unitarios, sin red ni Android.
+     */
+    fun validationError(): String? {
+        val rosterProblems = if (externalRival) rosterProblems() else emptyList()
+        return when {
+            homeTeamId == null -> AppText.get(R.string.create_match_elige_tu_equipo)
+            externalRival && externalName.trim().length < 2 -> AppText.get(R.string.create_match_escribe_el_nombre_del_rival)
+            !externalRival && awayTeamId == null -> AppText.get(R.string.create_match_elige_el_equipo_rival)
+            formatPlayers !in 5..11 -> AppText.get(R.string.create_match_el_formato_debe_ser_de)
+            halfMinutes !in 5..60 -> AppText.get(R.string.create_match_cada_tiempo_debe_durar_entre)
+            parseDateDigits(dateDigits) == null -> AppText.get(R.string.create_match_fecha_invalida_escribe_8_digitos)
+            parseTimeDigits(timeDigits) == null -> AppText.get(R.string.create_match_hora_invalida_escribe_4_digitos)
+            rosterProblems.isNotEmpty() -> AppText.get(R.string.create_match_plantel_del_rival) + rosterProblems.joinToString("; ") + "."
+            else -> null
+        }
+    }
+
     fun rosterProblems(): List<String> {
         val out = mutableListOf<String>()
         val rows = filledRoster
@@ -107,18 +126,7 @@ class CreateMatchViewModel(private val container: AppContainer) : ViewModel() {
         val f = _form.value
         val date = parseDateDigits(f.dateDigits)
         val time = parseTimeDigits(f.timeDigits)
-        val rosterProblems = if (f.externalRival) f.rosterProblems() else emptyList()
-        val error = when {
-            f.homeTeamId == null -> AppText.get(R.string.create_match_elige_tu_equipo)
-            f.externalRival && f.externalName.trim().length < 2 -> AppText.get(R.string.create_match_escribe_el_nombre_del_rival)
-            !f.externalRival && f.awayTeamId == null -> AppText.get(R.string.create_match_elige_el_equipo_rival)
-            f.formatPlayers !in 5..11 -> AppText.get(R.string.create_match_el_formato_debe_ser_de)
-            f.halfMinutes !in 5..60 -> AppText.get(R.string.create_match_cada_tiempo_debe_durar_entre)
-            date == null -> AppText.get(R.string.create_match_fecha_invalida_escribe_8_digitos)
-            time == null -> AppText.get(R.string.create_match_hora_invalida_escribe_4_digitos)
-            rosterProblems.isNotEmpty() -> AppText.get(R.string.create_match_plantel_del_rival) + rosterProblems.joinToString("; ") + "."
-            else -> null
-        }
+        val error = f.validationError()
         if (error != null) {
             _form.update { it.copy(error = error) }
             return
@@ -149,7 +157,7 @@ class CreateMatchViewModel(private val container: AppContainer) : ViewModel() {
 }
 
 /** Ajusta las filas de titulares al formato: agrega las que falten (la primera, arquero) y quita solo filas vacías. */
-private fun CreateMatchForm.withRosterSize(): CreateMatchForm {
+internal fun CreateMatchForm.withRosterSize(): CreateMatchForm {
     var starters = externalRoster.count { it.starter }
     if (starters > formatPlayers) {
         // Si se reduce el formato, solo se eliminan filas de titulares VACÍAS del final (nunca lo que escribió el DT).

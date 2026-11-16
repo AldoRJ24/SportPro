@@ -1023,4 +1023,10 @@
     <string name="match_away_fallback">Rival</string>
     <string name="queue_save_failed">No se pudo guardar «%1$s»: %2$s</string>
     <string name="match_setup_no_jersey">sin dorsal</string>
+
+    <!-- Textos de una sola palabra usados dentro de frases -->
+    <string name="time_now">ahora</string>
+    <string name="auth_who_guardian">apoderado</string>
+    <string name="auth_who_coach">entrenador</string>
+    <string name="auth_who_player">jugador</string>
 </resources>

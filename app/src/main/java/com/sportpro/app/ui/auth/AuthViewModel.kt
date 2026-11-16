@@ -115,10 +115,10 @@ class AuthViewModel(private val container: AppContainer) : ViewModel() {
         val age = date?.let { Period.between(it, LocalDate.now()).years }
         val minAge = if (type == "jug") 13 else 18
         val who = when (type) {
-            "pad" -> "apoderado"
+            "pad" -> AppText.get(R.string.auth_who_guardian)
             "adm" -> AppText.get(R.string.auth_administrador_de_academia)
-            "dt" -> "entrenador"
-            else -> "jugador"
+            "dt" -> AppText.get(R.string.auth_who_coach)
+            else -> AppText.get(R.string.auth_who_player)
         }
         // Validaciones del formulario en orden; se muestra el primer error encontrado.
         val error = when {

@@ -52,8 +52,8 @@ data class MatchRow(
     val home: TeamRef? = null,
     val away: TeamRef? = null,
 ) {
-    val homeName: String get() = home?.name ?: "Local"
-    val awayName: String get() = away?.name ?: awayExternalName ?: "Rival"
+    val homeName: String get() = home?.name ?: AppText.get(R.string.match_home_fallback)
+    val awayName: String get() = away?.name ?: awayExternalName ?: AppText.get(R.string.match_away_fallback)
     val category: String? get() = home?.category
     val isLive: Boolean get() = status == "live" || status == "halftime"
     val isFinished: Boolean get() = status == "finished"

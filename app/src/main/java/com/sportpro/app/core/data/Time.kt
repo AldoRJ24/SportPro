@@ -30,7 +30,7 @@ fun timeAgo(iso: String?, nowMs: Long = System.currentTimeMillis()): String {
     val t = parseInstant(iso)?.toEpochMilli() ?: return ""
     val s = ((nowMs - t) / 1000).coerceAtLeast(0)
     return when {
-        s < 60 -> "ahora"
+        s < 60 -> AppText.get(R.string.time_now)
         s < 3600 -> AppText.get(R.string.time_hace_x_min, s / 60)
         s < 86_400 -> AppText.get(R.string.time_hace_x_h, s / 3600)
         s < 7 * 86_400 -> AppText.get(R.string.time_hace_x_d, s / 86_400)

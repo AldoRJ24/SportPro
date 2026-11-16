@@ -651,5 +651,152 @@ select pg_temp.expect_eq((select count(*) from public.audit_log where action in 
 update public.team_players set status = 'active' where id = current_setting('t.tp')::uuid;
 select pg_temp.expect_eq((select inactive_reason is null and left_at is null from public.team_players where id = current_setting('t.tp')::uuid), true, 'al volver al equipo se limpia el motivo de la baja');
 
+-- =====================================================================
+-- FOTO DE ACADEMIA Y DE PERFIL (migraciones 004 y 005).
+-- ADM = …002, DT = …003, apoderada = …005. Academia Demo = b…001 con Halcones y Leones.
+-- =====================================================================
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+select pg_temp.expect_fail($$insert into storage.objects (bucket_id, name) values ('academy-logos', 'b0000000-0000-0000-0000-000000000001/logo.jpg')$$, 'el DT no sube la foto de la academia');
+with u as (update public.academies set crest_path = 'b0000000-0000-0000-0000-000000000001/logo.jpg' where id = 'b0000000-0000-0000-0000-000000000001' returning 1)
+select pg_temp.expect_eq((select count(*) from u)::int, 0, 'el DT no cambia la foto de la academia');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000002');
+select pg_temp.expect_fail($$insert into storage.objects (bucket_id, name) values ('academy-logos', 'b0000000-0000-0000-0000-000000000099/logo.jpg')$$, 'el admin no sube fotos a la carpeta de otra academia');
+insert into storage.objects (bucket_id, name) values ('academy-logos', 'b0000000-0000-0000-0000-000000000001/logo.jpg');
+select pg_temp.expect_fail($$update public.academies set crest_path = 'otra-carpeta/logo.jpg' where id = 'b0000000-0000-0000-0000-000000000001'$$, 'la foto de la academia debe estar en su propia carpeta');
+update public.academies set crest_path = 'b0000000-0000-0000-0000-000000000001/logo.jpg' where id = 'b0000000-0000-0000-0000-000000000001';
+select pg_temp.expect_eq((select count(*) from public.teams where academy_id = 'b0000000-0000-0000-0000-000000000001' and crest_path = 'b0000000-0000-0000-0000-000000000001/logo.jpg')::int, 2, 'todos los equipos heredan la foto de su academia');
+update public.teams set crest_path = 'x/otra.jpg' where id = 'c0000000-0000-0000-0000-000000000001';
+select pg_temp.expect_eq((select crest_path from public.teams where id = 'c0000000-0000-0000-0000-000000000001'), 'b0000000-0000-0000-0000-000000000001/logo.jpg', 'un equipo no puede tener una foto distinta a la de su academia');
+update public.academies set crest_path = null where id = 'b0000000-0000-0000-0000-000000000001';
+select pg_temp.expect_eq((select count(*) from public.teams where academy_id = 'b0000000-0000-0000-0000-000000000001' and crest_path is not null)::int, 0, 'al quitar la foto de la academia se quita de sus equipos');
+-- Foto de perfil: solo en mi carpeta
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000005');
+select pg_temp.expect_fail($$update public.profiles set avatar_path = 'a0000000-0000-0000-0000-000000000002/avatar.jpg' where id = auth.uid()$$, 'no se usa como foto de perfil un archivo de otra persona');
+select pg_temp.expect_fail($$insert into storage.objects (bucket_id, name) values ('avatars', 'a0000000-0000-0000-0000-000000000002/avatar.jpg')$$, 'no se sube una foto a la carpeta de otra persona');
+insert into storage.objects (bucket_id, name) values ('avatars', 'a0000000-0000-0000-0000-000000000005/avatar.jpg');
+update public.profiles set avatar_path = 'a0000000-0000-0000-0000-000000000005/avatar.jpg' where id = auth.uid();
+select pg_temp.expect_eq((select avatar_path from public.profiles where id = auth.uid()), 'a0000000-0000-0000-0000-000000000005/avatar.jpg', 'un adulto guarda su foto de perfil en su carpeta');
+
+-- =====================================================================
+-- FEED Y MODERACIÓN (migración 006). El resumen del partido e…001 lo aprobó el DT (…003)
+-- con visibilidad «team»: lo ven el staff y las familias del equipo local (Halcones).
+-- La apoderada (…005) es familia de Mateo, que juega en Halcones.
+-- =====================================================================
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000005');
+select pg_temp.expect_eq((select count(*) from public.get_feed())::int, 1, 'la familia del equipo ve la publicación en su feed');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000006');
+select pg_temp.expect_eq((select count(*) from public.get_feed())::int, 0, 'un seguidor NO ve una publicación solo para el equipo');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000007');
+select pg_temp.expect_eq((select count(*) from public.get_feed())::int, 0, 'un extraño NO ve la publicación');
+select pg_temp.expect_fail($$select public.toggle_post_like('e0000000-0000-0000-0000-000000000001')$$, 'no se da me gusta a una publicación que no se puede ver');
+select pg_temp.expect_fail($$select public.add_post_comment('e0000000-0000-0000-0000-000000000001', 'Hola')$$, 'no se comenta una publicación que no se puede ver');
+
+-- Me gusta: alterna y no se duplica
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000005');
+select pg_temp.expect_eq((public.toggle_post_like('e0000000-0000-0000-0000-000000000001')->>'likes')::int, 1, 'dar me gusta suma 1');
+select pg_temp.expect_eq((public.toggle_post_like('e0000000-0000-0000-0000-000000000001')->>'likes')::int, 0, 'tocar otra vez quita el me gusta');
+select pg_temp.expect_eq((public.toggle_post_like('e0000000-0000-0000-0000-000000000001')->>'liked')::boolean, true, 'el me gusta queda marcado');
+select pg_temp.expect_fail($$insert into public.post_likes (match_id, user_id) values ('e0000000-0000-0000-0000-000000000001', auth.uid())$$, 'cliente no inserta me gusta directo en la tabla');
+
+-- Comentarios: validaciones
+select pg_temp.expect_fail($$select public.add_post_comment('e0000000-0000-0000-0000-000000000001', '   ')$$, 'comentario vacío rechazado');
+select pg_temp.expect_fail($$select public.add_post_comment('e0000000-0000-0000-0000-000000000001', repeat('a', 501))$$, 'comentario de más de 500 caracteres rechazado');
+select pg_temp.expect_fail($$insert into public.post_comments (match_id, user_id, body) values ('e0000000-0000-0000-0000-000000000001', auth.uid(), 'directo')$$, 'cliente no inserta comentarios directo en la tabla');
+select set_config('t.cm1', public.add_post_comment('e0000000-0000-0000-0000-000000000001', '¡Gran partido de los chicos!')::text, false) is not null;
+select pg_temp.as_su();
+select pg_temp.expect_eq((select count(*) from public.notifications where kind = 'post_comment' and user_id = 'a0000000-0000-0000-0000-000000000003')::int, 1, 'quien publicó recibe el aviso del comentario');
+
+-- Moderación
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000007');
+select pg_temp.expect_eq((select count(*) from public.post_comments)::int, 0, 'un extraño NO lee los comentarios');
+select pg_temp.expect_fail(format($$select public.delete_post_comment(%L)$$, current_setting('t.cm1')), 'un extraño no elimina comentarios');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000005');
+select pg_temp.expect_fail($$select public.set_post_comments_enabled('e0000000-0000-0000-0000-000000000001', false)$$, 'quien comenta no puede desactivar los comentarios');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+select pg_temp.expect_eq((select count(*) from public.get_post_comments('e0000000-0000-0000-0000-000000000001'))::int, 1, 'quien publicó ve el comentario');
+select public.delete_post_comment(current_setting('t.cm1')::uuid);
+select pg_temp.expect_fail(format($$select public.delete_post_comment(%L)$$, current_setting('t.cm1')), 'un comentario eliminado no se elimina otra vez');
+select pg_temp.as_su();
+select pg_temp.expect_eq((select body = '' and deleted_at is not null from public.post_comments where id = current_setting('t.cm1')::uuid), true, 'el comentario moderado queda vacío pero no se borra la fila');
+select pg_temp.expect_eq((select data->>'original_text' from public.audit_log where action = 'delete_post_comment' and entity_id = current_setting('t.cm1')::uuid), '¡Gran partido de los chicos!', 'la auditoría conserva el texto original del comentario');
+select pg_temp.expect_eq((select count(*) from public.notifications where kind = 'post_comment_removed' and user_id = 'a0000000-0000-0000-0000-000000000005')::int, 1, 'el autor recibe el aviso de que moderaron su comentario');
+
+-- Desactivar comentarios y límite anti-spam
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+select public.set_post_comments_enabled('e0000000-0000-0000-0000-000000000001', false);
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000005');
+select pg_temp.expect_fail($$select public.add_post_comment('e0000000-0000-0000-0000-000000000001', 'Otro')$$, 'no se comenta si los comentarios están desactivados');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+select public.set_post_comments_enabled('e0000000-0000-0000-0000-000000000001', true);
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000005');
+select count(public.add_post_comment('e0000000-0000-0000-0000-000000000001', 'Comentario ' || i)) = 4 from generate_series(1, 4) i;
+select pg_temp.expect_fail($$select public.add_post_comment('e0000000-0000-0000-0000-000000000001', 'El sexto en un minuto')$$, 'anti-spam: máximo 5 comentarios por minuto');
+set role anon;
+select pg_temp.expect_fail($$select * from public.get_feed()$$, 'anon no lee el feed');
+reset role;
+
+-- =====================================================================
+-- UNIRSE A UN EQUIPO CON CÓDIGO (migración 007).
+-- Luz (hija de la apoderada, 11 años) pide entrar a Halcones (Sub-15) y luego a Leones.
+-- =====================================================================
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000005');
+select pg_temp.expect_fail($$select public.team_join_code('c0000000-0000-0000-0000-000000000001')$$, 'la apoderada no obtiene el código del equipo');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+select set_config('t.code1', public.team_join_code('c0000000-0000-0000-0000-000000000001'), false) is not null;
+select pg_temp.expect_eq(current_setting('t.code1') ~ '^EQ-[A-Z2-9]{4}-[A-Z2-9]{4}$', true, 'el código del equipo tiene el formato EQ-XXXX-XXXX');
+select pg_temp.expect_eq(public.team_join_code('c0000000-0000-0000-0000-000000000001'), current_setting('t.code1'), 'pedir el código otra vez devuelve el mismo');
+
+-- Ver a qué equipo corresponde y enviar la solicitud
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000005');
+select pg_temp.expect_eq(public.check_team_code(lower(current_setting('t.code1')))->>'team_name', 'Halcones', 'el código (aun en minúsculas) muestra el equipo antes de solicitar');
+select pg_temp.expect_eq((public.check_team_code('EQ-ZZZZ-ZZZZ')->>'valid')::boolean, false, 'un código inexistente se informa como no válido');
+select pg_temp.expect_fail(format($$select public.request_team_join(%L, 'd0000001-0000-0000-0000-000000000001')$$, current_setting('t.code1')), 'no se envía una solicitud por el hijo de otra persona');
+select pg_temp.expect_fail(format($$select public.request_team_join(%L, %L)$$, current_setting('t.code1'), current_setting('t.child')), 'no se solicita entrar a un equipo donde ya se juega');
+select pg_temp.expect_fail(format($$select public.request_team_join('EQ-ZZZZ-ZZZZ', %L)$$, current_setting('t.child2')), 'no se envía una solicitud con un código inválido');
+select set_config('t.rq1', public.request_team_join(current_setting('t.code1'), current_setting('t.child2')::uuid)::text, false) is not null;
+select pg_temp.expect_fail(format($$select public.request_team_join(%L, %L)$$, current_setting('t.code1'), current_setting('t.child2')), 'no hay dos solicitudes pendientes para el mismo equipo');
+select pg_temp.expect_fail(format($$insert into public.team_join_requests (team_id, player_id, requested_by) values ('c0000000-0000-0000-0000-000000000001', %L, auth.uid())$$, current_setting('t.child2')), 'cliente no inserta solicitudes directo en la tabla');
+select pg_temp.expect_eq((select status from public.my_team_join_requests() limit 1), 'pending', 'la apoderada ve su solicitud como pendiente');
+select pg_temp.expect_eq((select count(*) from public.team_join_requests_for_me())::int, 0, 'la apoderada no ve solicitudes para responder');
+select pg_temp.expect_fail(format($$select public.respond_team_join(%L, true)$$, current_setting('t.rq1')), 'quien solicita no se acepta a sí mismo');
+
+-- El DT recibe el aviso y decide
+select pg_temp.as_su();
+select pg_temp.expect_eq((select count(*) from public.notifications where kind = 'team_join_request' and user_id = 'a0000000-0000-0000-0000-000000000003' and data->>'request_id' = current_setting('t.rq1'))::int, 1, 'el DT recibe la notificación de la solicitud');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000007');
+select pg_temp.expect_eq((select count(*) from public.team_join_requests)::int, 0, 'un extraño NO ve solicitudes');
+select pg_temp.expect_fail(format($$select public.respond_team_join(%L, true)$$, current_setting('t.rq1')), 'un extraño no responde solicitudes');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+select pg_temp.expect_eq((select by_guardian from public.team_join_requests_for_me() where id = current_setting('t.rq1')::uuid), true, 'el DT ve que la solicitud la envió un apoderado');
+select public.respond_team_join(current_setting('t.rq1')::uuid, true);
+select pg_temp.expect_fail(format($$select public.respond_team_join(%L, false)$$, current_setting('t.rq1')), 'una solicitud ya respondida no se responde otra vez');
+select pg_temp.as_su();
+select pg_temp.expect_eq((select status from public.team_players where team_id = 'c0000000-0000-0000-0000-000000000001' and player_id = current_setting('t.child2')::uuid), 'active', 'al aceptar, el jugador entra al plantel');
+select pg_temp.expect_eq((select count(*) from public.academy_memberships where user_id = 'a0000000-0000-0000-0000-000000000005' and academy_id = 'b0000000-0000-0000-0000-000000000001' and role = 'pad' and status = 'active')::int, 1, 'al aceptar, el apoderado pasa a ser miembro de la academia');
+select pg_temp.expect_eq((select count(*) from public.notifications where kind = 'team_join_answer' and user_id = 'a0000000-0000-0000-0000-000000000005')::int, 1, 'quien solicitó recibe la respuesta');
+
+-- Regenerar el código invalida el anterior
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+select pg_temp.expect_eq(public.team_join_code('c0000000-0000-0000-0000-000000000001', true) <> current_setting('t.code1'), true, 'regenerar entrega un código distinto');
+select pg_temp.expect_eq((public.check_team_code(current_setting('t.code1'))->>'valid')::boolean, false, 'el código anterior deja de servir');
+
+-- Rechazo: equipo sin DT (Leones), responde el admin de la academia
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000002');
+select set_config('t.code2', public.team_join_code('c0000000-0000-0000-0000-000000000002'), false) is not null;
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000005');
+select set_config('t.rq2', public.request_team_join(current_setting('t.code2'), current_setting('t.child2')::uuid)::text, false) is not null;
+select pg_temp.as_su();
+select pg_temp.expect_eq((select count(*) from public.notifications where kind = 'team_join_request' and user_id = 'a0000000-0000-0000-0000-000000000002' and data->>'request_id' = current_setting('t.rq2'))::int, 1, 'si el equipo no tiene DT, el aviso llega al admin de la academia');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+select pg_temp.expect_fail(format($$select public.respond_team_join(%L, true)$$, current_setting('t.rq2')), 'el DT de otro equipo no responde esta solicitud');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000002');
+select public.respond_team_join(current_setting('t.rq2')::uuid, false);
+select pg_temp.as_su();
+select pg_temp.expect_eq((select count(*) from public.team_players where team_id = 'c0000000-0000-0000-0000-000000000002' and player_id = current_setting('t.child2')::uuid)::int, 0, 'al rechazar, el jugador no entra al plantel');
+select pg_temp.expect_eq((select status from public.team_join_requests where id = current_setting('t.rq2')::uuid), 'rejected', 'la solicitud rechazada se conserva con su estado');
+set role anon;
+select pg_temp.expect_fail($$select public.check_team_code('EQ-AAAA-BBBB')$$, 'anon no consulta códigos de equipo');
+reset role;
+
 select pg_temp.as_su();
 \echo '=== TODAS LAS PRUEBAS PASARON ==='
