@@ -1,4 +1,6 @@
 package com.sportpro.app.ui.components
+import androidx.compose.ui.res.stringResource
+import com.sportpro.app.R
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -70,6 +72,7 @@ fun TeamCrest(name: String, crestPath: String?, size: Dp = 48.dp, modifier: Modi
     RemoteCircleImage(name, SupabaseProvider.academyLogoUrl(crestPath), size, modifier, ring)
 
 // Descarga la imagen (con caché) y la muestra en círculo; mientras carga o si no hay, muestra las iniciales.
+/** Foto circular descargada de internet. Mientras carga, o si falla, muestra las iniciales del nombre. */
 @Composable
 private fun RemoteCircleImage(name: String, url: String?, size: Dp, modifier: Modifier, ring: Color?) {
     val image by produceState(initialValue = url?.let { AvatarCache.peek(it) }, url) {
@@ -81,7 +84,7 @@ private fun RemoteCircleImage(name: String, url: String?, size: Dp, modifier: Mo
     } else {
         Image(
             bitmap = img,
-            contentDescription = "Imagen de $name",
+            contentDescription = stringResource(R.string.avatar_imagen_de_x, name),
             contentScale = ContentScale.Crop,
             modifier = modifier
                 .size(size)
@@ -92,8 +95,8 @@ private fun RemoteCircleImage(name: String, url: String?, size: Dp, modifier: Mo
 }
 
 /**
- * Reads the picked image (EXIF rotation applied by ImageDecoder), crops it square,
- * scales it to 512 px and compresses it to JPEG (~50–120 KB) before uploading.
+ * Lee la imagen elegida (ImageDecoder ya aplica la rotación EXIF), la recorta cuadrada,
+ * la reduce a 512 px y la comprime en JPEG (~50–120 KB) antes de subirla.
  */
 fun prepareAvatarJpeg(context: Context, uri: Uri, sizePx: Int = 512): ByteArray {
     val source = ImageDecoder.createSource(context.contentResolver, uri)

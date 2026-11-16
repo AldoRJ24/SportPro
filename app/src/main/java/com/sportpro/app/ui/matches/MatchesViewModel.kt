@@ -27,7 +27,7 @@ data class MatchesUiState(
         .sortedByDescending { parseInstant(it.finishedAt ?: it.scheduledAt)?.toEpochMilli() ?: 0L }
 }
 
-/** Shared by Inicio, Partidos and Calendario. Realtime keeps it fresh without manual reload (D-19). */
+/** Lo comparten Inicio, Partidos y Calendario. Realtime lo mantiene al día sin recargar a mano (D-19). */
 @OptIn(FlowPreview::class)
 class MatchesViewModel(private val container: AppContainer) : ViewModel() {
     private val _ui = MutableStateFlow(MatchesUiState())

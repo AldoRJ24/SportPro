@@ -3,7 +3,9 @@ package com.sportpro.app.core.data
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.time.LocalDate
+import java.time.Month
 import java.time.Period
+import java.time.format.TextStyle
 import java.util.Locale
 
 // ---------------- Mensualidades (migración 008) ----------------
@@ -90,10 +92,7 @@ object Fees {
     /** Métodos de pago en el orden en que se muestran. Los códigos son los de la base de datos. */
     val METHODS: List<String> = listOf("yape", "plin", "transfer", "cash")
 
-    private val MONTHS = listOf(
-        "enero", "febrero", "marzo", "abril", "mayo", "junio",
-        "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
-    )
+    private val SPANISH: Locale = Locale.forLanguageTag("es-PE")
 
     /** 120.0 → «S/ 120.00». Locale.US para que el separador decimal siempre sea el punto. */
     fun money(amount: Double): String = "S/ " + String.format(Locale.US, "%.2f", amount)
@@ -104,7 +103,9 @@ object Fees {
         val year = parts.getOrNull(0)?.toIntOrNull()
         val month = parts.getOrNull(1)?.toIntOrNull()
         if (year == null || month == null || month !in 1..12) return iso.orEmpty()
-        return MONTHS[month - 1].replaceFirstChar { it.uppercase() } + " " + year
+        // El nombre del mes lo da Java en español: no hace falta una lista escrita a mano
+        val name = Month.of(month).getDisplayName(TextStyle.FULL, SPANISH)
+        return name.replaceFirstChar { it.uppercase() } + " " + year
     }
 
     /** «2026-11-10» → «10/11/2026». */

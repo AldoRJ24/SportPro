@@ -1,4 +1,7 @@
 package com.sportpro.app.ui.teams
+import androidx.compose.ui.res.stringResource
+import com.sportpro.app.R
+import com.sportpro.app.core.AppText
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -98,7 +101,7 @@ class JoinTeamViewModel(private val container: AppContainer) : ViewModel() {
     fun check(raw: String?) {
         val code = normalizeTeamCode(raw)
         if (code == null) {
-            _messages.tryEmit("El código tiene el formato EQ-XXXX-XXXX (8 letras/números).")
+            _messages.tryEmit(AppText.get(R.string.join_team_el_codigo_tiene_el_formato))
             return
         }
         viewModelScope.launch {
@@ -106,7 +109,7 @@ class JoinTeamViewModel(private val container: AppContainer) : ViewModel() {
             try {
                 val c = container.club.checkTeamCode(code)
                 _ui.update { it.copy(checking = false, check = c) }
-                if (!c.valid) _messages.tryEmit(c.reason ?: "Código no válido")
+                if (!c.valid) _messages.tryEmit(c.reason ?: AppText.get(R.string.join_team_codigo_no_valido))
             } catch (e: Exception) {
                 _ui.update { it.copy(checking = false) }
                 _messages.tryEmit(e.friendlyMessage())
@@ -120,7 +123,7 @@ class JoinTeamViewModel(private val container: AppContainer) : ViewModel() {
             _ui.update { it.copy(sending = true) }
             try {
                 container.club.requestTeamJoin(code, player.id)
-                _messages.tryEmit("Solicitud enviada. El DT recibirá una notificación para aceptarla.")
+                _messages.tryEmit(AppText.get(R.string.join_team_solicitud_enviada_el_dt_recibira))
                 _ui.update { it.copy(check = null, code = null) }
                 onSent()
                 loadMine()
@@ -158,13 +161,13 @@ fun JoinTeamScreen(session: SessionViewModel, onBack: () -> Unit) {
         }
     }
 
-    SpScaffold(title = "Unirme a un equipo", onBack = onBack, snackbarHostState = snack) { pad ->
+    SpScaffold(title = stringResource(R.string.join_team_unirme_a_un_equipo), onBack = onBack, snackbarHostState = snack) { pad ->
         Column(
             Modifier.padding(pad).imePadding().verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(
-                "Pide al DT el código o el QR de su equipo. Tu solicitud le llega como notificación y él decide si acepta.",
+                stringResource(R.string.join_team_pide_al_dt_el_codigo),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -172,12 +175,12 @@ fun JoinTeamScreen(session: SessionViewModel, onBack: () -> Unit) {
                 OutlinedTextField(
                     value = typed,
                     onValueChange = { typed = it.uppercase().take(14) },
-                    label = { Text("Código del equipo (EQ-XXXX-XXXX)") },
+                    label = { Text(stringResource(R.string.join_team_codigo_del_equipo_eq_xxxx)) },
                     singleLine = true,
                     modifier = Modifier.weight(1f),
                 )
                 Spacer(Modifier.width(8.dp))
-                Button(onClick = { vm.check(typed) }, enabled = !ui.checking) { Text("Buscar") }
+                Button(onClick = { vm.check(typed) }, enabled = !ui.checking) { Text(stringResource(R.string.join_team_buscar)) }
             }
             OutlinedButton(
                 onClick = {
@@ -193,7 +196,7 @@ fun JoinTeamScreen(session: SessionViewModel, onBack: () -> Unit) {
                     )
                 },
                 modifier = Modifier.fillMaxWidth(),
-            ) { Text("Escanear QR del equipo") }
+            ) { Text(stringResource(R.string.join_team_escanear_qr_del_equipo)) }
             if (ui.checking) LinearProgressIndicator(Modifier.fillMaxWidth())
 
             val check = ui.check
@@ -204,31 +207,31 @@ fun JoinTeamScreen(session: SessionViewModel, onBack: () -> Unit) {
                 ) {
                     Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            TeamCrest(check.teamName ?: "Equipo", check.crestPath, size = 52.dp)
+                            TeamCrest(check.teamName ?: stringResource(R.string.join_team_equipo), check.crestPath, size = 52.dp)
                             Spacer(Modifier.width(12.dp))
                             Column(Modifier.weight(1f)) {
-                                Text(check.teamName ?: "Equipo", style = MaterialTheme.typography.titleMedium)
+                                Text(check.teamName ?: stringResource(R.string.join_team_equipo), style = MaterialTheme.typography.titleMedium)
                                 Text(
                                     listOfNotNull(check.category, check.academyName).joinToString(" · "),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                                 check.maxAge?.let {
-                                    Text("Hasta $it años", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text(stringResource(R.string.join_team_hasta_x_anos, it), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
                             }
                         }
-                        Text("¿Quién se une?", style = MaterialTheme.typography.titleSmall)
+                        Text(stringResource(R.string.join_team_quien_se_une), style = MaterialTheme.typography.titleSmall)
                         if (candidates.isEmpty()) {
                             Text(
-                                "Tu cuenta no tiene perfil de jugador. Si eres apoderado, crea primero el perfil de tu hijo en «Mis hijos».",
+                                stringResource(R.string.join_team_tu_cuenta_no_tiene_perfil),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         } else {
                             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                 candidates.forEach { p ->
-                                    val label = if (p.id == ctx?.ownPlayer?.id) "Yo · ${p.fullName}" else p.fullName
+                                    val label = if (p.id == ctx?.ownPlayer?.id) stringResource(R.string.join_team_yo_x, p.fullName) else p.fullName
                                     FilterChip(selected = selectedId == p.id, onClick = { selectedId = p.id }, label = { Text(label) })
                                 }
                             }
@@ -237,14 +240,14 @@ fun JoinTeamScreen(session: SessionViewModel, onBack: () -> Unit) {
                                 onClick = { chosen?.let { vm.send(it) { typed = "" } } },
                                 enabled = chosen != null && !ui.sending,
                                 modifier = Modifier.fillMaxWidth(),
-                            ) { Text("Enviar solicitud al DT") }
+                            ) { Text(stringResource(R.string.join_team_enviar_solicitud_al_dt)) }
                         }
                     }
                 }
             }
 
             if (ui.mine.isNotEmpty()) {
-                SectionHeader("Mis solicitudes", Modifier.padding(top = 8.dp))
+                SectionHeader(stringResource(R.string.join_team_mis_solicitudes), Modifier.padding(top = 8.dp))
                 ui.mine.forEach { r -> MyRequestRow(r) }
             }
         }
@@ -267,9 +270,9 @@ private fun MyRequestRow(r: MyTeamJoinRequest) {
                 )
             }
             when (r.status) {
-                "approved" -> Pill("Aceptada", Mint400)
-                "rejected" -> Pill("Rechazada", LiveRed)
-                else -> Pill("Pendiente", WarnAmber)
+                "approved" -> Pill(stringResource(R.string.join_team_aceptada), Mint400)
+                "rejected" -> Pill(stringResource(R.string.join_team_rechazada), LiveRed)
+                else -> Pill(stringResource(R.string.join_team_pendiente), WarnAmber)
             }
         }
     }

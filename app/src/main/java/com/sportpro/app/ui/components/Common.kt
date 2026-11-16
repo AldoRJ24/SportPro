@@ -1,4 +1,8 @@
 package com.sportpro.app.ui.components
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import com.sportpro.app.R
+import com.sportpro.app.core.AppText
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -52,8 +56,8 @@ import com.sportpro.app.ui.theme.WarnAmber
 import kotlin.math.abs
 
 /**
- * Screen scaffold used by every screen.
- * [isTab] = true when the screen lives inside the bottom bar (the bottom inset is handled by the bar).
+ * Estructura común de todas las pantallas: barra superior con título, botón «volver» y acciones.
+ * [isTab] = true cuando la pantalla es una pestaña del menú inferior (el margen de abajo lo maneja la barra).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -77,7 +81,7 @@ fun SpScaffold(
                 navigationIcon = {
                     if (onBack != null) {
                         IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_volver))
                         }
                     } else navigationIcon()
                 },
@@ -96,11 +100,13 @@ fun SpScaffold(
     )
 }
 
+/** Indicador de carga centrado, para cuando la pantalla todavía no tiene datos. */
 @Composable
 fun LoadingBox(modifier: Modifier = Modifier) {
     Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
 }
 
+/** Mensaje de error a pantalla completa con botón «Reintentar». */
 @Composable
 fun ErrorBox(message: String, onRetry: () -> Unit, modifier: Modifier = Modifier) {
     Column(
@@ -108,14 +114,15 @@ fun ErrorBox(message: String, onRetry: () -> Unit, modifier: Modifier = Modifier
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text("No se pudo cargar", style = MaterialTheme.typography.titleMedium)
+        Text(stringResource(R.string.common_no_se_pudo_cargar), style = MaterialTheme.typography.titleMedium)
         Spacer(Modifier.height(8.dp))
         Text(message, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(16.dp))
-        Button(onClick = onRetry) { Text("Reintentar") }
+        Button(onClick = onRetry) { Text(stringResource(R.string.common_reintentar)) }
     }
 }
 
+/** Estado vacío: título, explicación y, si se indica, un botón para la acción que resuelve el vacío. */
 @Composable
 fun EmptyState(
     title: String,
@@ -138,7 +145,7 @@ fun EmptyState(
     }
 }
 
-/** Honest label for parts that are still a prototype (rule: never present them as functional). */
+/** Etiqueta honesta para lo que aún es prototipo (regla: nunca presentarlo como funcional). Hoy ninguna pantalla la usa. */
 @Composable
 fun PrototypeBanner(text: String, modifier: Modifier = Modifier) {
     Surface(
@@ -147,13 +154,14 @@ fun PrototypeBanner(text: String, modifier: Modifier = Modifier) {
         shape = RoundedCornerShape(12.dp),
     ) {
         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Pill("PROTOTIPO", WarnAmber)
+            Pill(stringResource(R.string.common_prototipo), WarnAmber)
             Spacer(Modifier.size(10.dp))
             Text(text, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
         }
     }
 }
 
+/** Título de sección dentro de una lista (en mayúsculas y color suave). */
 @Composable
 fun SectionHeader(text: String, modifier: Modifier = Modifier) {
     Text(
@@ -165,6 +173,7 @@ fun SectionHeader(text: String, modifier: Modifier = Modifier) {
     )
 }
 
+/** Etiqueta pequeña de color (estado, rol…). Con [filled] el fondo es sólido y el texto blanco. */
 @Composable
 fun Pill(text: String, color: Color, modifier: Modifier = Modifier, filled: Boolean = false) {
     Box(
@@ -183,6 +192,7 @@ fun Pill(text: String, color: Color, modifier: Modifier = Modifier, filled: Bool
     }
 }
 
+/** Etiqueta roja sólida para «EN VIVO». */
 @Composable
 fun LivePill(text: String, modifier: Modifier = Modifier) = Pill(text, LiveRed, modifier, filled = true)
 
@@ -191,7 +201,7 @@ private val crestPalette = listOf(
     Color(0xFF8E24AA), Color(0xFF00ACC1), Color(0xFF6D4C41), Color(0xFFD81B60),
 )
 
-/** Default crest: initials over a stable color (also used for external rivals, D-15). */
+/** Escudo por defecto: iniciales sobre un color que siempre es el mismo para ese nombre (también para rivales externos, D-15). */
 @Composable
 fun Crest(name: String, size: Dp = 48.dp, modifier: Modifier = Modifier, ring: Color? = null) {
     val initials = name.split(" ", "-").filter { it.isNotBlank() && it.first().isLetter() }
@@ -210,13 +220,14 @@ fun Crest(name: String, size: Dp = 48.dp, modifier: Modifier = Modifier, ring: C
 }
 
 fun roleLabel(role: String): String = when (role) {
-    "adm" -> "Administrador"
-    "dt" -> "Director técnico"
-    "pad" -> "Apoderado"
-    "jug" -> "Jugador"
+    "adm" -> AppText.get(R.string.common_administrador)
+    "dt" -> AppText.get(R.string.common_director_tecnico)
+    "pad" -> AppText.get(R.string.common_apoderado)
+    "jug" -> AppText.get(R.string.common_jugador)
     else -> role
 }
 
+/** Punto de conexión del registro en vivo: verde en línea, ámbar sin conexión, con los eventos pendientes de envío. */
 @Composable
 fun OnlineDot(online: Boolean, pending: Int, modifier: Modifier = Modifier) {
     Row(modifier, verticalAlignment = Alignment.CenterVertically) {
@@ -227,10 +238,10 @@ fun OnlineDot(online: Boolean, pending: Int, modifier: Modifier = Modifier) {
         Spacer(Modifier.size(6.dp))
         Text(
             when {
-                !online && pending > 0 -> "Sin conexión · $pending pendiente(s)"
-                !online -> "Sin conexión"
-                pending > 0 -> "Enviando $pending…"
-                else -> "En línea"
+                !online && pending > 0 -> pluralStringResource(R.plurals.common_offline_pending, pending, pending)
+                !online -> stringResource(R.string.common_sin_conexion)
+                pending > 0 -> stringResource(R.string.common_enviando_x, pending)
+                else -> stringResource(R.string.common_en_linea)
             },
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -238,7 +249,7 @@ fun OnlineDot(online: Boolean, pending: Int, modifier: Modifier = Modifier) {
     }
 }
 
-/** Ticking clock for live minutes (recomposes every [periodMs]). */
+/** Reloj que avanza para los minutos en vivo (redibuja cada [periodMs]). */
 @Composable
 fun rememberNowMs(periodMs: Long = 1000L): Long {
     val now = androidx.compose.runtime.produceState(System.currentTimeMillis()) {

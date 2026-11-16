@@ -1,5 +1,7 @@
 package com.sportpro.app.core.data
 
+import com.sportpro.app.R
+import com.sportpro.app.core.AppText
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
@@ -185,7 +187,7 @@ data class CallupMatchRef(
     val home: TeamRef? = null,
     val away: TeamRef? = null,
 ) {
-    val title: String get() = "${home?.name ?: "Local"} vs ${away?.name ?: awayExternalName ?: "Rival"}"
+    val title: String get() = "${home?.name ?: AppText.get(R.string.match_home_fallback)} vs ${away?.name ?: awayExternalName ?: AppText.get(R.string.match_away_fallback)}"
 }
 
 @Serializable
@@ -260,7 +262,7 @@ data class ExternalPlayer(
     @SerialName("field_position") val fieldPosition: String? = null,
 )
 
-/** Row typed by the DT for the external rival's roster (D-15). */
+/** Fila que escribe el DT para el plantel del rival externo (D-15). */
 data class ExternalDraft(
     val jersey: String = "",
     val name: String = "",
@@ -268,7 +270,7 @@ data class ExternalDraft(
     val starter: Boolean = true,
 )
 
-/** Everything the app needs to know about the signed-in user (roles are always read from the server). */
+/** Todo lo que la app necesita saber del usuario con sesión iniciada (los roles siempre se leen del servidor). */
 data class UserContext(
     val userId: String,
     val profile: Profile?,
@@ -364,7 +366,7 @@ data class TeamStaffMember(
     val profile: Profile? = null,
 )
 
-/** Data typed in the registration form (D-13 + migration 003). */
+/** Datos escritos en el formulario de registro (D-13 + migración 003). */
 data class SignUpData(
     val accountType: String,
     val firstName: String,

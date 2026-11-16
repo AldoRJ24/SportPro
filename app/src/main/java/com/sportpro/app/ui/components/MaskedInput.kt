@@ -1,4 +1,6 @@
 package com.sportpro.app.ui.components
+import com.sportpro.app.R
+import com.sportpro.app.core.AppText
 
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.OutlinedTextField
@@ -17,8 +19,8 @@ import java.time.format.DateTimeFormatter
 import java.time.format.ResolverStyle
 
 /**
- * Shows only digits typed by the user with the separators of [mask] ('#' = digit),
- * e.g. "##/##/####" turns 07112026 into 07/11/2026 while typing.
+ * Muestra los dígitos que escribe la persona con los separadores de [mask] ('#' = dígito);
+ * por ejemplo "##/##/####" convierte 07112026 en 07/11/2026 mientras se escribe.
  */
 class DigitMaskTransformation(private val mask: String) : VisualTransformation {
     private val slots = mask.count { it == '#' }
@@ -55,7 +57,7 @@ class DigitMaskTransformation(private val mask: String) : VisualTransformation {
     }
 }
 
-/** Digits-only field limited to the mask length. [value] holds only digits. */
+/** Campo que solo acepta dígitos, hasta el largo de la máscara. [value] guarda solo los dígitos. */
 @Composable
 fun MaskedDigitsField(
     value: String,
@@ -86,7 +88,7 @@ const val TIME_MASK = "##:##"
 private val strictDate: DateTimeFormatter = DateTimeFormatter.ofPattern("ddMMuuuu").withResolverStyle(ResolverStyle.STRICT)
 private val strictTime: DateTimeFormatter = DateTimeFormatter.ofPattern("HHmm").withResolverStyle(ResolverStyle.STRICT)
 
-/** "07112026" → 2026-11-07, or null if incomplete or not a real date (e.g. 31/02). */
+/** "07112026" → 2026-11-07, o null si está incompleta o no es una fecha real (por ejemplo 31/02). */
 fun parseDateDigits(digits: String): LocalDate? =
     if (digits.length != 8) null else runCatching { LocalDate.parse(digits, strictDate) }.getOrNull()
 
@@ -96,10 +98,10 @@ fun parseTimeDigits(digits: String): LocalTime? =
 fun LocalDate.toDateDigits(): String = format(DateTimeFormatter.ofPattern("ddMMyyyy"))
 fun LocalTime.toTimeDigits(): String = format(DateTimeFormatter.ofPattern("HHmm"))
 
-/** Supporting text for a date field while typing. */
+/** Texto de ayuda de un campo de fecha mientras se escribe. */
 fun dateHint(digits: String): String? = when {
-    digits.isEmpty() -> "Día, mes y año: 8 dígitos"
-    digits.length < 8 -> "Faltan ${8 - digits.length} dígitos"
-    parseDateDigits(digits) == null -> "Esa fecha no existe"
+    digits.isEmpty() -> AppText.get(R.string.masked_input_dia_mes_y_ano_8)
+    digits.length < 8 -> AppText.get(R.string.masked_input_faltan_x_digitos, 8 - digits.length)
+    parseDateDigits(digits) == null -> AppText.get(R.string.masked_input_esa_fecha_no_existe)
     else -> null
 }

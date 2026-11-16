@@ -1,4 +1,8 @@
 package com.sportpro.app.ui.family
+import com.sportpro.app.core.AppText
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import com.sportpro.app.R
 
 import android.content.Context
 import android.content.Intent
@@ -20,14 +24,13 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sportpro.app.core.data.GuardianRequest
 import com.sportpro.app.core.data.formatDayTime
+import com.sportpro.app.ui.components.copyToClipboard
 import com.sportpro.app.ui.components.Crest
 import com.sportpro.app.ui.theme.Mint400
 
@@ -43,7 +46,6 @@ fun shareText(context: Context, subject: String, text: String) {
 /** «Mi código familiar»: única por apoderado; el hijo lo escribe al crear su cuenta. */
 @Composable
 fun FamilyCodeCard(code: String?, modifier: Modifier = Modifier) {
-    val clipboard = LocalClipboardManager.current
     val context = LocalContext.current
     Card(
         modifier.fillMaxWidth(),
@@ -51,9 +53,9 @@ fun FamilyCodeCard(code: String?, modifier: Modifier = Modifier) {
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text("Mi código familiar", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.family_cards_mi_codigo_familiar), style = MaterialTheme.typography.titleMedium)
             Text(
-                "Compártelo únicamente con tus hijos. Lo escriben al crear su cuenta y tú apruebas la solicitud.",
+                stringResource(R.string.family_cards_compartelo_unicamente_con_tus_hijos),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -62,21 +64,21 @@ fun FamilyCodeCard(code: String?, modifier: Modifier = Modifier) {
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest),
             ) {
                 Column(Modifier.fillMaxWidth().padding(14.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("CÓDIGO", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.family_cards_codigo), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text(code ?: "…", fontSize = 26.sp, fontWeight = FontWeight.Black, letterSpacing = 2.sp)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        TextButton(onClick = { code?.let { clipboard.setText(AnnotatedString(it)) } }, enabled = code != null) {
-                            Text("Copiar código", color = Mint400)
+                        TextButton(onClick = { code?.let { copyToClipboard(context, it) } }, enabled = code != null) {
+                            Text(stringResource(R.string.family_cards_copiar_codigo), color = Mint400)
                         }
                         TextButton(
                             onClick = {
                                 code?.let {
-                                    shareText(context, "Código familiar SportPro",
-                                        "Mi código familiar de SportPro es $it. Escríbelo al crear tu cuenta de jugador para vincularte conmigo.")
+                                    shareText(context, AppText.get(R.string.family_cards_codigo_familiar_sportpro),
+                                        AppText.get(R.string.family_cards_mi_codigo_familiar_de_sportpro, it))
                                 }
                             },
                             enabled = code != null,
-                        ) { Text("Compartir", color = Mint400) }
+                        ) { Text(stringResource(R.string.family_cards_compartir), color = Mint400) }
                     }
                 }
             }
@@ -94,15 +96,15 @@ fun GuardianRequestCard(request: GuardianRequest, onAccept: () -> Unit, onReject
             Crest(request.playerName, 44.dp)
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
-                Text("${request.playerName} quiere vincularse contigo", style = MaterialTheme.typography.titleSmall)
+                Text(stringResource(R.string.family_cards_x_quiere_vincularse_contigo, request.playerName), style = MaterialTheme.typography.titleSmall)
                 Text(
-                    listOfNotNull(request.age?.let { "$it años" }, formatDayTime(request.requestedAt)).joinToString(" · "),
+                    listOfNotNull(request.age?.let { pluralStringResource(R.plurals.common_years, it, it) }, formatDayTime(request.requestedAt)).joinToString(" · "),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 6.dp)) {
-                    Button(onClick = onAccept) { Text("Aceptar") }
-                    OutlinedButton(onClick = onReject) { Text("Rechazar") }
+                    Button(onClick = onAccept) { Text(stringResource(R.string.family_cards_aceptar)) }
+                    OutlinedButton(onClick = onReject) { Text(stringResource(R.string.family_cards_rechazar)) }
                 }
             }
         }

@@ -1,4 +1,7 @@
 package com.sportpro.app.ui.profile
+import com.sportpro.app.core.AppText
+import androidx.compose.ui.res.stringResource
+import com.sportpro.app.R
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -30,7 +33,7 @@ import com.sportpro.app.ui.components.MaskedDigitsField
 import com.sportpro.app.ui.components.dateHint
 import com.sportpro.app.ui.components.parseDateDigits
 
-/** D-08/D-09: only the guardian creates the profile of an under-13 child; it is linked and approved at once. */
+/** D-08/D-09: solo el apoderado crea el perfil de un hijo menor de 13 años; queda vinculado y aprobado al instante. */
 @Composable
 fun AddChildScreen(onBack: () -> Unit, onCreated: () -> Unit) {
     val container = LocalAppContainer.current
@@ -41,28 +44,28 @@ fun AddChildScreen(onBack: () -> Unit, onCreated: () -> Unit) {
     var position by rememberSaveable { mutableStateOf("") }
     var busy by rememberSaveable { mutableStateOf(false) }
     var error by rememberSaveable { mutableStateOf<String?>(null) }
-    SpScaffold(title = "Agregar hijo", onBack = onBack) { pad ->
+    SpScaffold(title = stringResource(R.string.add_child_agregar_hijo), onBack = onBack) { pad ->
         Column(
             Modifier.padding(pad).padding(16.dp).verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(
-                "Para menores de 13 años. El perfil lo gestionas tú; a los 13 podrá reclamarlo con su propia cuenta conservando su historial.",
+                stringResource(R.string.add_child_para_menores_de_13_anos),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            OutlinedTextField(first, { first = it }, label = { Text("Nombre") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-            OutlinedTextField(last, { last = it }, label = { Text("Apellido") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(first, { first = it }, label = { Text(stringResource(R.string.add_child_nombre)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(last, { last = it }, label = { Text(stringResource(R.string.add_child_apellido)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
             MaskedDigitsField(
                 value = birth,
                 onValueChange = { birth = it },
                 mask = DATE_MASK,
-                label = "Fecha de nacimiento (DD/MM/AAAA)",
+                label = stringResource(R.string.add_child_fecha_de_nacimiento_dd_mm),
                 isError = birth.length == 8 && parseDateDigits(birth) == null,
                 supportingText = dateHint(birth),
                 modifier = Modifier.fillMaxWidth(),
             )
-            OutlinedTextField(position, { position = it }, label = { Text("Posición (opcional)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(position, { position = it }, label = { Text(stringResource(R.string.add_child_posicion_opcional)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
             error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
             Button(
                 enabled = !busy,
@@ -70,7 +73,7 @@ fun AddChildScreen(onBack: () -> Unit, onCreated: () -> Unit) {
                 onClick = {
                     val date = parseDateDigits(birth)
                     if (first.isBlank() || last.isBlank() || date == null) {
-                        error = "Completa nombre, apellido y una fecha de nacimiento válida (8 dígitos)."
+                        error = AppText.get(R.string.add_child_completa_nombre_apellido_y_una)
                         return@Button
                     }
                     busy = true
@@ -87,7 +90,7 @@ fun AddChildScreen(onBack: () -> Unit, onCreated: () -> Unit) {
                         }
                     }
                 },
-            ) { Text("Crear perfil") }
+            ) { Text(stringResource(R.string.add_child_crear_perfil)) }
         }
     }
 }

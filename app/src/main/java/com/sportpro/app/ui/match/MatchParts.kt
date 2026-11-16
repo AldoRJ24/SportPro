@@ -1,4 +1,6 @@
 package com.sportpro.app.ui.match
+import androidx.compose.ui.res.stringResource
+import com.sportpro.app.R
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
@@ -67,8 +69,8 @@ fun MatchHeader(match: MatchRow, nowMs: Long, modifier: Modifier = Modifier) {
             Text(
                 listOfNotNull(
                     match.category,
-                    "${match.formatPlayers} vs ${match.formatPlayers}",
-                    "${match.halfMinutes}' por tiempo",
+                    stringResource(R.string.match_parts_x_vs_x, match.formatPlayers, match.formatPlayers),
+                    stringResource(R.string.match_parts_x_por_tiempo, match.halfMinutes),
                     match.venue,
                     formatDayTime(match.scheduledAt),
                 ).joinToString(" · "),
@@ -93,17 +95,17 @@ fun TimelineRow(
 ) {
     val payloadText = buildList {
         val p = e.payload
-        if (JsonPrimitiveOrNull(p["own_goal"])?.booleanOrNull == true) add("en contra")
+        if (JsonPrimitiveOrNull(p["own_goal"])?.booleanOrNull == true) add(stringResource(R.string.match_parts_en_contra))
         when (JsonPrimitiveOrNull(p["result"])?.contentOrNull) {
             "converted" -> add("convertido")
             "missed" -> add("fallado")
             "saved" -> add("atajado")
         }
-        JsonPrimitiveOrNull(p["assist_player_id"])?.contentOrNull?.let { id -> nameOf(id)?.let { add("asist. $it") } }
+        JsonPrimitiveOrNull(p["assist_player_id"])?.contentOrNull?.let { id -> nameOf(id)?.let { add(stringResource(R.string.match_parts_asist_x, it)) } }
         if (e.code == "substitution") {
             val out = nameOf(JsonPrimitiveOrNull(p["player_out_id"])?.contentOrNull) ?: "?"
             val inn = nameOf(JsonPrimitiveOrNull(p["player_in_id"])?.contentOrNull) ?: "?"
-            add("sale $out, entra $inn")
+            add(stringResource(R.string.match_parts_sale_x_entra_x, out, inn))
         }
     }.joinToString(" · ")
     Row(
@@ -131,9 +133,9 @@ fun TimelineRow(
             )
             if (payloadText.isNotBlank()) Text(payloadText, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                if (e.isVoided) Pill("ANULADO", ErrorRed)
-                if (!e.isControl && !e.isVoided && e.playerName == null && e.code != "substitution") Pill("Sin jugador asignado", WarnAmber)
-                if (e.recordedLate) Pill("Registro tardío", WarnAmber)
+                if (e.isVoided) Pill(stringResource(R.string.match_parts_anulado), ErrorRed)
+                if (!e.isControl && !e.isVoided && e.playerName == null && e.code != "substitution") Pill(stringResource(R.string.match_parts_sin_jugador_asignado), WarnAmber)
+                if (e.recordedLate) Pill(stringResource(R.string.match_parts_registro_tardio), WarnAmber)
             }
             e.notes?.takeIf { it.isNotBlank() }?.let {
                 Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -145,7 +147,7 @@ fun TimelineRow(
 @Composable
 fun PendingRow(p: PendingEvent) {
     Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-        Pill("PENDIENTE", WarnAmber)
+        Pill(stringResource(R.string.match_parts_pendiente), WarnAmber)
         Spacer(Modifier.width(10.dp))
         Text(p.label, style = MaterialTheme.typography.bodyMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
     }
@@ -158,14 +160,14 @@ fun LineupColumn(title: String, players: List<LineupPlayer>, modifier: Modifier 
         val starters = players.filter { it.isStarter }
             .sortedWith(compareBy({ Position.of(it.fieldPosition)?.ordinal ?: 9 }, { it.jerseyNumber ?: 99 }))
         val subs = players.filterNot { it.isStarter }
-        Text("Titulares (${starters.size})", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(stringResource(R.string.match_parts_titulares_x, starters.size), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         starters.forEach { PlayerLine(it) }
         if (subs.isNotEmpty()) {
             Spacer(Modifier.height(6.dp))
-            Text("Suplentes (${subs.size})", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(R.string.match_parts_suplentes_x, subs.size), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             subs.forEach { PlayerLine(it) }
         }
-        if (players.isEmpty()) Text("Sin alineación registrada", style = MaterialTheme.typography.bodySmall)
+        if (players.isEmpty()) Text(stringResource(R.string.match_parts_sin_alineacion_registrada), style = MaterialTheme.typography.bodySmall)
     }
 }
 
@@ -175,11 +177,11 @@ private fun PlayerLine(p: LineupPlayer) {
         Text(p.jerseyNumber?.toString() ?: "-", style = MaterialTheme.typography.titleSmall, modifier = Modifier.width(28.dp))
         PositionBadge(Position.of(p.fieldPosition))
         Spacer(Modifier.width(6.dp))
-        Text(p.playerName ?: "Jugador", style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(p.playerName ?: stringResource(R.string.match_parts_jugador), style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 
-/** Big tappable event button with own drawing (§10: «dibujos interactivos», ≥48dp targets). */
+/** Botón grande de evento con dibujo propio (§10: «dibujos interactivos», zona táctil de 48dp o más). */
 @Composable
 fun EventButton(name: String, icon: String?, code: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Card(

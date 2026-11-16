@@ -1,4 +1,6 @@
 package com.sportpro.app.ui.match
+import androidx.compose.ui.res.stringResource
+import com.sportpro.app.R
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -78,7 +80,7 @@ fun RecorderSheet(
                 OutlinedButton(onClick = { onMinute(1) }) { Text("+") }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("Tiempo añadido", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.recorder_tiempo_anadido), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 OutlinedButton(onClick = { onExtra(-1) }) { Text("−") }
                 Text("+${draft.extra}")
                 OutlinedButton(onClick = { onExtra(1) }) { Text("+") }
@@ -86,7 +88,7 @@ fun RecorderSheet(
 
             when (draft.step) {
                 DraftStep.SIDE -> {
-                    Text("¿Qué equipo?", style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.recorder_que_equipo), style = MaterialTheme.typography.titleMedium)
                     listOf("home", "away").forEach { side ->
                         FilledTonalButton(
                             onClick = { onSide(side) },
@@ -100,8 +102,8 @@ fun RecorderSheet(
                 }
 
                 DraftStep.PENALTY_RESULT -> {
-                    Text("Resultado del penal", style = MaterialTheme.typography.titleMedium)
-                    listOf("converted" to "Convertido (gol)", "missed" to "Fallado", "saved" to "Atajado").forEach { (code, label) ->
+                    Text(stringResource(R.string.recorder_resultado_del_penal), style = MaterialTheme.typography.titleMedium)
+                    listOf("converted" to stringResource(R.string.recorder_convertido_gol), "missed" to stringResource(R.string.recorder_fallado), "saved" to stringResource(R.string.recorder_atajado)).forEach { (code, label) ->
                         FilledTonalButton(onClick = { onPenalty(code) }, modifier = Modifier.fillMaxWidth().height(60.dp)) { Text(label) }
                     }
                 }
@@ -111,33 +113,33 @@ fun RecorderSheet(
                     val onField = ui.fieldPlayers(side)
                     val bench = ui.benchPlayers(side)
                     val title = when (draft.step) {
-                        DraftStep.SUB_OUT -> "¿Quién sale? (en cancha · ${ui.sideName(side)})"
-                        DraftStep.SUB_IN -> "¿Quién entra? Sale: ${draft.playerOut?.playerName ?: "?"}"
-                        else -> if (draft.type.code == "penalty") "¿Quién pateó? (${ui.sideName(side)})" else "¿Quién? (${ui.sideName(side)})"
+                        DraftStep.SUB_OUT -> stringResource(R.string.recorder_quien_sale_en_cancha_x, ui.sideName(side))
+                        DraftStep.SUB_IN -> stringResource(R.string.recorder_quien_entra_sale_x, draft.playerOut?.playerName ?: "?")
+                        else -> if (draft.type.code == "penalty") stringResource(R.string.recorder_quien_pateo_x, ui.sideName(side)) else stringResource(R.string.recorder_quien_x, ui.sideName(side))
                     }
                     Text(title, style = MaterialTheme.typography.titleMedium)
                     if (draft.type.code == "goal" && draft.step == DraftStep.PLAYER) {
-                        FilterChip(selected = draft.ownGoal, onClick = onOwnGoal, label = { Text("Gol en contra") })
+                        FilterChip(selected = draft.ownGoal, onClick = onOwnGoal, label = { Text(stringResource(R.string.recorder_gol_en_contra)) })
                     }
                     if (draft.type.code == "penalty" && draft.penaltyResult == "saved") {
                         val gk = ui.goalkeeperOnField(ui.otherSide(side))
                         Text(
-                            "La atajada se anotará automáticamente al arquero de ${ui.sideName(ui.otherSide(side))}" +
-                                (gk?.playerName?.let { ": $it" } ?: " (sin arquero identificado)."),
+                            stringResource(R.string.recorder_la_atajada_se_anotara_automaticamente, ui.sideName(ui.otherSide(side))) +
+                                (gk?.playerName?.let { ": $it" } ?: stringResource(R.string.recorder_sin_arquero_identificado)),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                     if (draft.type.code == "save" && draft.step == DraftStep.PLAYER) {
                         Text(
-                            "No hay un arquero marcado en cancha para este equipo: elige quién atajó.",
+                            stringResource(R.string.recorder_no_hay_un_arquero_marcado),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                     if (onField.isEmpty() && bench.isEmpty()) {
                         Text(
-                            "Este equipo no tiene alineación registrada. Puedes guardar el evento sin jugador y asignarlo después.",
+                            stringResource(R.string.recorder_este_equipo_no_tiene_alineacion),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -146,7 +148,7 @@ fun RecorderSheet(
                     val main = if (draft.step == DraftStep.SUB_IN) bench else onField
                     if (main.isNotEmpty()) {
                         Text(
-                            if (draft.step == DraftStep.SUB_IN) "Banca" else "En cancha",
+                            if (draft.step == DraftStep.SUB_IN) stringResource(R.string.recorder_banca) else stringResource(R.string.recorder_en_cancha),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -160,7 +162,7 @@ fun RecorderSheet(
                     if (draft.step == DraftStep.PLAYER && bench.isNotEmpty() && draft.type.code in setOf("yellow_card", "red_card", "foul")) {
                         var showBench by remember { mutableStateOf(false) }
                         TextButton(onClick = { showBench = !showBench }) {
-                            Text(if (showBench) "Ocultar banca" else "Ver banca (${bench.size})")
+                            Text(if (showBench) stringResource(R.string.recorder_ocultar_banca) else stringResource(R.string.recorder_ver_banca_x, bench.size))
                         }
                         if (showBench) {
                             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -170,7 +172,7 @@ fun RecorderSheet(
                     }
                     if (draft.step == DraftStep.PLAYER) {
                         Button(onClick = { onPlayer(null) }, modifier = Modifier.fillMaxWidth().height(56.dp)) {
-                            Text("Sin identificar (asignar después)")
+                            Text(stringResource(R.string.recorder_sin_identificar_asignar_despues))
                         }
                     }
                 }
@@ -190,7 +192,7 @@ private fun PlayerChip(p: LineupPlayer, onClick: () -> Unit) {
                 PositionBadge(Position.of(p.fieldPosition))
             }
             Text(
-                p.playerName ?: "Jugador",
+                p.playerName ?: stringResource(R.string.recorder_jugador),
                 style = MaterialTheme.typography.labelSmall,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,

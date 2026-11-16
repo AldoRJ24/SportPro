@@ -1,4 +1,6 @@
 package com.sportpro.app.ui.home
+import androidx.compose.ui.res.stringResource
+import com.sportpro.app.R
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -64,7 +66,7 @@ fun HomeScreen(
         }
     }
     SpScaffold(
-        title = "SportPro",
+        title = stringResource(R.string.home_sportpro),
         isTab = true,
         navigationIcon = { CreateAction(onCreate) },
         actions = { BellAction(onBell) },
@@ -81,22 +83,22 @@ fun HomeScreen(
             LazyColumn(contentPadding = PaddingValues(bottom = 24.dp)) {
                 item {
                     Text(
-                        "Hola, ${ctx?.displayName ?: ""}",
+                        stringResource(R.string.home_hola_x, ctx?.displayName ?: ""),
                         style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
                     )
                 }
                 if (ui.live.isNotEmpty()) {
-                    item { SectionHeader("En vivo ahora") }
+                    item { SectionHeader(stringResource(R.string.home_en_vivo_ahora)) }
                     item { LiveStrip(ui.live, now, onClick = { onOpenMatch(it.id) }) }
                 }
                 // ---- Publicaciones (como el inicio de Instagram) ----
-                item { SectionHeader("Publicaciones") }
+                item { SectionHeader(stringResource(R.string.home_publicaciones)) }
                 if (feed.posts.isEmpty() && !feed.loading) {
                     item {
                         EmptyState(
-                            if (feed.error != null) "No se pudieron cargar las publicaciones" else "Aún no hay publicaciones",
-                            feed.error ?: "Cuando un DT apruebe el resumen con IA de un partido, aparecerá aquí.",
+                            if (feed.error != null) stringResource(R.string.home_no_se_pudieron_cargar_las) else stringResource(R.string.home_aun_no_hay_publicaciones),
+                            feed.error ?: stringResource(R.string.home_cuando_un_dt_apruebe_el),
                         )
                     }
                 }
@@ -110,13 +112,13 @@ fun HomeScreen(
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
                     )
                 }
-                item { SectionHeader("Resultados y próximos partidos") }
+                item { SectionHeader(stringResource(R.string.home_resultados_y_proximos_partidos)) }
                 val matches = ui.live + ui.finished.take(10) + ui.upcoming.take(5)
                 if (matches.isEmpty() && !ui.loading) {
                     item {
                         EmptyState(
-                            "Tu inicio está vacío",
-                            "Sigue academias y equipos en Explorar para ver sus partidos aquí.",
+                            stringResource(R.string.home_tu_inicio_esta_vacio),
+                            stringResource(R.string.home_sigue_academias_y_equipos_en),
                         )
                     }
                 }

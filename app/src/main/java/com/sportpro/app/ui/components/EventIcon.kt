@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.sportpro.app.R
 
-/** Maps the catalog `icon` key (configurable per academy) to an own vector drawing. */
+/** Traduce la clave `icon` del catálogo de eventos (configurable por academia) a un dibujo vectorial propio. */
 @DrawableRes
 fun eventIconRes(iconKey: String?, code: String? = null): Int = when (iconKey ?: code) {
     "ball", "goal" -> R.drawable.ic_ev_ball
@@ -37,6 +37,7 @@ fun eventIconRes(iconKey: String?, code: String? = null): Int = when (iconKey ?:
 private fun keepsOwnColors(iconKey: String?, code: String?): Boolean =
     (iconKey ?: code) in setOf("card_yellow", "yellow_card", "card_red", "red_card")
 
+/** Dibujo de un tipo de evento (gol, tarjeta, cambio…) según su clave de icono. */
 @Composable
 fun EventIcon(
     iconKey: String?,

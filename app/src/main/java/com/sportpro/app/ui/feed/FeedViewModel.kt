@@ -1,4 +1,6 @@
 package com.sportpro.app.ui.feed
+import com.sportpro.app.R
+import com.sportpro.app.core.AppText
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -129,7 +131,7 @@ class FeedViewModel(private val container: AppContainer) : ViewModel() {
                 container.feed.deleteComment(comment.id)
                 _ui.update { s -> s.copy(comments = s.comments.filterNot { it.id == comment.id }) }
                 updatePost(matchId) { it.copy(comments = (it.comments - 1).coerceAtLeast(0)) }
-                _messages.tryEmit("Comentario eliminado")
+                _messages.tryEmit(AppText.get(R.string.feed_comentario_eliminado))
             } catch (e: Exception) {
                 _messages.tryEmit(e.friendlyMessage())
             }
@@ -141,7 +143,7 @@ class FeedViewModel(private val container: AppContainer) : ViewModel() {
             try {
                 container.feed.setCommentsEnabled(post.matchId, enabled)
                 updatePost(post.matchId) { it.copy(commentsEnabled = enabled) }
-                _messages.tryEmit(if (enabled) "Comentarios activados" else "Comentarios desactivados")
+                _messages.tryEmit(if (enabled) AppText.get(R.string.feed_comentarios_activados) else AppText.get(R.string.feed_comentarios_desactivados))
             } catch (e: Exception) {
                 _messages.tryEmit(e.friendlyMessage())
             }

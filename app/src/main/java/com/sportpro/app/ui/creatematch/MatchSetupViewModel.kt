@@ -1,4 +1,6 @@
 package com.sportpro.app.ui.creatematch
+import com.sportpro.app.R
+import com.sportpro.app.core.AppText
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -62,11 +64,11 @@ data class MatchSetupUi(
     // Validación del rival externo antes de iniciar (mismas reglas que al crear el partido).
     fun externalProblems(format: Int): List<String> {
         val out = mutableListOf<String>()
-        if (externalStarters.size != format) out += "Titulares ${externalStarters.size}/$format"
+        if (externalStarters.size != format) out += AppText.get(R.string.match_setup_titulares_x_x, externalStarters.size, format)
         val gk = externalStarters.count { it.fieldPosition == "POR" }
-        if (gk != 1) out += "Arqueros titulares: $gk (debe ser 1)"
-        if (external.any { it.jerseyNumber == null }) out += "Hay jugadores sin dorsal"
-        if (external.any { it.fieldPosition == null }) out += "Hay jugadores sin posición"
+        if (gk != 1) out += AppText.get(R.string.match_setup_arqueros_titulares_x_debe_ser, gk)
+        if (external.any { it.jerseyNumber == null }) out += AppText.get(R.string.match_setup_hay_jugadores_sin_dorsal)
+        if (external.any { it.fieldPosition == null }) out += AppText.get(R.string.match_setup_hay_jugadores_sin_posicion)
         return out
     }
 }
@@ -101,7 +103,7 @@ class MatchSetupViewModel(private val container: AppContainer, private val match
             try {
                 val match = container.matches.getMatch(matchId)
                 if (match == null) {
-                    _ui.update { it.copy(loading = false, error = "Partido no encontrado o sin acceso.") }
+                    _ui.update { it.copy(loading = false, error = AppText.get(R.string.match_setup_partido_no_encontrado_o_sin)) }
                     return@launch
                 }
                 val lineup = container.matches.lineup(matchId)
@@ -172,7 +174,7 @@ class MatchSetupViewModel(private val container: AppContainer, private val match
         val missing = side.roster.map { it.playerId }.filter { _ui.value.callupOf(it) == null }
         container.matches.addCallups(matchId, side.teamId, missing)
         _ui.update { it.copy(callups = container.matches.callups(matchId)) }
-        _messages.tryEmit("Convocados ${missing.size} jugadores. Sus apoderados ya pueden confirmar.")
+        _messages.tryEmit(AppText.plural(R.plurals.match_setup_called_up, missing.size))
     }
 
     /** El DT confirma en bloque la asistencia comprobada en persona. Cada cambio queda trazado (responded_by). */
@@ -180,7 +182,7 @@ class MatchSetupViewModel(private val container: AppContainer, private val match
         val pending = _ui.value.callups.filter { it.teamId == side.teamId && it.status == "pending" }
         pending.forEach { container.matches.setCallupStatus(it.id, "confirmed") }
         _ui.update { it.copy(callups = container.matches.callups(matchId)) }
-        _messages.tryEmit("Confirmados ${pending.size} jugadores.")
+        _messages.tryEmit(AppText.plural(R.plurals.match_setup_confirmed, pending.size))
     }
 
     // ---------- Posición habitual del plantel (editable por el DT) ----------
@@ -246,7 +248,7 @@ class MatchSetupViewModel(private val container: AppContainer, private val match
         val current = _ui.value.sides.first { it.side == side.side }
         val problems = Formations.problems(current.formation, current.starterPositions)
         if (problems.isNotEmpty()) {
-            _messages.tryEmit("Formación ${current.formation.name} incompleta: ${problems.joinToString(", ")}")
+            _messages.tryEmit(AppText.get(R.string.match_setup_formacion_x_incompleta_x, current.formation.name, problems.joinToString(", ")))
             return
         }
         act {
@@ -256,8 +258,8 @@ class MatchSetupViewModel(private val container: AppContainer, private val match
             }
             container.matches.saveLineup(matchId, current.side, entries)
             _messages.tryEmit(
-                "Alineación de ${current.teamName} guardada · ${current.formation.name} · " +
-                    "${entries.count { it.starter }} titulares, ${entries.count { !it.starter }} suplentes.",
+                AppText.get(R.string.match_setup_alineacion_de_x_guardada_x, current.teamName, current.formation.name) +
+                    AppText.get(R.string.match_setup_x_titulares_x_suplentes, entries.count { it.starter }, entries.count { !it.starter }),
             )
         }
     }
@@ -277,10 +279,10 @@ class MatchSetupViewModel(private val container: AppContainer, private val match
     fun addExternal(row: ExternalDraft, onDone: () -> Unit) {
         val jersey = row.jersey.toIntOrNull()
         val error = when {
-            row.name.isBlank() -> "Escribe el nombre del jugador."
-            jersey == null -> "Escribe el dorsal."
-            _ui.value.external.any { it.jerseyNumber == jersey } -> "El dorsal $jersey ya existe en el plantel rival."
-            row.position == null -> "Elige la posición."
+            row.name.isBlank() -> AppText.get(R.string.match_setup_escribe_el_nombre_del_jugador)
+            jersey == null -> AppText.get(R.string.match_setup_escribe_el_dorsal)
+            _ui.value.external.any { it.jerseyNumber == jersey } -> AppText.get(R.string.match_setup_el_dorsal_x_ya_existe, jersey)
+            row.position == null -> AppText.get(R.string.match_setup_elige_la_posicion)
             else -> null
         }
         if (error != null) {
@@ -299,6 +301,6 @@ class MatchSetupViewModel(private val container: AppContainer, private val match
     fun setOperator(userId: String) = act {
         container.matches.setOperator(matchId, userId)
         _ui.update { it.copy(operatorId = userId) }
-        _messages.tryEmit("Operador designado. Solo esa persona (y el DT) registra eventos.")
+        _messages.tryEmit(AppText.get(R.string.match_setup_operador_designado_solo_esa_persona))
     }
 }

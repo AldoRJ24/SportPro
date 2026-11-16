@@ -29,7 +29,7 @@ fun PositionBadge(p: Position?, modifier: Modifier = Modifier) {
     Pill(p?.short ?: "—", positionColor(p), modifier)
 }
 
-/** Four chips to choose a position. */
+/** Cuatro chips para elegir una posición. */
 @Composable
 fun PositionChips(selected: Position?, onSelect: (Position) -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -44,7 +44,7 @@ fun PositionChips(selected: Position?, onSelect: (Position) -> Unit, modifier: M
     }
 }
 
-/** «ARQ 1/1 · DEF 2/2 · MED 2/3 · DEL 1/1» counter for a formation. */
+/** «ARQ 1/1 · DEF 2/2 · MED 2/3 · DEL 1/1» : contador de cuántos jugadores hay por posición frente a lo que pide la formación. */
 @Composable
 fun FormationCounter(formation: Formation, positions: List<Position?>, modifier: Modifier = Modifier) {
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -56,6 +56,7 @@ fun FormationCounter(formation: Formation, positions: List<Position?>, modifier:
     }
 }
 
+/** Chips para elegir la formación entre las disponibles para el formato del partido (por ejemplo 1-2-3-1). */
 @Composable
 fun FormationChips(options: List<Formation>, selected: Formation?, onSelect: (Formation) -> Unit, modifier: Modifier = Modifier) {
     Row(modifier.padding(vertical = 2.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {

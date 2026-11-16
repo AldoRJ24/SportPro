@@ -1,4 +1,6 @@
 package com.sportpro.app.ui.match
+import com.sportpro.app.R
+import com.sportpro.app.core.AppText
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -78,8 +80,8 @@ data class MatchDetailUi(
             .sortedWith(compareBy({ if (it.groupKind == "main") 0 else 1 }, { it.sortOrder }))
 
     fun sideName(side: String): String = when (side) {
-        "home" -> match?.homeName ?: "Local"
-        "away" -> match?.awayName ?: "Rival"
+        "home" -> match?.homeName ?: AppText.get(R.string.match_detail_local)
+        "away" -> match?.awayName ?: AppText.get(R.string.match_detail_rival)
         else -> ""
     }
 
@@ -152,7 +154,7 @@ class MatchDetailViewModel(private val container: AppContainer, private val matc
         viewModelScope.launch {
             container.matches.observeMatch(matchId)
                 .debounce(250)
-                .catch { _messages.tryEmit(UiMessage("Tiempo real no disponible; usa actualizar.")) }
+                .catch { _messages.tryEmit(UiMessage(AppText.get(R.string.match_detail_tiempo_real_no_disponible_usa))) }
                 .collect { refresh() }
         }
         viewModelScope.launch {
@@ -171,7 +173,7 @@ class MatchDetailViewModel(private val container: AppContainer, private val matc
             try {
                 val match = container.matches.getMatch(matchId)
                 if (match == null) {
-                    _ui.update { it.copy(loading = false, error = "No tienes acceso a este partido o no existe.") }
+                    _ui.update { it.copy(loading = false, error = AppText.get(R.string.match_detail_no_tienes_acceso_a_este)) }
                     return@launch
                 }
                 val timeline = container.matches.timeline(matchId)
@@ -200,7 +202,7 @@ class MatchDetailViewModel(private val container: AppContainer, private val matc
                 val types = if (_ui.value.eventTypes.isEmpty()) container.matches.eventTypes() else _ui.value.eventTypes
                 _ui.update { it.copy(match = match, timeline = timeline, eventTypes = types) }
             } catch (_: Exception) {
-                // keep last known state; the offline indicator tells the user
+                // se conserva el último estado conocido; el indicador «sin conexión» avisa al usuario
             }
         }
     }
@@ -220,10 +222,10 @@ class MatchDetailViewModel(private val container: AppContainer, private val matc
                 container.matches.changeState(matchId, action)
                 refresh()
                 _messages.tryEmit(UiMessage(when (action) {
-                    "start" -> "¡Partido iniciado!"
-                    "halftime" -> "Fin del primer tiempo"
-                    "second_half" -> "Inicia el segundo tiempo"
-                    else -> "Partido finalizado. Las estadísticas se consolidaron."
+                    "start" -> AppText.get(R.string.match_detail_partido_iniciado)
+                    "halftime" -> AppText.get(R.string.match_detail_fin_del_primer_tiempo)
+                    "second_half" -> AppText.get(R.string.match_detail_inicia_el_segundo_tiempo)
+                    else -> AppText.get(R.string.match_detail_partido_finalizado_las_estadisticas_se)
                 }))
             } catch (e: Exception) {
                 _messages.tryEmit(UiMessage(e.friendlyMessage()))
@@ -349,7 +351,7 @@ class MatchDetailViewModel(private val container: AppContainer, private val matc
             put("payload", payload)
         }
         val minuteLabel = if (d.extra > 0) "${d.minute}+${d.extra}'" else "${d.minute}'"
-        val label = listOf(d.type.name, s.sideName(side), actor?.playerName ?: "Sin identificar", minuteLabel).joinToString(" · ")
+        val label = listOf(d.type.name, s.sideName(side), actor?.playerName ?: AppText.get(R.string.match_detail_sin_identificar), minuteLabel).joinToString(" · ")
         _ui.update { it.copy(draft = null) }
         viewModelScope.launch {
             val result = container.queue.submit(
@@ -362,7 +364,7 @@ class MatchDetailViewModel(private val container: AppContainer, private val matc
                     refresh()
                 }
                 SubmitResult.Queued -> _messages.tryEmit(
-                    UiMessage("Sin conexión: «$label» guardado en el teléfono; se enviará solo.", undoClientEventId = clientId),
+                    UiMessage(AppText.get(R.string.match_detail_sin_conexion_x_guardado_en, label), undoClientEventId = clientId),
                 )
                 is SubmitResult.Rejected -> _messages.tryEmit(UiMessage(result.message))
             }
@@ -374,13 +376,13 @@ class MatchDetailViewModel(private val container: AppContainer, private val matc
         viewModelScope.launch {
             try {
                 if (container.queue.removePending(clientEventId)) {
-                    _messages.tryEmit(UiMessage("Registro descartado"))
+                    _messages.tryEmit(UiMessage(AppText.get(R.string.match_detail_registro_descartado)))
                     return@launch
                 }
                 val id = eventId ?: container.matches.eventIdByClientId(matchId, clientEventId)
                 if (id != null) {
-                    container.matches.voidEvent(id, "Deshecho por el operador (registro equivocado)")
-                    _messages.tryEmit(UiMessage("Registro anulado (queda en el historial)"))
+                    container.matches.voidEvent(id, AppText.get(R.string.match_detail_deshecho_por_el_operador_registro))
+                    _messages.tryEmit(UiMessage(AppText.get(R.string.match_detail_registro_anulado_queda_en_el)))
                     refresh()
                 }
             } catch (e: Exception) {
@@ -395,7 +397,7 @@ class MatchDetailViewModel(private val container: AppContainer, private val matc
         viewModelScope.launch {
             try {
                 container.matches.correctEvent(event.eventId, patch, reason)
-                _messages.tryEmit(UiMessage("Evento corregido. Se guardó la versión anterior."))
+                _messages.tryEmit(UiMessage(AppText.get(R.string.match_detail_evento_corregido_se_guardo_la)))
                 refresh()
             } catch (e: Exception) {
                 _messages.tryEmit(UiMessage(e.friendlyMessage()))
@@ -407,7 +409,7 @@ class MatchDetailViewModel(private val container: AppContainer, private val matc
         viewModelScope.launch {
             try {
                 container.matches.voidEvent(event.eventId, reason)
-                _messages.tryEmit(UiMessage("Evento anulado. Sigue visible en la cronología como anulado."))
+                _messages.tryEmit(UiMessage(AppText.get(R.string.match_detail_evento_anulado_sigue_visible_en)))
                 refresh()
             } catch (e: Exception) {
                 _messages.tryEmit(UiMessage(e.friendlyMessage()))

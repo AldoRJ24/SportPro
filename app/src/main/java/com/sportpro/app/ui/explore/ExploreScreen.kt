@@ -1,5 +1,7 @@
 package com.sportpro.app.ui.explore
 
+import androidx.compose.ui.res.stringResource
+import com.sportpro.app.R
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -121,7 +123,7 @@ fun ExploreScreen(onBell: () -> Unit, onFollowChanged: () -> Unit, onTryouts: ()
     val vm: ExploreViewModel = viewModel { ExploreViewModel(container) }
     val ui by vm.ui.collectAsStateWithLifecycle()
     var query by rememberSaveable { mutableStateOf("") }
-    SpScaffold(title = "Explorar", isTab = true, actions = { BellAction(onBell) }) { pad ->
+    SpScaffold(title = stringResource(R.string.explore_explorar), isTab = true, actions = { BellAction(onBell) }) { pad ->
         when {
             ui.loading && ui.academies.isEmpty() -> LoadingBox(Modifier.padding(pad))
             ui.error != null && ui.academies.isEmpty() -> ErrorBox(ui.error!!, onRetry = vm::load, modifier = Modifier.padding(pad))
@@ -136,7 +138,7 @@ fun ExploreScreen(onBell: () -> Unit, onFollowChanged: () -> Unit, onTryouts: ()
                         OutlinedTextField(
                             query, { query = it },
                             leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
-                            placeholder = { Text("Buscar academia, equipo o categoría") },
+                            placeholder = { Text(stringResource(R.string.explore_buscar_academia_equipo_o_categoria)) },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth().padding(16.dp),
                         )
@@ -144,20 +146,20 @@ fun ExploreScreen(onBell: () -> Unit, onFollowChanged: () -> Unit, onTryouts: ()
                     // Avisos de pruebas: pantalla propia con filtros por categoría, posición, fecha y distrito
                     item { TryoutsEntryCard(onClick = onTryouts) }
                     ui.message?.let { item { Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(horizontal = 16.dp)) } }
-                    item { SectionHeader("Academias") }
-                    if (academies.isEmpty()) item { EmptyState("Sin resultados", "Prueba con otro nombre.") }
+                    item { SectionHeader(stringResource(R.string.explore_academias)) }
+                    if (academies.isEmpty()) item { EmptyState(stringResource(R.string.explore_sin_resultados), stringResource(R.string.explore_prueba_con_otro_nombre)) }
                     items(academies, key = { "a" + it.id }) { a ->
                         val following = ui.follows.any { it.academyId == a.id }
                         FollowRowCard(
                             title = a.name,
-                            subtitle = listOfNotNull(a.city, if (a.status == "verified") "Verificada" else null).joinToString(" · "),
+                            subtitle = listOfNotNull(a.city, if (a.status == "verified") stringResource(R.string.explore_verificada) else null).joinToString(" · "),
                             verified = a.status == "verified",
                             following = following,
                             onToggle = { vm.toggleAcademy(a, onFollowChanged) },
                             crestPath = a.crestPath,
                         )
                     }
-                    item { SectionHeader("Equipos") }
+                    item { SectionHeader(stringResource(R.string.explore_equipos)) }
                     items(teams, key = { "t" + it.id }) { t ->
                         val following = ui.follows.any { it.teamId == t.id }
                         FollowRowCard(
@@ -175,6 +177,7 @@ fun ExploreScreen(onBell: () -> Unit, onFollowChanged: () -> Unit, onTryouts: ()
     }
 }
 
+/** Fila de una academia o equipo: escudo, nombre, datos y el botón «Seguir» / «Siguiendo». */
 @Composable
 private fun FollowRowCard(
     title: String,
@@ -201,8 +204,8 @@ private fun FollowRowCard(
                 }
                 if (subtitle.isNotBlank()) Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            if (following) OutlinedButton(onClick = onToggle) { Text("Siguiendo") }
-            else Button(onClick = onToggle) { Text("Seguir") }
+            if (following) OutlinedButton(onClick = onToggle) { Text(stringResource(R.string.explore_siguiendo)) }
+            else Button(onClick = onToggle) { Text(stringResource(R.string.explore_seguir)) }
         }
     }
 }

@@ -1,4 +1,7 @@
 package com.sportpro.app.ui.profile
+import com.sportpro.app.core.AppText
+import androidx.compose.ui.res.stringResource
+import com.sportpro.app.R
 
 import android.graphics.BitmapFactory
 import android.net.Uri
@@ -54,7 +57,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/** Edit name and profile photo (visible to people who share an academy with you). */
+/** Editar nombre y foto de perfil (visibles para quienes comparten academia contigo). */
 @Composable
 fun EditProfileScreen(session: SessionViewModel, onBack: () -> Unit) {
     val container = LocalAppContainer.current
@@ -79,13 +82,13 @@ fun EditProfileScreen(session: SessionViewModel, onBack: () -> Unit) {
                     pendingJpeg = jpeg
                     preview = BitmapFactory.decodeByteArray(jpeg, 0, jpeg.size)?.asImageBitmap()
                 } catch (e: Exception) {
-                    message = "No se pudo leer la imagen"
+                    message = AppText.get(R.string.edit_profile_no_se_pudo_leer_la)
                 }
             }
         }
     }
 
-    SpScaffold(title = "Editar perfil", onBack = onBack, snackbarHostState = snack) { pad ->
+    SpScaffold(title = stringResource(R.string.edit_profile_editar_perfil), onBack = onBack, snackbarHostState = snack) { pad ->
         Column(
             Modifier.padding(pad).imePadding().verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
@@ -93,7 +96,7 @@ fun EditProfileScreen(session: SessionViewModel, onBack: () -> Unit) {
         ) {
             val p = preview
             if (p != null) {
-                Image(p, contentDescription = "Vista previa", contentScale = ContentScale.Crop, modifier = Modifier.size(132.dp).clip(CircleShape))
+                Image(p, contentDescription = stringResource(R.string.edit_profile_vista_previa), contentScale = ContentScale.Crop, modifier = Modifier.size(132.dp).clip(CircleShape))
             } else {
                 Avatar(ctx?.displayName ?: "?", ctx?.profile?.avatarPath, size = 132.dp)
             }
@@ -102,7 +105,7 @@ fun EditProfileScreen(session: SessionViewModel, onBack: () -> Unit) {
                     OutlinedButton(
                         onClick = { picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
                         enabled = !busy,
-                    ) { Text("Elegir foto") }
+                    ) { Text(stringResource(R.string.edit_profile_elegir_foto)) }
                     if (ctx?.profile?.avatarPath != null && p == null) {
                         TextButton(
                             onClick = {
@@ -111,7 +114,7 @@ fun EditProfileScreen(session: SessionViewModel, onBack: () -> Unit) {
                                     try {
                                         container.account.removeAvatar()
                                         session.refreshContext()
-                                        message = "Foto quitada"
+                                        message = AppText.get(R.string.edit_profile_foto_quitada)
                                     } catch (e: Exception) {
                                         message = e.friendlyMessage()
                                     } finally {
@@ -120,17 +123,17 @@ fun EditProfileScreen(session: SessionViewModel, onBack: () -> Unit) {
                                 }
                             },
                             enabled = !busy,
-                        ) { Text("Quitar foto") }
+                        ) { Text(stringResource(R.string.edit_profile_quitar_foto)) }
                     }
                 }
                 Text(
-                    "Tu foto la ven las personas de tus academias (entrenadores, apoderados y jugadores).",
+                    stringResource(R.string.edit_profile_tu_foto_la_ven_las),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             } else {
                 Text(
-                    "Por privacidad, las cuentas de menores de edad no publican foto de perfil.",
+                    stringResource(R.string.edit_profile_por_privacidad_las_cuentas_de),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -138,7 +141,7 @@ fun EditProfileScreen(session: SessionViewModel, onBack: () -> Unit) {
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it.take(60) },
-                label = { Text("Nombre completo") },
+                label = { Text(stringResource(R.string.edit_profile_nombre_completo)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -146,7 +149,7 @@ fun EditProfileScreen(session: SessionViewModel, onBack: () -> Unit) {
             Button(
                 onClick = {
                     if (name.trim().length < 3) {
-                        message = "Escribe tu nombre completo"
+                        message = AppText.get(R.string.edit_profile_escribe_tu_nombre_completo)
                         return@Button
                     }
                     busy = true
@@ -160,7 +163,7 @@ fun EditProfileScreen(session: SessionViewModel, onBack: () -> Unit) {
                             pendingJpeg = null
                             preview = null
                             session.refreshContext()
-                            message = "Perfil actualizado"
+                            message = AppText.get(R.string.edit_profile_perfil_actualizado)
                         } catch (e: Exception) {
                             message = e.friendlyMessage()
                         } finally {
@@ -170,7 +173,7 @@ fun EditProfileScreen(session: SessionViewModel, onBack: () -> Unit) {
                 },
                 enabled = !busy,
                 modifier = Modifier.fillMaxWidth().height(52.dp),
-            ) { Text("Guardar cambios") }
+            ) { Text(stringResource(R.string.edit_profile_guardar_cambios)) }
         }
     }
 }

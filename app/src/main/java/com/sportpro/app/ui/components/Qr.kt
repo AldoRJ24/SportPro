@@ -1,4 +1,7 @@
 package com.sportpro.app.ui.components
+import androidx.compose.ui.res.stringResource
+import com.sportpro.app.R
+import com.sportpro.app.core.AppText
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -42,6 +45,7 @@ fun qrBitmap(text: String, sizePx: Int = 640): ImageBitmap {
     return bmp.asImageBitmap()
 }
 
+/** Muestra un código QR sobre fondo blanco con esquinas redondeadas. Se genera una sola vez por texto. */
 @Composable
 fun QrImage(text: String, modifier: Modifier = Modifier, size: Dp = 240.dp) {
     val image = remember(text) { qrBitmap(text) }
@@ -51,13 +55,13 @@ fun QrImage(text: String, modifier: Modifier = Modifier, size: Dp = 240.dp) {
             .background(Color.White)
             .padding(10.dp),
     ) {
-        Image(image, contentDescription = "Código QR de invitación", modifier = Modifier.size(size))
+        Image(image, contentDescription = stringResource(R.string.qr_codigo_qr_de_invitacion), modifier = Modifier.size(size))
     }
 }
 
 /**
- * Opens Google's code scanner (Play services; no camera permission needed).
- * [onResult] receives the raw text, or null if cancelled; [onError] a readable message.
+ * Abre el escáner de códigos de Google (Play services; no necesita permiso de cámara).
+ * [onResult] recibe el texto leído, o null si se canceló; [onError] recibe un mensaje legible.
  */
 fun scanQr(context: Context, onResult: (String?) -> Unit, onError: (String) -> Unit) {
     val options = GmsBarcodeScannerOptions.Builder()
@@ -67,5 +71,5 @@ fun scanQr(context: Context, onResult: (String?) -> Unit, onError: (String) -> U
         .startScan()
         .addOnSuccessListener { barcode -> onResult(barcode.rawValue) }
         .addOnCanceledListener { onResult(null) }
-        .addOnFailureListener { e -> onError(e.message ?: "No se pudo abrir el escáner") }
+        .addOnFailureListener { e -> onError(e.message ?: AppText.get(R.string.qr_no_se_pudo_abrir_el)) }
 }

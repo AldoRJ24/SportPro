@@ -1,4 +1,6 @@
 package com.sportpro.app.ui.components
+import androidx.compose.ui.res.stringResource
+import com.sportpro.app.R
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
@@ -35,7 +37,7 @@ import com.sportpro.app.ui.theme.Mint400
 import com.sportpro.app.ui.theme.ScoreStyle
 import com.sportpro.app.ui.theme.WarnAmber
 
-/** Match card (§9.8): crests on both sides, score in the middle, status and date on top. */
+/** Tarjeta de partido (§9.8): escudos a los lados, marcador al centro, estado y fecha arriba. */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MatchCard(
@@ -90,6 +92,7 @@ fun MatchCard(
     }
 }
 
+/** Columna de un equipo dentro de la tarjeta: escudo arriba y nombre debajo. */
 @Composable
 private fun TeamColumn(name: String, crestPath: String?, modifier: Modifier = Modifier) {
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
@@ -106,18 +109,19 @@ private fun TeamColumn(name: String, crestPath: String?, modifier: Modifier = Mo
     }
 }
 
+/** Etiqueta del estado del partido: en vivo con su minuto, entretiempo, finalizado o la fecha programada. */
 @Composable
 fun StatusBadge(match: MatchRow, nowMs: Long) {
     when (match.status) {
-        "live" -> LivePill("EN VIVO · ${match.clock(nowMs).label}")
-        "halftime" -> Pill("ENTRETIEMPO", WarnAmber)
-        "finished" -> Pill("FINALIZADO", Mint400)
-        "cancelled" -> Pill("CANCELADO", MaterialTheme.colorScheme.onSurfaceVariant)
+        "live" -> LivePill(stringResource(R.string.match_card_en_vivo_x, match.clock(nowMs).label))
+        "halftime" -> Pill(stringResource(R.string.match_card_entretiempo), WarnAmber)
+        "finished" -> Pill(stringResource(R.string.match_card_finalizado), Mint400)
+        "cancelled" -> Pill(stringResource(R.string.match_card_cancelado), MaterialTheme.colorScheme.onSurfaceVariant)
         else -> Pill(formatDayTime(match.scheduledAt).uppercase(), MaterialTheme.colorScheme.secondary)
     }
 }
 
-/** Instagram-stories-like strip with the live matches the user follows (§9.8). */
+/** Franja tipo «historias» con los partidos en vivo que sigue el usuario (§9.8). */
 @Composable
 fun LiveStrip(matches: List<MatchRow>, nowMs: Long, onClick: (MatchRow) -> Unit, modifier: Modifier = Modifier) {
     LazyRow(

@@ -338,4 +338,689 @@
     <string name="fees_done_rejected">Pago rechazado.</string>
     <string name="fees_done_voided">Pago anulado. El cobro volvió a pendiente.</string>
     <string name="fees_done_waived">Cobro exonerado.</string>
+
+    <!-- core/data/Positions.kt -->
+    <string name="positions_arquero">Arquero</string>
+    <string name="positions_defensa">Defensa</string>
+    <string name="positions_mediocampista">Mediocampista</string>
+    <string name="positions_delantero">Delantero</string>
+    <string name="positions_titulares_x_x">Titulares %1$s/%2$s</string>
+    <plurals name="positions_missing_position">
+        <item quantity="one">%d titular sin posición</item>
+        <item quantity="other">%d titulares sin posición</item>
+    </plurals>
+
+    <!-- core/data/Time.kt -->
+    <string name="time_sin_fecha">Sin fecha</string>
+    <string name="time_hace_x_min">hace %1$s min</string>
+    <string name="time_hace_x_h">hace %1$s h</string>
+    <string name="time_hace_x_d">hace %1$s d</string>
+    <string name="time_en_vivo_x">EN VIVO · %1$s</string>
+    <string name="time_entretiempo">ENTRETIEMPO</string>
+    <string name="time_finalizado">FINALIZADO</string>
+    <string name="time_cancelado">CANCELADO</string>
+
+    <!-- ui/admin/AcademyTeamsScreen.kt -->
+    <string name="academy_teams_escribe_el_nombre_y_la">Escribe el nombre y la categoría del equipo.</string>
+    <string name="academy_teams_equipo_creado">Equipo creado</string>
+    <string name="academy_teams_x_asignado_a_x">%1$s asignado a %2$s</string>
+    <string name="academy_teams_foto_de_la_academia_actualizada">Foto de la academia actualizada en todos sus equipos</string>
+    <string name="academy_teams_foto_de_la_academia_quitada">Foto de la academia quitada</string>
+    <string name="academy_teams_no_se_pudo_leer_la">No se pudo leer la imagen</string>
+    <string name="academy_teams_equipos_x">Equipos · %1$s</string>
+    <string name="academy_teams_foto_de_la_academia">Foto de la academia</string>
+    <string name="academy_teams_se_muestra_en_la_academia">Se muestra en la academia y en todos sus equipos. Solo el administrador puede cambiarla.</string>
+    <string name="academy_teams_cambiar_foto">Cambiar foto</string>
+    <string name="academy_teams_quitar">Quitar</string>
+    <string name="academy_teams_nuevo_equipo">Nuevo equipo</string>
+    <string name="academy_teams_nombre_ej_halcones">Nombre (ej. Halcones)</string>
+    <string name="academy_teams_categoria_ej_sub_15">Categoría (ej. Sub-15)</string>
+    <string name="academy_teams_edad_max">Edad máx.</string>
+    <string name="academy_teams_x_vs_x">%1$s vs %2$s</string>
+    <string name="academy_teams_crear_equipo">Crear equipo</string>
+    <string name="academy_teams_equipos_y_su_dt">Equipos y su DT</string>
+    <string name="academy_teams_sin_equipos">Sin equipos</string>
+    <string name="academy_teams_crea_el_primer_equipo_de">Crea el primer equipo de la academia.</string>
+    <string name="academy_teams_formato_x_vs_x_x">Formato %1$s vs %2$s · %3$s\' por tiempo</string>
+    <string name="academy_teams_dt_x">DT: %1$s ✕</string>
+    <string name="academy_teams_asignar_dt">Asignar DT</string>
+    <string name="academy_teams_no_hay_dt_disponibles_invitar">No hay DT disponibles: invitar uno</string>
+    <string name="academy_teams_entrenador">Entrenador</string>
+
+    <!-- ui/admin/InvitesScreen.kt -->
+    <string name="invites_invitacion_anulada">Invitación anulada</string>
+    <string name="invites_invitar_administrador">Invitar administrador</string>
+    <string name="invites_invitar_entrenador">Invitar entrenador</string>
+    <string name="invites_administrador_de_academias">administrador de academias</string>
+    <string name="invites_entrenador_dt_de_x">entrenador (DT) de %1$s</string>
+    <string name="invites_genera_un_codigo_qr_de">Genera un código QR de un solo uso (vence en 7 días). Quien lo escanee abre SportPro y se registra como %1$s.</string>
+    <string name="invites_debera_registrar_su_academia_para">" Deberá registrar su academia para completar el registro."</string>
+    <string name="invites_generar_codigo_qr">Generar código QR</string>
+    <string name="invites_generar_otro_codigo">Generar otro código</string>
+    <string name="invites_escanealo_con_la_camara_del">Escanéalo con la cámara del teléfono o con «Me invitaron: escanear QR» en el inicio de sesión. Vence: %1$s</string>
+    <string name="invites_copiar_codigo">Copiar código</string>
+    <string name="invites_invitacion_a_sportpro">Invitación a SportPro</string>
+    <string name="invites_te_invito_a_sportpro_como">"Te invito a SportPro como %1$s. Abre este enlace en tu celular con la app instalada: %2$s "</string>
+    <string name="invites_o_ingresa_el_codigo_x">(o ingresa el código %1$s en «Regístrate → ¿Te invitaron?»).</string>
+    <string name="invites_compartir">Compartir</string>
+    <string name="invites_invitaciones_generadas">Invitaciones generadas</string>
+    <string name="invites_aun_no_generaste_invitaciones">Aún no generaste invitaciones.</string>
+    <string name="invites_usada_por_x">usada por %1$s</string>
+    <string name="invites_vence_x">vence %1$s</string>
+    <string name="invites_activa">Activa</string>
+    <string name="invites_anular">Anular</string>
+    <string name="invites_usada">Usada</string>
+    <string name="invites_vencida">Vencida</string>
+    <string name="invites_anulada">Anulada</string>
+
+    <!-- ui/admin/RedeemInviteDialog.kt -->
+    <string name="redeem_invite_invitacion_x">Invitación %1$s</string>
+    <string name="redeem_invite_invitacion_no_valida">Invitación no válida</string>
+    <string name="redeem_invite_te_invitaron_como_administrador_de">Te invitaron como administrador de academias. Para aceptarla con esta cuenta registra tu academia.</string>
+    <string name="redeem_invite_nombre_de_la_academia">Nombre de la academia</string>
+    <string name="redeem_invite_ciudad">Ciudad</string>
+    <string name="redeem_invite_te_invitaron_como_entrenador_dt">Te invitaron como entrenador (DT) de %1$s. ¿Aceptar con esta cuenta?</string>
+    <string name="redeem_invite_si_la_invitacion_es_para">Si la invitación es para otra persona, ciérrala y que esa persona cree su cuenta.</string>
+    <string name="redeem_invite_aceptar_invitacion">Aceptar invitación</string>
+    <string name="redeem_invite_cerrar">Cerrar</string>
+
+    <!-- ui/auth/AuthScreens.kt -->
+    <string name="auth_sportpro">SportPro</string>
+    <string name="auth_gestion_de_academias_y_partidos">Gestión de academias y partidos en vivo</string>
+    <string name="auth_iniciar_sesion">Iniciar sesión</string>
+    <string name="auth_correo">Correo</string>
+    <string name="auth_contrasena">Contraseña</string>
+    <string name="auth_entrar">Entrar</string>
+    <string name="auth_no_tienes_cuenta_registrate">¿No tienes cuenta? Regístrate</string>
+    <string name="auth_me_invitaron_escanear_qr">Me invitaron: escanear QR</string>
+    <string name="auth_crear_cuenta">Crear cuenta</string>
+    <string name="auth_invitacion_x">INVITACIÓN %1$s</string>
+    <string name="auth_te_estas_registrando_como_administrador">Te estás registrando como administrador de academias</string>
+    <string name="auth_te_estas_registrando_como_entrenador">Te estás registrando como entrenador (DT) de %1$s</string>
+    <string name="auth_debes_ser_mayor_de_edad">Debes ser mayor de edad y registrar al menos una academia.</string>
+    <string name="auth_debes_ser_mayor_de_edad_2">Debes ser mayor de edad. Quedarás en el cuerpo técnico de esa academia.</string>
+    <string name="auth_no_usar_esta_invitacion">No usar esta invitación</string>
+    <string name="auth_como_usaras_sportpro">¿Cómo usarás SportPro?</string>
+    <string name="auth_apoderado">Apoderado</string>
+    <string name="auth_mayor_de_edad_gestionas_a">Mayor de edad. Gestionas a tus hijos y apruebas sus solicitudes.</string>
+    <string name="auth_jugador">Jugador</string>
+    <string name="auth_13_anos_o_mas_si">13 años o más. Si eres menor, te vinculas a tu apoderado.</string>
+    <string name="auth_te_invitaron_como_administrador_o">¿Te invitaron como administrador o entrenador?</string>
+    <string name="auth_codigo_de_invitacion_adm_o">Código de invitación (ADM-… o DT-…)</string>
+    <string name="auth_validar">Validar</string>
+    <string name="auth_escanear_qr">Escanear QR</string>
+    <string name="auth_nombre">Nombre</string>
+    <string name="auth_apellido">Apellido</string>
+    <string name="auth_fecha_de_nacimiento_dd_mm">Fecha de nacimiento (DD/MM/AAAA)</string>
+    <string name="auth_tu_academia">Tu academia</string>
+    <string name="auth_nombre_de_la_academia">Nombre de la academia</string>
+    <string name="auth_ciudad">Ciudad</string>
+    <string name="auth_contrasena_min_6">Contraseña (mín. 6)</string>
+    <string name="auth_tus_datos_se_usan_solo">Tus datos se usan solo para gestionar tu participación en la academia. Los menores de 13 años no crean cuenta propia.</string>
+    <string name="auth_ya_tengo_cuenta">Ya tengo cuenta</string>
+
+    <!-- ui/auth/AuthViewModel.kt -->
+    <string name="auth_ingresa_tu_correo_y_contrasena">Ingresa tu correo y contraseña.</string>
+    <string name="auth_codigo_de_invitacion_invalido">Código de invitación inválido</string>
+    <string name="auth_invitacion_no_valida">Invitación no válida</string>
+    <string name="auth_administrador_de_academia">administrador de academia</string>
+    <string name="auth_la_invitacion_no_es_valida">La invitación no es válida: %1$s</string>
+    <string name="auth_escribe_tu_nombre">Escribe tu nombre.</string>
+    <string name="auth_escribe_tu_apellido">Escribe tu apellido.</string>
+    <string name="auth_completa_la_fecha_de_nacimiento">Completa la fecha de nacimiento: 8 dígitos (DD/MM/AAAA).</string>
+    <string name="auth_esa_fecha_de_nacimiento_no">Esa fecha de nacimiento no existe. Revisa día y mes.</string>
+    <string name="auth_la_fecha_de_nacimiento_no">La fecha de nacimiento no puede ser futura.</string>
+    <string name="auth_los_menores_de_13_anos">Los menores de 13 años no crean cuenta: su apoderado crea su perfil en «Mis hijos».</string>
+    <string name="auth_para_registrarte_como_x_debes">Para registrarte como %1$s debes ser mayor de edad (18+).</string>
+    <string name="auth_registra_el_nombre_de_tu">Registra el nombre de tu academia para completar el registro.</string>
+    <string name="auth_correo_invalido">Correo inválido.</string>
+    <string name="auth_la_contrasena_debe_tener_al">La contraseña debe tener al menos 6 caracteres.</string>
+    <string name="auth_cuenta_creada_te_enviamos_un">Cuenta creada. Te enviamos un correo para confirmarla; luego inicia sesión.</string>
+    <string name="auth_el_servidor_rechazo_el_registro">El servidor rechazó el registro (revisa edad, invitación y datos de la academia).</string>
+
+    <!-- ui/calendar/CalendarScreen.kt -->
+    <string name="calendar_calendario">Calendario</string>
+    <string name="calendar_sin_partidos_proximos">Sin partidos próximos</string>
+    <string name="calendar_cuando_tu_equipo_programe_un">Cuando tu equipo programe un partido aparecerá aquí.</string>
+    <string name="calendar_jugados_recientemente">Jugados recientemente</string>
+
+    <!-- ui/components/Avatar.kt -->
+    <string name="avatar_imagen_de_x">Imagen de %1$s</string>
+
+    <!-- ui/components/Common.kt -->
+    <string name="common_volver">Volver</string>
+    <string name="common_no_se_pudo_cargar">No se pudo cargar</string>
+    <string name="common_reintentar">Reintentar</string>
+    <string name="common_prototipo">PROTOTIPO</string>
+    <string name="common_administrador">Administrador</string>
+    <string name="common_director_tecnico">Director técnico</string>
+    <string name="common_apoderado">Apoderado</string>
+    <string name="common_jugador">Jugador</string>
+    <plurals name="common_offline_pending">
+        <item quantity="one">Sin conexión · %d pendiente</item>
+        <item quantity="other">Sin conexión · %d pendientes</item>
+    </plurals>
+    <string name="common_sin_conexion">Sin conexión</string>
+    <string name="common_enviando_x">Enviando %1$s…</string>
+    <string name="common_en_linea">En línea</string>
+
+    <!-- ui/components/MaskedInput.kt -->
+    <string name="masked_input_dia_mes_y_ano_8">Día, mes y año: 8 dígitos</string>
+    <string name="masked_input_faltan_x_digitos">Faltan %1$s dígitos</string>
+    <string name="masked_input_esa_fecha_no_existe">Esa fecha no existe</string>
+
+    <!-- ui/components/MatchCard.kt -->
+    <string name="match_card_en_vivo_x">EN VIVO · %1$s</string>
+    <string name="match_card_entretiempo">ENTRETIEMPO</string>
+    <string name="match_card_finalizado">FINALIZADO</string>
+    <string name="match_card_cancelado">CANCELADO</string>
+
+    <!-- ui/components/Qr.kt -->
+    <string name="qr_codigo_qr_de_invitacion">Código QR de invitación</string>
+    <string name="qr_no_se_pudo_abrir_el">No se pudo abrir el escáner</string>
+
+    <!-- ui/components/TabActions.kt -->
+    <string name="tab_actions_crear_partido">Crear partido</string>
+    <string name="tab_actions_notificaciones_y_avisos_x_sin">Notificaciones y avisos (%1$s sin leer)</string>
+
+    <!-- ui/creatematch/CreateMatchScreen.kt -->
+    <string name="create_match_nuevo_partido">Nuevo partido</string>
+    <string name="create_match_no_gestionas_equipos">No gestionas equipos</string>
+    <string name="create_match_solo_el_dt_o_el">Solo el DT o el administrador de la academia crean partidos.</string>
+    <string name="create_match_tu_equipo_local">Tu equipo (local)</string>
+    <string name="create_match_rival">Rival</string>
+    <string name="create_match_externo">Externo</string>
+    <string name="create_match_registrado_en_sportpro">Registrado en SportPro</string>
+    <string name="create_match_nombre_del_rival">Nombre del rival</string>
+    <string name="create_match_plantel_del_rival_x_x">Plantel del rival: %1$s/%2$s titulares · dorsal, nombre y posición de cada uno (1 arquero).</string>
+    <string name="create_match_agregar_suplente">Agregar suplente</string>
+    <string name="create_match_completar_posiciones">Completar posiciones</string>
+    <string name="create_match_rival_externo_escudo_por_defecto">Rival externo: escudo por defecto y sin estadísticas para sus jugadores.</string>
+    <string name="create_match_no_gestionas_otros_equipos_usa">No gestionas otros equipos. Usa un rival externo.</string>
+    <string name="create_match_formato_jugadores_en_cancha_por">Formato (jugadores en cancha por equipo)</string>
+    <string name="create_match_otro">Otro</string>
+    <string name="create_match_x_vs_x">%1$s vs %2$s</string>
+    <string name="create_match_duracion_de_cada_tiempo_x">Duración de cada tiempo: %1$s min</string>
+    <string name="create_match_fecha">Fecha</string>
+    <string name="create_match_hora_24_h">Hora (24 h)</string>
+    <string name="create_match_sede_opcional">Sede (opcional)</string>
+    <string name="create_match_quien_puede_verlo_en_vivo">¿Quién puede verlo en vivo?</string>
+    <string name="create_match_seguidores">Seguidores</string>
+    <string name="create_match_publico">Público</string>
+    <string name="create_match_solo_academia">Solo academia</string>
+    <string name="create_match_crear_y_preparar_convocatoria">Crear y preparar convocatoria</string>
+    <string name="create_match_cancelar">Cancelar</string>
+
+    <!-- ui/creatematch/CreateMatchViewModel.kt -->
+    <string name="create_match_titulares_x_x">Titulares %1$s/%2$s</string>
+    <string name="create_match_debe_haber_exactamente_1_arquero">Debe haber exactamente 1 arquero titular (hay %1$s)</string>
+    <string name="create_match_hay_filas_sin_nombre">Hay filas sin nombre</string>
+    <string name="create_match_todos_necesitan_dorsal_0_99">Todos necesitan dorsal (0–99)</string>
+    <string name="create_match_dorsales_repetidos_x">Dorsales repetidos: %1$s</string>
+    <string name="create_match_asigna_la_posicion_de_cada">Asigna la posición de cada jugador</string>
+    <string name="create_match_elige_tu_equipo">Elige tu equipo.</string>
+    <string name="create_match_escribe_el_nombre_del_rival">Escribe el nombre del rival externo.</string>
+    <string name="create_match_elige_el_equipo_rival">Elige el equipo rival.</string>
+    <string name="create_match_el_formato_debe_ser_de">El formato debe ser de 5 a 11 jugadores.</string>
+    <string name="create_match_cada_tiempo_debe_durar_entre">Cada tiempo debe durar entre 5 y 60 minutos.</string>
+    <string name="create_match_fecha_invalida_escribe_8_digitos">Fecha inválida: escribe 8 dígitos (DD/MM/AAAA).</string>
+    <string name="create_match_hora_invalida_escribe_4_digitos">Hora inválida: escribe 4 dígitos (HH:MM, 24 h).</string>
+    <string name="create_match_plantel_del_rival">"Plantel del rival: "</string>
+
+    <!-- ui/creatematch/MatchSetupScreen.kt -->
+    <string name="match_setup_convocatoria_y_alineacion">Convocatoria y alineación</string>
+    <string name="match_setup_x_vs_x">%1$s vs %2$s</string>
+    <string name="match_setup_x_vs_x_1_convoca">%1$s vs %2$s · 1) convoca · 2) confirma · 3) arma la formación · 4) guarda</string>
+    <string name="match_setup_el_partido_ya_inicio_la">El partido ya inició: la alineación no se puede cambiar.</string>
+    <string name="match_setup_1_convocatoria_x">1 · Convocatoria · %1$s</string>
+    <string name="match_setup_convocar_a_todos">Convocar a todos</string>
+    <string name="match_setup_marcar_confirmados">Marcar confirmados</string>
+    <string name="match_setup_toca_la_posicion_para_cambiar">Toca la posición para cambiar la posición habitual del jugador en el equipo.</string>
+    <string name="match_setup_jugador">Jugador</string>
+    <string name="match_setup_confirmado">Confirmado</string>
+    <string name="match_setup_no_asiste">No asiste</string>
+    <string name="match_setup_pendiente">Pendiente</string>
+    <string name="match_setup_2_formacion_y_alineacion_x">2 · Formación y alineación · %1$s</string>
+    <string name="match_setup_formacion_arquero_defensas_medios_delant">Formación (arquero + defensas + medios + delanteros)</string>
+    <string name="match_setup_solo_pueden_alinearse_jugadores_que">Solo pueden alinearse jugadores que confirmaron asistencia (US-09). Siempre debe haber 1 arquero.</string>
+    <string name="match_setup_armar_automatico">Armar automático</string>
+    <string name="match_setup_guardar_alineacion">Guardar alineación</string>
+    <string name="match_setup_aun_no_hay_convocados_confirmados">Aún no hay convocados confirmados.</string>
+    <string name="match_setup_titular">Titular</string>
+    <string name="match_setup_suplente">Suplente</string>
+    <string name="match_setup_no_juega">No juega</string>
+    <string name="match_setup_posicion_en_este_partido">Posición en este partido</string>
+    <string name="match_setup_plantel_del_rival_externo_x">Plantel del rival externo · %1$s</string>
+    <string name="match_setup_plantel_completo">Plantel completo</string>
+    <string name="match_setup_3_operador_del_partido">3 · Operador del partido</string>
+    <string name="match_setup_quien_registra_los_eventos_desde">Quien registra los eventos desde su celular (un solo operador activo). El DT siempre puede registrar.</string>
+    <string name="match_setup_miembro">Miembro</string>
+    <string name="match_setup_ir_al_partido">Ir al partido</string>
+    <string name="match_setup_quitar">Quitar</string>
+    <string name="match_setup_agregar_jugador_al_plantel_rival">Agregar jugador al plantel rival</string>
+    <string name="match_setup_agregar">Agregar</string>
+
+    <!-- ui/creatematch/MatchSetupViewModel.kt -->
+    <string name="match_setup_titulares_x_x">Titulares %1$s/%2$s</string>
+    <string name="match_setup_arqueros_titulares_x_debe_ser">Arqueros titulares: %1$s (debe ser 1)</string>
+    <string name="match_setup_hay_jugadores_sin_dorsal">Hay jugadores sin dorsal</string>
+    <string name="match_setup_hay_jugadores_sin_posicion">Hay jugadores sin posición</string>
+    <string name="match_setup_partido_no_encontrado_o_sin">Partido no encontrado o sin acceso.</string>
+    <plurals name="match_setup_called_up">
+        <item quantity="one">Convocado %d jugador. Su apoderado ya puede confirmar.</item>
+        <item quantity="other">Convocados %d jugadores. Sus apoderados ya pueden confirmar.</item>
+    </plurals>
+    <plurals name="match_setup_confirmed">
+        <item quantity="one">Confirmado %d jugador.</item>
+        <item quantity="other">Confirmados %d jugadores.</item>
+    </plurals>
+    <string name="match_setup_formacion_x_incompleta_x">Formación %1$s incompleta: %2$s</string>
+    <string name="match_setup_alineacion_de_x_guardada_x">"Alineación de %1$s guardada · %2$s · "</string>
+    <string name="match_setup_x_titulares_x_suplentes">%1$s titulares, %2$s suplentes.</string>
+    <string name="match_setup_escribe_el_nombre_del_jugador">Escribe el nombre del jugador.</string>
+    <string name="match_setup_escribe_el_dorsal">Escribe el dorsal.</string>
+    <string name="match_setup_el_dorsal_x_ya_existe">El dorsal %1$s ya existe en el plantel rival.</string>
+    <string name="match_setup_elige_la_posicion">Elige la posición.</string>
+    <string name="match_setup_operador_designado_solo_esa_persona">Operador designado. Solo esa persona (y el DT) registra eventos.</string>
+
+    <!-- ui/creatematch/RosterEditor.kt -->
+    <string name="roster_editor_nombre">Nombre</string>
+    <string name="roster_editor_quitar">Quitar</string>
+    <string name="roster_editor_titular">Titular</string>
+    <string name="roster_editor_suplente">Suplente</string>
+
+    <!-- ui/explore/ExploreScreen.kt -->
+    <string name="explore_explorar">Explorar</string>
+    <string name="explore_buscar_academia_equipo_o_categoria">Buscar academia, equipo o categoría</string>
+    <string name="explore_academias">Academias</string>
+    <string name="explore_sin_resultados">Sin resultados</string>
+    <string name="explore_prueba_con_otro_nombre">Prueba con otro nombre.</string>
+    <string name="explore_verificada">Verificada</string>
+    <string name="explore_equipos">Equipos</string>
+    <string name="explore_siguiendo">Siguiendo</string>
+    <string name="explore_seguir">Seguir</string>
+
+    <!-- ui/family/FamilyCards.kt -->
+    <string name="family_cards_mi_codigo_familiar">Mi código familiar</string>
+    <string name="family_cards_compartelo_unicamente_con_tus_hijos">Compártelo únicamente con tus hijos. Lo escriben al crear su cuenta y tú apruebas la solicitud.</string>
+    <string name="family_cards_codigo">CÓDIGO</string>
+    <string name="family_cards_copiar_codigo">Copiar código</string>
+    <string name="family_cards_codigo_familiar_sportpro">Código familiar SportPro</string>
+    <string name="family_cards_mi_codigo_familiar_de_sportpro">Mi código familiar de SportPro es %1$s. Escríbelo al crear tu cuenta de jugador para vincularte conmigo.</string>
+    <string name="family_cards_compartir">Compartir</string>
+    <string name="family_cards_x_quiere_vincularse_contigo">%1$s quiere vincularse contigo</string>
+    <plurals name="common_years">
+        <item quantity="one">%d año</item>
+        <item quantity="other">%d años</item>
+    </plurals>
+    <string name="family_cards_aceptar">Aceptar</string>
+    <string name="family_cards_rechazar">Rechazar</string>
+
+    <!-- ui/family/GuardianLinkScreen.kt -->
+    <string name="guardian_link_el_codigo_tiene_8_caracteres">El código tiene 8 caracteres después de «SP-».</string>
+    <string name="guardian_link_sportpro">SPORTPRO</string>
+    <string name="guardian_link_vincula_a_tu_apoderado">Vincula a tu apoderado</string>
+    <string name="guardian_link_hola_x_como_eres_menor">Hola, %1$s. Como eres menor de edad, para activar tu cuenta necesitamos la autorización de tu apoderado.</string>
+    <string name="guardian_link_solicitud_enviada">SOLICITUD ENVIADA</string>
+    <string name="guardian_link_esperando_que_x_acepte_la">Esperando que %1$s acepte la vinculación.</string>
+    <string name="guardian_link_cuando_la_acepte_entraras_automaticament">Cuando la acepte, entrarás automáticamente.</string>
+    <string name="guardian_link_actualizar">Actualizar</string>
+    <string name="guardian_link_usar_otro_codigo">Usar otro código</string>
+    <string name="guardian_link_x_rechazo_la_solicitud_revisa">%1$s rechazó la solicitud. Revisa el código con tu apoderado.</string>
+    <string name="guardian_link_codigo_del_apoderado">CÓDIGO DEL APODERADO</string>
+    <string name="guardian_link_solicitar_vinculacion">Solicitar vinculación</string>
+    <string name="guardian_link_tu_apoderado_encuentra_su_codigo">Tu apoderado encuentra su código en Perfil → Mis hijos, y debe revisar y aprobar la solicitud.</string>
+    <string name="guardian_link_cerrar_sesion">Cerrar sesión</string>
+
+    <!-- ui/feed/FeedViewModel.kt -->
+    <string name="feed_comentario_eliminado">Comentario eliminado</string>
+    <string name="feed_comentarios_activados">Comentarios activados</string>
+    <string name="feed_comentarios_desactivados">Comentarios desactivados</string>
+
+    <!-- ui/feed/PostCard.kt -->
+    <string name="post_card_publico">Público</string>
+    <string name="post_card_academia">Academia</string>
+    <string name="post_card_equipo">Equipo</string>
+    <plurals name="post_card_likes">
+        <item quantity="one">%d me gusta</item>
+        <item quantity="other">%d me gusta</item>
+    </plurals>
+    <string name="post_card_comentar">Comentar</string>
+    <string name="post_card_comentarios_desactivados">Comentarios desactivados</string>
+    <plurals name="post_card_view_comments">
+        <item quantity="one">Ver %d comentario</item>
+        <item quantity="other">Ver los %d comentarios</item>
+    </plurals>
+    <string name="post_card_resumen_generado_con_ia_y">Resumen generado con IA y revisado por el DT</string>
+    <string name="post_card_quitar_me_gusta">Quitar me gusta</string>
+    <string name="post_card_me_gusta">Me gusta</string>
+    <string name="post_card_comentarios">Comentarios</string>
+    <string name="post_card_permitir">Permitir</string>
+    <string name="post_card_como_autor_puedes_eliminar_comentarios">Como autor puedes eliminar comentarios ofensivos o desactivar los comentarios.</string>
+    <string name="post_card_aun_no_hay_comentarios_se">Aún no hay comentarios. ¡Sé el primero!</string>
+    <string name="post_card_sin_comentarios">Sin comentarios.</string>
+    <string name="post_card_eliminar_comentario">Eliminar comentario</string>
+    <string name="post_card_escribe_un_comentario">Escribe un comentario…</string>
+    <string name="post_card_publicar">Publicar</string>
+    <string name="post_card_los_comentarios_estan_desactivados_por">Los comentarios están desactivados por el autor.</string>
+    <string name="post_card_eliminar_comentario_2">¿Eliminar comentario?</string>
+    <string name="post_card_se_quitara_tu_comentario">Se quitará tu comentario.</string>
+    <string name="post_card_se_quitara_el_comentario_de">Se quitará el comentario de %1$s. Queda registrado quién lo eliminó.</string>
+    <string name="post_card_eliminar">Eliminar</string>
+    <string name="post_card_cancelar">Cancelar</string>
+
+    <!-- ui/home/HomeScreen.kt -->
+    <string name="home_sportpro">SportPro</string>
+    <string name="home_hola_x">Hola, %1$s</string>
+    <string name="home_en_vivo_ahora">En vivo ahora</string>
+    <string name="home_publicaciones">Publicaciones</string>
+    <string name="home_no_se_pudieron_cargar_las">No se pudieron cargar las publicaciones</string>
+    <string name="home_aun_no_hay_publicaciones">Aún no hay publicaciones</string>
+    <string name="home_cuando_un_dt_apruebe_el">Cuando un DT apruebe el resumen con IA de un partido, aparecerá aquí.</string>
+    <string name="home_resultados_y_proximos_partidos">Resultados y próximos partidos</string>
+    <string name="home_tu_inicio_esta_vacio">Tu inicio está vacío</string>
+    <string name="home_sigue_academias_y_equipos_en">Sigue academias y equipos en Explorar para ver sus partidos aquí.</string>
+
+    <!-- ui/match/EditEventDialog.kt -->
+    <string name="edit_event_anular_evento">Anular evento</string>
+    <string name="edit_event_el_evento_no_se_borra">El evento no se borra: queda marcado como anulado y deja de contar en marcador y estadísticas.</string>
+    <string name="edit_event_motivo_obligatorio">Motivo (obligatorio)</string>
+    <string name="edit_event_anular">Anular</string>
+    <string name="edit_event_cancelar">Cancelar</string>
+    <string name="edit_event_corregir_x_x">Corregir · %1$s %2$s</string>
+    <string name="edit_event_jugador_x">Jugador: %1$s</string>
+    <string name="edit_event_sin_jugador">Sin jugador</string>
+    <string name="edit_event_asistencia_opcional">Asistencia (opcional)</string>
+    <string name="edit_event_minuto">Minuto</string>
+    <string name="edit_event_anadido">+añadido</string>
+    <string name="edit_event_quitar">Quitar</string>
+    <string name="edit_event_motivo_de_la_correccion">Motivo de la corrección</string>
+    <string name="edit_event_jugador_identificado_despues">Jugador identificado después</string>
+    <string name="edit_event_minuto_corregido">Minuto corregido</string>
+    <string name="edit_event_error_de_registro">Error de registro</string>
+    <string name="edit_event_motivo">Motivo</string>
+    <string name="edit_event_anular_evento_2">Anular evento…</string>
+    <string name="edit_event_guardar_correccion">Guardar corrección</string>
+
+    <!-- ui/match/MatchDetailScreen.kt -->
+    <string name="match_detail_deshacer">Deshacer</string>
+    <string name="match_detail_x_vs_x">%1$s vs %2$s</string>
+    <string name="match_detail_partido">Partido</string>
+    <string name="match_detail_actualizar">Actualizar</string>
+    <string name="match_detail_registrar">Registrar</string>
+    <string name="match_detail_cronologia">Cronología</string>
+    <string name="match_detail_alineacion">Alineación</string>
+    <string name="match_detail_finalizar_el_partido">¿Finalizar el partido?</string>
+    <string name="match_detail_se_consolidan_las_estadisticas_luego">Se consolidan las estadísticas. Luego el DT aún puede corregir eventos con motivo.</string>
+    <string name="match_detail_finalizar">Finalizar</string>
+    <string name="match_detail_cancelar">Cancelar</string>
+    <string name="match_detail_convocatoria_y_alineacion">Convocatoria y alineación</string>
+    <string name="match_detail_iniciar_partido">Iniciar partido</string>
+    <string name="match_detail_fin_1_er_tiempo">Fin 1.er tiempo</string>
+    <string name="match_detail_iniciar_2_tiempo">Iniciar 2.º tiempo</string>
+    <string name="match_detail_resumen_ia">Resumen IA</string>
+    <string name="match_detail_catalogo_vacio">Catálogo vacío</string>
+    <string name="match_detail_no_hay_tipos_de_evento">No hay tipos de evento activos.</string>
+    <string name="match_detail_ultimos_registros">Últimos registros</string>
+    <string name="match_detail_x_sin_enviar">" · %1$s sin enviar"</string>
+    <string name="match_detail_manten_presionado_un_registro_para">Mantén presionado un registro para corregirlo o anularlo.</string>
+    <string name="match_detail_sin_eventos_aun">Sin eventos aún</string>
+    <string name="match_detail_la_cronologia_se_actualiza_en">La cronología se actualiza en tiempo real.</string>
+
+    <!-- ui/match/MatchDetailViewModel.kt -->
+    <string name="match_detail_local">Local</string>
+    <string name="match_detail_rival">Rival</string>
+    <string name="match_detail_tiempo_real_no_disponible_usa">Tiempo real no disponible; usa actualizar.</string>
+    <string name="match_detail_no_tienes_acceso_a_este">No tienes acceso a este partido o no existe.</string>
+    <string name="match_detail_partido_iniciado">¡Partido iniciado!</string>
+    <string name="match_detail_fin_del_primer_tiempo">Fin del primer tiempo</string>
+    <string name="match_detail_inicia_el_segundo_tiempo">Inicia el segundo tiempo</string>
+    <string name="match_detail_partido_finalizado_las_estadisticas_se">Partido finalizado. Las estadísticas se consolidaron.</string>
+    <string name="match_detail_sin_identificar">Sin identificar</string>
+    <string name="match_detail_sin_conexion_x_guardado_en">Sin conexión: «%1$s» guardado en el teléfono; se enviará solo.</string>
+    <string name="match_detail_registro_descartado">Registro descartado</string>
+    <string name="match_detail_deshecho_por_el_operador_registro">Deshecho por el operador (registro equivocado)</string>
+    <string name="match_detail_registro_anulado_queda_en_el">Registro anulado (queda en el historial)</string>
+    <string name="match_detail_evento_corregido_se_guardo_la">Evento corregido. Se guardó la versión anterior.</string>
+    <string name="match_detail_evento_anulado_sigue_visible_en">Evento anulado. Sigue visible en la cronología como anulado.</string>
+
+    <!-- ui/match/MatchParts.kt -->
+    <string name="match_parts_x_vs_x">%1$s vs %2$s</string>
+    <string name="match_parts_x_por_tiempo">%1$s\' por tiempo</string>
+    <string name="match_parts_en_contra">en contra</string>
+    <string name="match_parts_asist_x">asist. %1$s</string>
+    <string name="match_parts_sale_x_entra_x">sale %1$s, entra %2$s</string>
+    <string name="match_parts_anulado">ANULADO</string>
+    <string name="match_parts_sin_jugador_asignado">Sin jugador asignado</string>
+    <string name="match_parts_registro_tardio">Registro tardío</string>
+    <string name="match_parts_pendiente">PENDIENTE</string>
+    <string name="match_parts_titulares_x">Titulares (%1$s)</string>
+    <string name="match_parts_suplentes_x">Suplentes (%1$s)</string>
+    <string name="match_parts_sin_alineacion_registrada">Sin alineación registrada</string>
+    <string name="match_parts_jugador">Jugador</string>
+
+    <!-- ui/match/RecorderSheet.kt -->
+    <string name="recorder_tiempo_anadido">Tiempo añadido</string>
+    <string name="recorder_que_equipo">¿Qué equipo?</string>
+    <string name="recorder_resultado_del_penal">Resultado del penal</string>
+    <string name="recorder_convertido_gol">Convertido (gol)</string>
+    <string name="recorder_fallado">Fallado</string>
+    <string name="recorder_atajado">Atajado</string>
+    <string name="recorder_quien_sale_en_cancha_x">¿Quién sale? (en cancha · %1$s)</string>
+    <string name="recorder_quien_entra_sale_x">¿Quién entra? Sale: %1$s</string>
+    <string name="recorder_quien_pateo_x">¿Quién pateó? (%1$s)</string>
+    <string name="recorder_quien_x">¿Quién? (%1$s)</string>
+    <string name="recorder_gol_en_contra">Gol en contra</string>
+    <string name="recorder_la_atajada_se_anotara_automaticamente">La atajada se anotará automáticamente al arquero de %1$s</string>
+    <string name="recorder_sin_arquero_identificado">" (sin arquero identificado)."</string>
+    <string name="recorder_no_hay_un_arquero_marcado">No hay un arquero marcado en cancha para este equipo: elige quién atajó.</string>
+    <string name="recorder_este_equipo_no_tiene_alineacion">Este equipo no tiene alineación registrada. Puedes guardar el evento sin jugador y asignarlo después.</string>
+    <string name="recorder_banca">Banca</string>
+    <string name="recorder_en_cancha">En cancha</string>
+    <string name="recorder_ocultar_banca">Ocultar banca</string>
+    <string name="recorder_ver_banca_x">Ver banca (%1$s)</string>
+    <string name="recorder_sin_identificar_asignar_despues">Sin identificar (asignar después)</string>
+    <string name="recorder_jugador">Jugador</string>
+
+    <!-- ui/matches/MatchesScreen.kt -->
+    <string name="matches_partidos">Partidos</string>
+    <string name="matches_aun_no_hay_partidos">Aún no hay partidos</string>
+    <string name="matches_crea_el_primero_con_el">Crea el primero con el botón +.</string>
+    <string name="matches_sigue_a_un_equipo_en">Sigue a un equipo en Explorar para ver sus partidos.</string>
+    <string name="matches_crear_partido">Crear partido</string>
+    <string name="matches_en_vivo">En vivo</string>
+    <string name="matches_proximos">Próximos</string>
+    <string name="matches_finalizados">Finalizados</string>
+
+    <!-- ui/navigation/MainShell.kt -->
+    <string name="main_shell_inicio">Inicio</string>
+    <string name="main_shell_partidos">Partidos</string>
+    <string name="main_shell_explorar">Explorar</string>
+    <string name="main_shell_calendario">Calendario</string>
+    <string name="main_shell_perfil">Perfil</string>
+
+    <!-- ui/navigation/SportProRoot.kt -->
+    <string name="sport_pro_root_no_se_pudo_cargar_tu">No se pudo cargar tu cuenta</string>
+    <string name="sport_pro_root_reintentar">Reintentar</string>
+    <string name="sport_pro_root_cerrar_sesion">Cerrar sesión</string>
+    <string name="sport_pro_root_falta_configuracion">Falta configuración</string>
+    <string name="sport_pro_root_agrega_supabase_url_y_supabase">Agrega SUPABASE_URL y SUPABASE_PUBLISHABLE_KEY en local.properties y vuelve a sincronizar Gradle.</string>
+
+    <!-- ui/profile/AddChildScreen.kt -->
+    <string name="add_child_agregar_hijo">Agregar hijo</string>
+    <string name="add_child_para_menores_de_13_anos">Para menores de 13 años. El perfil lo gestionas tú; a los 13 podrá reclamarlo con su propia cuenta conservando su historial.</string>
+    <string name="add_child_nombre">Nombre</string>
+    <string name="add_child_apellido">Apellido</string>
+    <string name="add_child_fecha_de_nacimiento_dd_mm">Fecha de nacimiento (DD/MM/AAAA)</string>
+    <string name="add_child_posicion_opcional">Posición (opcional)</string>
+    <string name="add_child_completa_nombre_apellido_y_una">Completa nombre, apellido y una fecha de nacimiento válida (8 dígitos).</string>
+    <string name="add_child_crear_perfil">Crear perfil</string>
+
+    <!-- ui/profile/EditProfileScreen.kt -->
+    <string name="edit_profile_no_se_pudo_leer_la">No se pudo leer la imagen</string>
+    <string name="edit_profile_editar_perfil">Editar perfil</string>
+    <string name="edit_profile_vista_previa">Vista previa</string>
+    <string name="edit_profile_elegir_foto">Elegir foto</string>
+    <string name="edit_profile_foto_quitada">Foto quitada</string>
+    <string name="edit_profile_quitar_foto">Quitar foto</string>
+    <string name="edit_profile_tu_foto_la_ven_las">Tu foto la ven las personas de tus academias (entrenadores, apoderados y jugadores).</string>
+    <string name="edit_profile_por_privacidad_las_cuentas_de">Por privacidad, las cuentas de menores de edad no publican foto de perfil.</string>
+    <string name="edit_profile_nombre_completo">Nombre completo</string>
+    <string name="edit_profile_escribe_tu_nombre_completo">Escribe tu nombre completo</string>
+    <string name="edit_profile_perfil_actualizado">Perfil actualizado</string>
+    <string name="edit_profile_guardar_cambios">Guardar cambios</string>
+
+    <!-- ui/profile/ProfileScreen.kt -->
+    <string name="profile_perfil">Perfil</string>
+    <string name="profile_cargando">Cargando…</string>
+    <string name="profile_superadmin">Superadmin</string>
+    <string name="profile_editar_perfil">Editar perfil</string>
+    <string name="profile_reintentar">Reintentar</string>
+    <string name="profile_mis_academias_y_roles">Mis academias y roles</string>
+    <string name="profile_convocatorias_por_responder">Convocatorias por responder</string>
+    <string name="profile_invitacion_para_ser_admin_de">Invitación para ser admin de academias</string>
+    <string name="profile_genera_un_codigo_qr_quien">Genera un código QR. Quien lo escanee se registra como administrador y crea su academia.</string>
+    <string name="profile_generar_qr">Generar QR</string>
+    <string name="profile_mi_academia">Mi academia</string>
+    <string name="profile_administracion_x">Administración · %1$s</string>
+    <string name="profile_invitar_entrenador_dt">Invitar entrenador (DT)</string>
+    <string name="profile_qr_de_un_solo_uso">QR de un solo uso: quien lo escanee se registra como DT de %1$s.</string>
+    <string name="profile_equipos_y_entrenadores">Equipos y entrenadores</string>
+    <string name="profile_crea_los_equipos_de_la">Crea los equipos de la academia y asigna a cada uno su DT.</string>
+    <string name="profile_abrir">Abrir</string>
+    <string name="profile_mis_hijos">Mis hijos</string>
+    <string name="profile_solicitudes_pendientes_ninguna_por_ahora">Solicitudes pendientes: ninguna por ahora.</string>
+    <string name="profile_solicitudes_pendientes_x">Solicitudes pendientes (%1$s)</string>
+    <string name="profile_aun_no_hay_perfiles">Aún no hay perfiles</string>
+    <string name="profile_crea_el_perfil_de_tu">Crea el perfil de tu hijo menor de 13 años.</string>
+    <string name="profile_agregar_hijo_menor_de_13">Agregar hijo menor de 13</string>
+    <string name="profile_mi_perfil_de_jugador">Mi perfil de jugador</string>
+    <string name="profile_unirme_a_un_equipo">Unirme a un equipo</string>
+    <string name="profile_escanea_el_qr_o_escribe">Escanea el QR o escribe el código que te dio el DT. Él recibe tu solicitud y la acepta.</string>
+    <string name="profile_equipos_que_gestiono">Equipos que gestiono</string>
+    <string name="profile_x_formato_x_x_por">%1$s · formato %2$s · %3$s\' por tiempo</string>
+    <string name="profile_plantel_e_invitar">Plantel e invitar</string>
+    <string name="profile_estadisticas">Estadísticas</string>
+    <string name="profile_cerrar_sesion">Cerrar sesión</string>
+    <string name="profile_convocatoria">CONVOCATORIA</string>
+    <string name="profile_jugador">Jugador</string>
+    <string name="profile_partido">Partido</string>
+    <string name="profile_confirmar">Confirmar</string>
+    <string name="profile_no_asistira">No asistirá</string>
+    <string name="profile_ver">Ver</string>
+    <string name="profile_sin_equipo_asignado">Sin equipo asignado</string>
+
+    <!-- ui/profile/ProfileViewModel.kt -->
+    <string name="profile_asistencia_confirmada">Asistencia confirmada</string>
+    <string name="profile_convocatoria_rechazada">Convocatoria rechazada</string>
+    <string name="profile_x_ahora_esta_vinculado_a">%1$s ahora está vinculado a ti</string>
+    <string name="profile_solicitud_rechazada">Solicitud rechazada</string>
+
+    <!-- ui/profile/StatsScreens.kt -->
+    <string name="stats_calculadas_en_el_servidor_a">Calculadas en el servidor a partir de los eventos vigentes de partidos finalizados (las correcciones y anulaciones se reflejan sin duplicar).</string>
+    <string name="stats_partidos">Partidos</string>
+    <string name="stats_goles">Goles</string>
+    <string name="stats_asistencias">Asistencias</string>
+    <string name="stats_amarillas">Amarillas</string>
+    <string name="stats_rojas">Rojas</string>
+    <string name="stats_faltas">Faltas</string>
+    <string name="stats_atajadas">Atajadas</string>
+    <string name="stats_goles_en_contra">Goles en contra</string>
+    <string name="stats_ganados">Ganados</string>
+    <string name="stats_empatados">Empatados</string>
+    <string name="stats_perdidos">Perdidos</string>
+    <string name="stats_goles_a_favor">Goles a favor</string>
+
+    <!-- ui/summary/SummaryScreen.kt -->
+    <string name="summary_no_se_pudo_generar_x">No se pudo generar: %1$s</string>
+    <string name="summary_edicion_guardada">Edición guardada</string>
+    <string name="summary_resumen_publicado_ya_aparece_en">Resumen publicado: ya aparece en Inicio</string>
+    <string name="summary_resumen_con_ia">Resumen con IA</string>
+    <string name="summary_la_ia_recibe_solo_la">La IA recibe solo la lista de eventos registrados, con seudónimos (sin nombres ni edades). No puede inventar jugadas: si cita a alguien inexistente, el borrador se rechaza. Revísalo y edítalo antes de publicar.</string>
+    <string name="summary_aprobado">APROBADO</string>
+    <string name="summary_editado">EDITADO</string>
+    <string name="summary_borrador">BORRADOR</string>
+    <string name="summary_sin_generar">SIN GENERAR</string>
+    <string name="summary_regeneraciones_restantes_x">Regeneraciones restantes: %1$s</string>
+    <string name="summary_generar_borrador">Generar borrador</string>
+    <string name="summary_regenerar">Regenerar</string>
+    <string name="summary_texto_del_resumen_editable">Texto del resumen (editable)</string>
+    <string name="summary_guardar_edicion">Guardar edición</string>
+    <string name="summary_visibilidad_de_la_publicacion">Visibilidad de la publicación</string>
+    <string name="summary_solo_mi_equipo">Solo mi equipo</string>
+    <string name="summary_mi_academia">Mi academia</string>
+    <string name="summary_todos">Todos</string>
+    <string name="summary_aprobar_y_publicar">Aprobar y publicar</string>
+    <string name="summary_etiqueta_al_publicar_resumen_generado">Etiqueta al publicar: «Resumen generado con IA y revisado por el entrenador».</string>
+
+    <!-- ui/teams/JoinTeamScreen.kt -->
+    <string name="join_team_el_codigo_tiene_el_formato">El código tiene el formato EQ-XXXX-XXXX (8 letras/números).</string>
+    <string name="join_team_codigo_no_valido">Código no válido</string>
+    <string name="join_team_solicitud_enviada_el_dt_recibira">Solicitud enviada. El DT recibirá una notificación para aceptarla.</string>
+    <string name="join_team_unirme_a_un_equipo">Unirme a un equipo</string>
+    <string name="join_team_pide_al_dt_el_codigo">Pide al DT el código o el QR de su equipo. Tu solicitud le llega como notificación y él decide si acepta.</string>
+    <string name="join_team_codigo_del_equipo_eq_xxxx">Código del equipo (EQ-XXXX-XXXX)</string>
+    <string name="join_team_escanear_qr_del_equipo">Escanear QR del equipo</string>
+    <string name="join_team_equipo">Equipo</string>
+    <string name="join_team_hasta_x_anos">Hasta %1$s años</string>
+    <string name="join_team_quien_se_une">¿Quién se une?</string>
+    <string name="join_team_tu_cuenta_no_tiene_perfil">Tu cuenta no tiene perfil de jugador. Si eres apoderado, crea primero el perfil de tu hijo en «Mis hijos».</string>
+    <string name="join_team_yo_x">Yo · %1$s</string>
+    <string name="join_team_enviar_solicitud_al_dt">Enviar solicitud al DT</string>
+    <string name="join_team_mis_solicitudes">Mis solicitudes</string>
+    <string name="join_team_aceptada">Aceptada</string>
+    <string name="join_team_rechazada">Rechazada</string>
+    <string name="join_team_pendiente">Pendiente</string>
+
+    <!-- ui/teams/TeamJoinRequests.kt -->
+    <string name="team_join_requests_x_ya_es_parte_de">%1$s ya es parte de %2$s</string>
+    <string name="team_join_requests_solicitud_rechazada">Solicitud rechazada</string>
+    <string name="team_join_requests_solicitudes_para_unirse_x">Solicitudes para unirse (%1$s)</string>
+    <string name="team_join_requests_quiere_unirse_a_x_x">Quiere unirse a %1$s%2$s · %3$s</string>
+    <string name="team_join_requests_lo_solicito_x_apoderado_a">Lo solicitó %1$s (apoderado/a)</string>
+    <string name="team_join_requests_lo_solicito_el_propio_jugador">Lo solicitó el propio jugador</string>
+    <string name="team_join_requests_aceptar">Aceptar</string>
+    <string name="team_join_requests_rechazar">Rechazar</string>
+    <string name="team_join_requests_invitar_jugadores">Invitar jugadores</string>
+    <string name="team_join_requests_comparte_este_codigo_o_qr">Comparte este código o QR. El jugador (o su apoderado) lo usa en «Unirme a un equipo» y te llega la solicitud para aceptarla o rechazarla.</string>
+    <string name="team_join_requests_no_se_pudo_obtener_el">No se pudo obtener el código del equipo.</string>
+    <string name="team_join_requests_generar_nuevo_codigo">Generar nuevo código</string>
+
+    <!-- ui/admin/InvitesScreen.kt -->
+    <string name="invites_tu_academia">tu academia</string>
+
+    <!-- ui/admin/RedeemInviteDialog.kt -->
+    <string name="redeem_invite_una_academia">una academia</string>
+
+    <!-- ui/auth/AuthScreens.kt -->
+    <string name="auth_la_academia">la academia</string>
+
+    <!-- ui/auth/AuthViewModel.kt -->
+    <string name="auth_revisala">revísala</string>
+
+    <!-- ui/family/GuardianLinkScreen.kt -->
+    <string name="guardian_link_tu_apoderado">tu apoderado</string>
+    <string name="guardian_link_el_apoderado">El apoderado</string>
+
+    <!-- ui/match/EditEventDialog.kt -->
+    <string name="edit_event_sin_asignar">sin asignar</string>
+
+    <!-- ui/teams/JoinTeamScreen.kt -->
+    <string name="join_team_buscar">Buscar</string>
+
+    <!-- Mensajes de error comunes (core/data/Errors.kt) -->
+    <string name="error_no_connection">Sin conexión con el servidor. Revisa tu internet e inténtalo otra vez.</string>
+    <string name="error_bad_credentials">Correo o contraseña incorrectos.</string>
+    <string name="error_email_not_confirmed">Confirma tu correo antes de iniciar sesión (revisa tu bandeja).</string>
+    <string name="error_email_taken">Ese correo ya tiene una cuenta.</string>
+    <string name="error_password_short">La contraseña debe tener al menos 6 caracteres.</string>
+    <string name="error_no_permission">No tienes permiso para esta acción.</string>
+    <string name="error_session_expired">Tu sesión expiró. Vuelve a iniciar sesión.</string>
+    <string name="error_unexpected">Ocurrió un error inesperado.</string>
+
+    <!-- Textos de modelos y de la cola sin conexión -->
+    <string name="match_home_fallback">Local</string>
+    <string name="match_away_fallback">Rival</string>
+    <string name="queue_save_failed">No se pudo guardar «%1$s»: %2$s</string>
+    <string name="match_setup_no_jersey">sin dorsal</string>
 </resources>

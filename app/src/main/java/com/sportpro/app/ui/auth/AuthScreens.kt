@@ -1,4 +1,6 @@
 package com.sportpro.app.ui.auth
+import androidx.compose.ui.res.stringResource
+import com.sportpro.app.R
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
@@ -62,9 +64,9 @@ private fun AuthFrame(content: @Composable ColumnScope.() -> Unit) {
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Spacer(Modifier.height(16.dp))
-        Text("SportPro", fontSize = 40.sp, fontWeight = FontWeight.Black, color = Mint400)
+        Text(stringResource(R.string.auth_sportpro), fontSize = 40.sp, fontWeight = FontWeight.Black, color = Mint400)
         Text(
-            "Gestión de academias y partidos en vivo",
+            stringResource(R.string.auth_gestion_de_academias_y_partidos),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -87,14 +89,14 @@ fun LoginScreen(vm: AuthViewModel, onRegister: () -> Unit) {
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     AuthFrame {
-        Text("Iniciar sesión", style = MaterialTheme.typography.headlineSmall)
+        Text(stringResource(R.string.auth_iniciar_sesion), style = MaterialTheme.typography.headlineSmall)
         OutlinedTextField(
-            email, { email = it.trim() }, label = { Text("Correo") }, singleLine = true,
+            email, { email = it.trim() }, label = { Text(stringResource(R.string.auth_correo)) }, singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
             modifier = Modifier.fillMaxWidth(),
         )
         OutlinedTextField(
-            password, { password = it }, label = { Text("Contraseña") }, singleLine = true,
+            password, { password = it }, label = { Text(stringResource(R.string.auth_contrasena)) }, singleLine = true,
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             modifier = Modifier.fillMaxWidth(),
@@ -104,9 +106,9 @@ fun LoginScreen(vm: AuthViewModel, onRegister: () -> Unit) {
             onClick = { vm.signIn(email, password) },
             enabled = !ui.busy,
             modifier = Modifier.fillMaxWidth().height(52.dp),
-        ) { Text("Entrar") }
+        ) { Text(stringResource(R.string.auth_entrar)) }
         TextButton(onClick = { vm.clearMessages(); onRegister() }, modifier = Modifier.align(Alignment.CenterHorizontally)) {
-            Text("¿No tienes cuenta? Regístrate")
+            Text(stringResource(R.string.auth_no_tienes_cuenta_registrate))
         }
         OutlinedButton(
             onClick = {
@@ -117,7 +119,7 @@ fun LoginScreen(vm: AuthViewModel, onRegister: () -> Unit) {
                 )
             },
             modifier = Modifier.fillMaxWidth(),
-        ) { Text("Me invitaron: escanear QR") }
+        ) { Text(stringResource(R.string.auth_me_invitaron_escanear_qr)) }
     }
 }
 
@@ -149,7 +151,7 @@ fun RegisterScreen(vm: AuthViewModel, onBackToLogin: () -> Unit) {
     val kind = invite.kind
 
     AuthFrame {
-        Text("Crear cuenta", style = MaterialTheme.typography.headlineSmall)
+        Text(stringResource(R.string.auth_crear_cuenta), style = MaterialTheme.typography.headlineSmall)
 
         if (kind != null) {
             // ---- Registro por invitación (ADM / DT) ----
@@ -158,54 +160,54 @@ fun RegisterScreen(vm: AuthViewModel, onBackToLogin: () -> Unit) {
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Pill("INVITACIÓN ${invite.code}", Mint400)
+                    Pill(stringResource(R.string.auth_invitacion_x, invite.code.orEmpty()), Mint400)
                     Text(
-                        if (kind == "adm") "Te estás registrando como administrador de academias"
-                        else "Te estás registrando como entrenador (DT) de ${invite.check?.academyName ?: "la academia"}",
+                        if (kind == "adm") stringResource(R.string.auth_te_estas_registrando_como_administrador)
+                        else stringResource(R.string.auth_te_estas_registrando_como_entrenador, invite.check?.academyName ?: stringResource(R.string.auth_la_academia)),
                         style = MaterialTheme.typography.titleMedium,
                     )
                     Text(
-                        if (kind == "adm") "Debes ser mayor de edad y registrar al menos una academia."
-                        else "Debes ser mayor de edad. Quedarás en el cuerpo técnico de esa academia.",
+                        if (kind == "adm") stringResource(R.string.auth_debes_ser_mayor_de_edad)
+                        else stringResource(R.string.auth_debes_ser_mayor_de_edad_2),
                         style = MaterialTheme.typography.bodySmall,
                     )
-                    TextButton(onClick = vm::clearInvite) { Text("No usar esta invitación") }
+                    TextButton(onClick = vm::clearInvite) { Text(stringResource(R.string.auth_no_usar_esta_invitacion)) }
                 }
             }
         } else {
             // ---- Registro libre: apoderado o jugador ----
-            Text("¿Cómo usarás SportPro?", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.auth_como_usaras_sportpro), style = MaterialTheme.typography.titleMedium)
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 TypeCard(
-                    "Apoderado", "Mayor de edad. Gestionas a tus hijos y apruebas sus solicitudes.",
+                    stringResource(R.string.auth_apoderado), stringResource(R.string.auth_mayor_de_edad_gestionas_a),
                     selected = f.accountType == "pad", onClick = { vm.updateForm { it.copy(accountType = "pad") } },
                     modifier = Modifier.weight(1f),
                 )
                 TypeCard(
-                    "Jugador", "13 años o más. Si eres menor, te vinculas a tu apoderado.",
+                    stringResource(R.string.auth_jugador), stringResource(R.string.auth_13_anos_o_mas_si),
                     selected = f.accountType == "jug", onClick = { vm.updateForm { it.copy(accountType = "jug") } },
                     modifier = Modifier.weight(1f),
                 )
             }
             TextButton(onClick = { showInviteBox = !showInviteBox }) {
-                Text("¿Te invitaron como administrador o entrenador?")
+                Text(stringResource(R.string.auth_te_invitaron_como_administrador_o))
             }
             if (showInviteBox || invite.error != null) {
                 Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
                     Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         OutlinedTextField(
                             typedCode, { typedCode = it.uppercase().take(20) },
-                            label = { Text("Código de invitación (ADM-… o DT-…)") }, singleLine = true,
+                            label = { Text(stringResource(R.string.auth_codigo_de_invitacion_adm_o)) }, singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                         )
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Button(onClick = { vm.applyInvite(typedCode) }, enabled = typedCode.isNotBlank() && !invite.checking) {
-                                Text("Validar")
+                                Text(stringResource(R.string.auth_validar))
                             }
                             OutlinedButton(onClick = {
                                 scanError = null
                                 scanQr(context, onResult = { raw -> if (raw != null) vm.applyInvite(raw) }, onError = { scanError = it })
-                            }) { Text("Escanear QR") }
+                            }) { Text(stringResource(R.string.auth_escanear_qr)) }
                         }
                         if (invite.checking) LinearProgressIndicator(Modifier.fillMaxWidth())
                         (invite.error ?: scanError)?.let { Text(it, color = WarnAmber, style = MaterialTheme.typography.bodySmall) }
@@ -214,29 +216,29 @@ fun RegisterScreen(vm: AuthViewModel, onBackToLogin: () -> Unit) {
             }
         }
 
-        OutlinedTextField(f.firstName, { v -> vm.updateForm { it.copy(firstName = v) } }, label = { Text("Nombre") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-        OutlinedTextField(f.lastName, { v -> vm.updateForm { it.copy(lastName = v) } }, label = { Text("Apellido") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(f.firstName, { v -> vm.updateForm { it.copy(firstName = v) } }, label = { Text(stringResource(R.string.auth_nombre)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(f.lastName, { v -> vm.updateForm { it.copy(lastName = v) } }, label = { Text(stringResource(R.string.auth_apellido)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
         MaskedDigitsField(
             value = f.birthDigits,
             onValueChange = { v -> vm.updateForm { it.copy(birthDigits = v) } },
             mask = DATE_MASK,
-            label = "Fecha de nacimiento (DD/MM/AAAA)",
+            label = stringResource(R.string.auth_fecha_de_nacimiento_dd_mm),
             isError = f.birthDigits.length == 8 && parseDateDigits(f.birthDigits) == null,
             supportingText = dateHint(f.birthDigits),
             modifier = Modifier.fillMaxWidth(),
         )
         if (kind == "adm") {
-            Text("Tu academia", style = MaterialTheme.typography.titleMedium)
-            OutlinedTextField(f.academyName, { v -> vm.updateForm { it.copy(academyName = v.take(80)) } }, label = { Text("Nombre de la academia") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-            OutlinedTextField(f.academyCity, { v -> vm.updateForm { it.copy(academyCity = v.take(60)) } }, label = { Text("Ciudad") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+            Text(stringResource(R.string.auth_tu_academia), style = MaterialTheme.typography.titleMedium)
+            OutlinedTextField(f.academyName, { v -> vm.updateForm { it.copy(academyName = v.take(80)) } }, label = { Text(stringResource(R.string.auth_nombre_de_la_academia)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(f.academyCity, { v -> vm.updateForm { it.copy(academyCity = v.take(60)) } }, label = { Text(stringResource(R.string.auth_ciudad)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
         }
         OutlinedTextField(
-            f.email, { v -> vm.updateForm { it.copy(email = v.trim()) } }, label = { Text("Correo") }, singleLine = true,
+            f.email, { v -> vm.updateForm { it.copy(email = v.trim()) } }, label = { Text(stringResource(R.string.auth_correo)) }, singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
             modifier = Modifier.fillMaxWidth(),
         )
         OutlinedTextField(
-            f.password, { v -> vm.updateForm { it.copy(password = v) } }, label = { Text("Contraseña (mín. 6)") }, singleLine = true,
+            f.password, { v -> vm.updateForm { it.copy(password = v) } }, label = { Text(stringResource(R.string.auth_contrasena_min_6)) }, singleLine = true,
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             modifier = Modifier.fillMaxWidth(),
@@ -246,15 +248,15 @@ fun RegisterScreen(vm: AuthViewModel, onBackToLogin: () -> Unit) {
             onClick = { vm.signUp(onDone = onBackToLogin) },
             enabled = !ui.busy && !invite.checking,
             modifier = Modifier.fillMaxWidth().height(52.dp),
-        ) { Text("Crear cuenta") }
+        ) { Text(stringResource(R.string.auth_crear_cuenta)) }
         Text(
-            "Tus datos se usan solo para gestionar tu participación en la academia. Los menores de 13 años no crean cuenta propia.",
+            stringResource(R.string.auth_tus_datos_se_usan_solo),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
         TextButton(onClick = { vm.clearMessages(); onBackToLogin() }, modifier = Modifier.align(Alignment.CenterHorizontally)) {
-            Text("Ya tengo cuenta")
+            Text(stringResource(R.string.auth_ya_tengo_cuenta))
         }
     }
 }

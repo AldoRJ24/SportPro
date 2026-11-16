@@ -1,4 +1,6 @@
 package com.sportpro.app.ui.creatematch
+import androidx.compose.ui.res.stringResource
+import com.sportpro.app.R
 
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -75,7 +77,7 @@ fun MatchSetupScreen(matchId: String, onBack: () -> Unit, onGoLive: () -> Unit) 
     val match = ui.match
     val editable = match?.isScheduled == true
 
-    SpScaffold(title = "Convocatoria y alineación", onBack = onBack, snackbarHostState = snack) { pad ->
+    SpScaffold(title = stringResource(R.string.match_setup_convocatoria_y_alineacion), onBack = onBack, snackbarHostState = snack) { pad ->
         when {
             ui.loading && match == null -> LoadingBox(Modifier.padding(pad))
             ui.error != null && match == null -> ErrorBox(ui.error!!, onRetry = vm::load, modifier = Modifier.padding(pad))
@@ -83,27 +85,27 @@ fun MatchSetupScreen(matchId: String, onBack: () -> Unit, onGoLive: () -> Unit) 
                 if (ui.busy) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
                 item {
                     Column(Modifier.padding(16.dp)) {
-                        Text("${match.homeName} vs ${match.awayName}", style = MaterialTheme.typography.titleMedium)
+                        Text(stringResource(R.string.match_setup_x_vs_x, match.homeName, match.awayName), style = MaterialTheme.typography.titleMedium)
                         Text(
-                            "${match.formatPlayers} vs ${match.formatPlayers} · 1) convoca · 2) confirma · 3) arma la formación · 4) guarda",
+                            stringResource(R.string.match_setup_x_vs_x_1_convoca, match.formatPlayers, match.formatPlayers),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                        if (!editable) Text("El partido ya inició: la alineación no se puede cambiar.", color = WarnAmber)
+                        if (!editable) Text(stringResource(R.string.match_setup_el_partido_ya_inicio_la), color = WarnAmber)
                     }
                 }
                 ui.sides.forEach { side ->
                     // ---------------- Convocatoria ----------------
-                    item { SectionHeader("1 · Convocatoria · ${side.teamName}") }
+                    item { SectionHeader(stringResource(R.string.match_setup_1_convocatoria_x, side.teamName)) }
                     item {
                         Row(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            OutlinedButton(onClick = { vm.callAll(side) }, enabled = !ui.busy && editable) { Text("Convocar a todos") }
-                            OutlinedButton(onClick = { vm.confirmAll(side) }, enabled = !ui.busy && editable) { Text("Marcar confirmados") }
+                            OutlinedButton(onClick = { vm.callAll(side) }, enabled = !ui.busy && editable) { Text(stringResource(R.string.match_setup_convocar_a_todos)) }
+                            OutlinedButton(onClick = { vm.confirmAll(side) }, enabled = !ui.busy && editable) { Text(stringResource(R.string.match_setup_marcar_confirmados)) }
                         }
                     }
                     item {
                         Text(
-                            "Toca la posición para cambiar la posición habitual del jugador en el equipo.",
+                            stringResource(R.string.match_setup_toca_la_posicion_para_cambiar),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
@@ -119,7 +121,7 @@ fun MatchSetupScreen(matchId: String, onBack: () -> Unit, onGoLive: () -> Unit) 
                             )
                             Text("${tp.jerseyNumber ?: "-"}", style = MaterialTheme.typography.titleSmall, modifier = Modifier.width(28.dp))
                             Text(
-                                tp.player?.fullName ?: "Jugador",
+                                tp.player?.fullName ?: stringResource(R.string.match_setup_jugador),
                                 modifier = Modifier.weight(1f),
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
@@ -127,9 +129,9 @@ fun MatchSetupScreen(matchId: String, onBack: () -> Unit, onGoLive: () -> Unit) 
                             TeamPositionMenu(tp, enabled = !ui.busy) { p -> vm.setTeamPosition(side, tp, p) }
                             Spacer(Modifier.width(6.dp))
                             when (callup?.status) {
-                                "confirmed" -> Pill("Confirmado", Mint400)
-                                "declined" -> Pill("No asiste", ErrorRed)
-                                "pending" -> Pill("Pendiente", WarnAmber)
+                                "confirmed" -> Pill(stringResource(R.string.match_setup_confirmado), Mint400)
+                                "declined" -> Pill(stringResource(R.string.match_setup_no_asiste), ErrorRed)
+                                "pending" -> Pill(stringResource(R.string.match_setup_pendiente), WarnAmber)
                                 else -> {}
                             }
                             Spacer(Modifier.width(8.dp))
@@ -137,10 +139,10 @@ fun MatchSetupScreen(matchId: String, onBack: () -> Unit, onGoLive: () -> Unit) 
                     }
 
                     // ---------------- Formación y alineación ----------------
-                    item { SectionHeader("2 · Formación y alineación · ${side.teamName}") }
+                    item { SectionHeader(stringResource(R.string.match_setup_2_formacion_y_alineacion_x, side.teamName)) }
                     item {
                         Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Text("Formación (arquero + defensas + medios + delanteros)", style = MaterialTheme.typography.labelLarge)
+                            Text(stringResource(R.string.match_setup_formacion_arquero_defensas_medios_delant), style = MaterialTheme.typography.labelLarge)
                             FormationChips(
                                 options = Formations.forFormat(match.formatPlayers),
                                 selected = side.formation,
@@ -149,13 +151,13 @@ fun MatchSetupScreen(matchId: String, onBack: () -> Unit, onGoLive: () -> Unit) 
                             )
                             FormationCounter(side.formation, side.starterPositions, Modifier.horizontalScroll(rememberScrollState()))
                             Text(
-                                "Solo pueden alinearse jugadores que confirmaron asistencia (US-09). Siempre debe haber 1 arquero.",
+                                stringResource(R.string.match_setup_solo_pueden_alinearse_jugadores_que),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                OutlinedButton(onClick = { vm.autoLineup(side) }, enabled = editable) { Text("Armar automático") }
-                                Button(onClick = { vm.saveLineup(side) }, enabled = !ui.busy && editable) { Text("Guardar alineación") }
+                                OutlinedButton(onClick = { vm.autoLineup(side) }, enabled = editable) { Text(stringResource(R.string.match_setup_armar_automatico)) }
+                                Button(onClick = { vm.saveLineup(side) }, enabled = !ui.busy && editable) { Text(stringResource(R.string.match_setup_guardar_alineacion)) }
                             }
                         }
                     }
@@ -163,7 +165,7 @@ fun MatchSetupScreen(matchId: String, onBack: () -> Unit, onGoLive: () -> Unit) 
                     if (confirmed.isEmpty()) {
                         item {
                             Text(
-                                "Aún no hay convocados confirmados.",
+                                stringResource(R.string.match_setup_aun_no_hay_convocados_confirmados),
                                 style = MaterialTheme.typography.bodySmall,
                                 modifier = Modifier.padding(16.dp),
                             )
@@ -187,12 +189,12 @@ fun MatchSetupScreen(matchId: String, onBack: () -> Unit, onGoLive: () -> Unit) 
                                     PositionBadge(Position.of(tp.position))
                                 }
                                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                    FilterChip(selected = role == LineupRole.STARTER, onClick = { vm.setRole(side, tp.playerId, LineupRole.STARTER) }, label = { Text("Titular") }, enabled = editable)
-                                    FilterChip(selected = role == LineupRole.SUB, onClick = { vm.setRole(side, tp.playerId, LineupRole.SUB) }, label = { Text("Suplente") }, enabled = editable)
-                                    FilterChip(selected = role == LineupRole.OUT, onClick = { vm.setRole(side, tp.playerId, LineupRole.OUT) }, label = { Text("No juega") }, enabled = editable)
+                                    FilterChip(selected = role == LineupRole.STARTER, onClick = { vm.setRole(side, tp.playerId, LineupRole.STARTER) }, label = { Text(stringResource(R.string.match_setup_titular)) }, enabled = editable)
+                                    FilterChip(selected = role == LineupRole.SUB, onClick = { vm.setRole(side, tp.playerId, LineupRole.SUB) }, label = { Text(stringResource(R.string.match_setup_suplente)) }, enabled = editable)
+                                    FilterChip(selected = role == LineupRole.OUT, onClick = { vm.setRole(side, tp.playerId, LineupRole.OUT) }, label = { Text(stringResource(R.string.match_setup_no_juega)) }, enabled = editable)
                                 }
                                 if (role == LineupRole.STARTER) {
-                                    Text("Posición en este partido", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text(stringResource(R.string.match_setup_posicion_en_este_partido), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     PositionChips(
                                         selected = side.positionOf(tp.playerId),
                                         onSelect = { vm.setMatchPosition(side, tp.playerId, it) },
@@ -206,11 +208,11 @@ fun MatchSetupScreen(matchId: String, onBack: () -> Unit, onGoLive: () -> Unit) 
 
                 // ---------------- Rival externo ----------------
                 if (match.hasExternalRival) {
-                    item { SectionHeader("Plantel del rival externo · ${match.awayName}") }
+                    item { SectionHeader(stringResource(R.string.match_setup_plantel_del_rival_externo_x, match.awayName)) }
                     item {
                         val problems = ui.externalProblems(match.formatPlayers)
                         Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            if (problems.isEmpty()) Pill("Plantel completo", Mint400)
+                            if (problems.isEmpty()) Pill(stringResource(R.string.match_setup_plantel_completo), Mint400)
                             else Text(problems.joinToString(" · "), color = WarnAmber, style = MaterialTheme.typography.bodySmall)
                         }
                     }
@@ -227,10 +229,10 @@ fun MatchSetupScreen(matchId: String, onBack: () -> Unit, onGoLive: () -> Unit) 
                 }
 
                 // ---------------- Operador ----------------
-                item { SectionHeader("3 · Operador del partido") }
+                item { SectionHeader(stringResource(R.string.match_setup_3_operador_del_partido)) }
                 item {
                     Text(
-                        "Quien registra los eventos desde su celular (un solo operador activo). El DT siempre puede registrar.",
+                        stringResource(R.string.match_setup_quien_registra_los_eventos_desde),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(horizontal = 16.dp),
@@ -241,14 +243,14 @@ fun MatchSetupScreen(matchId: String, onBack: () -> Unit, onGoLive: () -> Unit) 
                         RadioButton(selected = ui.operatorId == m.userId, onClick = { vm.setOperator(m.userId) }, enabled = !ui.busy)
                         Avatar(m.profile?.fullName ?: "?", m.profile?.avatarPath, size = 32.dp)
                         Spacer(Modifier.width(10.dp))
-                        Text(m.profile?.fullName?.ifBlank { null } ?: "Miembro", modifier = Modifier.weight(1f))
+                        Text(m.profile?.fullName?.ifBlank { null } ?: stringResource(R.string.match_setup_miembro), modifier = Modifier.weight(1f))
                         Text(roleLabel(m.role), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Spacer(Modifier.width(8.dp))
                     }
                 }
                 item {
                     Button(onClick = onGoLive, modifier = Modifier.fillMaxWidth().padding(16.dp).height(54.dp)) {
-                        Text("Ir al partido")
+                        Text(stringResource(R.string.match_setup_ir_al_partido))
                     }
                 }
             }
@@ -256,7 +258,7 @@ fun MatchSetupScreen(matchId: String, onBack: () -> Unit, onGoLive: () -> Unit) 
     }
 }
 
-/** Badge that opens a menu to change the player's usual position in the team (saved on the server). */
+/** Etiqueta que abre un menú para cambiar la posición habitual del jugador en el equipo (se guarda en el servidor). */
 @Composable
 private fun TeamPositionMenu(tp: TeamPlayerRow, enabled: Boolean, onSelect: (Position) -> Unit) {
     var open by remember { mutableStateOf(false) }
@@ -285,19 +287,19 @@ private fun ExternalPlayerRow(
         Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    "${x.jerseyNumber ?: "sin dorsal"}  ${x.name}",
+                    "${x.jerseyNumber ?: stringResource(R.string.match_setup_no_jersey)}  ${x.name}",
                     style = MaterialTheme.typography.titleSmall,
                     modifier = Modifier.weight(1f),
                     color = if (x.jerseyNumber == null) WarnAmber else MaterialTheme.colorScheme.onSurface,
                 )
                 PositionBadge(Position.of(x.fieldPosition))
-                if (editable) IconButton(onClick = onDelete) { Icon(Icons.Filled.Delete, contentDescription = "Quitar") }
+                if (editable) IconButton(onClick = onDelete) { Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.match_setup_quitar)) }
             }
             if (editable) {
                 PositionChips(selected = Position.of(x.fieldPosition), onSelect = onPosition)
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    FilterChip(selected = x.isStarter, onClick = { onStarter(true) }, label = { Text("Titular") })
-                    FilterChip(selected = !x.isStarter, onClick = { onStarter(false) }, label = { Text("Suplente") })
+                    FilterChip(selected = x.isStarter, onClick = { onStarter(true) }, label = { Text(stringResource(R.string.match_setup_titular)) })
+                    FilterChip(selected = !x.isStarter, onClick = { onStarter(false) }, label = { Text(stringResource(R.string.match_setup_suplente)) })
                 }
             }
         }
@@ -308,8 +310,8 @@ private fun ExternalPlayerRow(
 private fun AddExternalCard(onAdd: (ExternalDraft, () -> Unit) -> Unit) {
     var row by remember { mutableStateOf(ExternalDraft()) }
     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Text("Agregar jugador al plantel rival", style = MaterialTheme.typography.labelLarge)
+        Text(stringResource(R.string.match_setup_agregar_jugador_al_plantel_rival), style = MaterialTheme.typography.labelLarge)
         ExternalRowEditor(row = row, onChange = { row = it }, onRemove = null)
-        Button(onClick = { onAdd(row) { row = ExternalDraft() } }) { Text("Agregar") }
+        Button(onClick = { onAdd(row) { row = ExternalDraft() } }) { Text(stringResource(R.string.match_setup_agregar)) }
     }
 }

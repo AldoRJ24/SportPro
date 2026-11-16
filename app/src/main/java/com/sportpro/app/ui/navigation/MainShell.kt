@@ -1,5 +1,6 @@
 package com.sportpro.app.ui.navigation
 
+import com.sportpro.app.core.AppText
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -82,14 +83,14 @@ private data class Tab(
 )
 
 private val tabs = listOf(
-    Tab(HomeRoute, { it.hasRoute<HomeRoute>() }, "Inicio", Icons.Filled.Home, null),
-    Tab(MatchesRoute, { it.hasRoute<MatchesRoute>() }, "Partidos", null, R.drawable.ic_ev_ball),
-    Tab(ExploreRoute, { it.hasRoute<ExploreRoute>() }, "Explorar", Icons.Filled.Search, null),
-    Tab(CalendarRoute, { it.hasRoute<CalendarRoute>() }, "Calendario", Icons.Filled.DateRange, null),
-    Tab(ProfileRoute, { it.hasRoute<ProfileRoute>() }, "Perfil", Icons.Filled.Person, null), // D-29: profile bottom-right
+    Tab(HomeRoute, { it.hasRoute<HomeRoute>() }, AppText.get(R.string.main_shell_inicio), Icons.Filled.Home, null),
+    Tab(MatchesRoute, { it.hasRoute<MatchesRoute>() }, AppText.get(R.string.main_shell_partidos), null, R.drawable.ic_ev_ball),
+    Tab(ExploreRoute, { it.hasRoute<ExploreRoute>() }, AppText.get(R.string.main_shell_explorar), Icons.Filled.Search, null),
+    Tab(CalendarRoute, { it.hasRoute<CalendarRoute>() }, AppText.get(R.string.main_shell_calendario), Icons.Filled.DateRange, null),
+    Tab(ProfileRoute, { it.hasRoute<ProfileRoute>() }, AppText.get(R.string.main_shell_perfil), Icons.Filled.Person, null), // D-29: perfil abajo a la derecha
 )
 
-/** Instagram-inspired shell (D-21): bottom bar with icons, "+" top-left and bell top-right on tab screens. */
+/** Estructura principal inspirada en Instagram (D-21): menú inferior con iconos, «+» arriba a la izquierda y campana arriba a la derecha en las pestañas. */
 @Composable
 fun MainShell(session: SessionViewModel) {
     val container = LocalAppContainer.current
@@ -103,7 +104,7 @@ fun MainShell(session: SessionViewModel) {
     val onCreate: (() -> Unit)? = if (canCreate) ({ nav.navigate(CreateMatchRoute) }) else null
     val onBell: () -> Unit = { nav.navigate(NotificationsRoute) }
     val openMatch: (String) -> Unit = { id -> nav.navigate(MatchDetailRoute(id)) }
-    // Unread badge for the bell (real-time) + invitation opened while already signed in
+    // Contador de la campana (tiempo real) + invitación abierta cuando ya hay sesión iniciada
     val shellFamily: FamilyViewModel = viewModel(key = "shell-family") { FamilyViewModel(container) }
     val familyUi by shellFamily.ui.collectAsStateWithLifecycle()
     LaunchedEffect(ctx) { shellFamily.load(ctx) }

@@ -1,15 +1,17 @@
 package com.sportpro.app.core.data
 
+import com.sportpro.app.R
+import com.sportpro.app.core.AppText
 import io.github.jan.supabase.exceptions.RestException
 import io.github.jan.supabase.postgrest.exception.PostgrestRestException
 
-/** True when the server answered (validation/permission). False means a network or transport problem. */
+/** true si el servidor respondió (validación o permiso). false significa un problema de red. */
 fun Throwable.isServerAnswer(): Boolean = this is RestException
 
-/** Unique violation (23505): used to treat a resent event as already saved (idempotency). */
+/** Violación de clave única (23505): sirve para tratar un evento reenviado como ya guardado (idempotencia). */
 fun Throwable.isDuplicate(): Boolean = this is PostgrestRestException && this.code == "23505"
 
-/** Human message in Spanish. Server business errors are already written in Spanish in the SQL functions. */
+/** Mensaje para la persona, en español. Los errores de negocio ya vienen en español desde las funciones SQL; aquí solo se traducen los errores técnicos. */
 fun Throwable.friendlyMessage(): String {
     val raw = when (this) {
         is RestException -> listOfNotNull(error, description).joinToString(" ")
@@ -17,13 +19,13 @@ fun Throwable.friendlyMessage(): String {
     }
     val lower = raw.lowercase()
     return when {
-        this !is RestException -> "Sin conexión con el servidor. Revisa tu internet e inténtalo otra vez."
-        "invalid login credentials" in lower || "invalid_credentials" in lower -> "Correo o contraseña incorrectos."
-        "email not confirmed" in lower -> "Confirma tu correo antes de iniciar sesión (revisa tu bandeja)."
-        "already registered" in lower || "user_already_exists" in lower -> "Ese correo ya tiene una cuenta."
-        "password" in lower && "6" in lower -> "La contraseña debe tener al menos 6 caracteres."
-        "row-level security" in lower || "permission denied" in lower -> "No tienes permiso para esta acción."
-        "jwt" in lower -> "Tu sesión expiró. Vuelve a iniciar sesión."
-        else -> (this as RestException).error.ifBlank { "Ocurrió un error inesperado." }
+        this !is RestException -> AppText.get(R.string.error_no_connection)
+        "invalid login credentials" in lower || "invalid_credentials" in lower -> AppText.get(R.string.error_bad_credentials)
+        "email not confirmed" in lower -> AppText.get(R.string.error_email_not_confirmed)
+        "already registered" in lower || "user_already_exists" in lower -> AppText.get(R.string.error_email_taken)
+        "password" in lower && "6" in lower -> AppText.get(R.string.error_password_short)
+        "row-level security" in lower || "permission denied" in lower -> AppText.get(R.string.error_no_permission)
+        "jwt" in lower -> AppText.get(R.string.error_session_expired)
+        else -> this.error.ifBlank { AppText.get(R.string.error_unexpected) }
     }
 }

@@ -1,5 +1,6 @@
 package com.sportpro.app.ui.profile
 
+import com.sportpro.app.core.AppText
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -82,30 +83,30 @@ fun ProfileScreen(
         ui.message?.let { snack.showSnackbar(it); vm.consumeMessage() }
     }
 
-    SpScaffold(title = "Perfil", isTab = true, actions = { BellAction(onBell) }, snackbarHostState = snack) { pad ->
+    SpScaffold(title = stringResource(R.string.profile_perfil), isTab = true, actions = { BellAction(onBell) }, snackbarHostState = snack) { pad ->
         LazyColumn(Modifier.padding(pad), contentPadding = PaddingValues(bottom = 32.dp)) {
             item {
                 Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                     Avatar(ctx?.displayName ?: "?", ctx?.profile?.avatarPath, size = 72.dp)
                     Spacer(Modifier.width(14.dp))
                     Column(Modifier.weight(1f)) {
-                        Text(ctx?.displayName ?: "Cargando…", style = MaterialTheme.typography.titleLarge)
-                        if (ctx?.isPlatformAdmin == true) Pill("Superadmin", Mint400)
+                        Text(ctx?.displayName ?: stringResource(R.string.profile_cargando), style = MaterialTheme.typography.titleLarge)
+                        if (ctx?.isPlatformAdmin == true) Pill(stringResource(R.string.profile_superadmin), Mint400)
                     }
-                    OutlinedButton(onClick = onEditProfile) { Text("Editar perfil") }
+                    OutlinedButton(onClick = onEditProfile) { Text(stringResource(R.string.profile_editar_perfil)) }
                 }
             }
             ctxError?.let { err ->
                 item {
                     Column(Modifier.padding(16.dp)) {
                         Text(err, color = MaterialTheme.colorScheme.error)
-                        TextButton(onClick = { session.refreshContext() }) { Text("Reintentar") }
+                        TextButton(onClick = { session.refreshContext() }) { Text(stringResource(R.string.profile_reintentar)) }
                     }
                 }
             }
             val memberships = ctx?.memberships.orEmpty()
             if (memberships.isNotEmpty()) {
-                item { SectionHeader("Mis academias y roles") }
+                item { SectionHeader(stringResource(R.string.profile_mis_academias_y_roles)) }
                 item {
                     FlowRow(
                         Modifier.padding(horizontal = 16.dp),
@@ -121,7 +122,7 @@ fun ProfileScreen(
 
             // ---- Convocatorias pendientes (US-04) ----
             if (ui.pendingCallups.isNotEmpty()) {
-                item { SectionHeader("Convocatorias por responder") }
+                item { SectionHeader(stringResource(R.string.profile_convocatorias_por_responder)) }
                 items(ui.pendingCallups, key = { "cu" + it.id }) { c ->
                     CallupCard(c, onOpenMatch, onRespond = { accept -> vm.respond(c, accept, ctx) })
                 }
@@ -129,12 +130,12 @@ fun ProfileScreen(
 
             // ---- Invitaciones: superadmin → administradores de academia ----
             if (ctx?.isPlatformAdmin == true) {
-                item { SectionHeader("Superadmin") }
+                item { SectionHeader(stringResource(R.string.profile_superadmin)) }
                 item {
                     ActionCard(
-                        title = "Invitación para ser admin de academias",
-                        subtitle = "Genera un código QR. Quien lo escanee se registra como administrador y crea su academia.",
-                        action = "Generar QR",
+                        title = stringResource(R.string.profile_invitacion_para_ser_admin_de),
+                        subtitle = stringResource(R.string.profile_genera_un_codigo_qr_quien),
+                        action = stringResource(R.string.profile_generar_qr),
                         onClick = { onInvites("adm", null, null) },
                     )
                 }
@@ -142,21 +143,21 @@ fun ProfileScreen(
 
             // ---- ADM: invitar entrenadores y gestionar equipos de su academia ----
             ctx?.adminAcademies.orEmpty().forEach { m ->
-                val academyName = m.academy?.name ?: "Mi academia"
-                item { SectionHeader("Administración · $academyName") }
+                val academyName = m.academy?.name ?: AppText.get(R.string.profile_mi_academia)
+                item { SectionHeader(stringResource(R.string.profile_administracion_x, academyName)) }
                 item {
                     ActionCard(
-                        title = "Invitar entrenador (DT)",
-                        subtitle = "QR de un solo uso: quien lo escanee se registra como DT de $academyName.",
-                        action = "Generar QR",
+                        title = stringResource(R.string.profile_invitar_entrenador_dt),
+                        subtitle = stringResource(R.string.profile_qr_de_un_solo_uso, academyName),
+                        action = stringResource(R.string.profile_generar_qr),
                         onClick = { onInvites("dt", m.academyId, academyName) },
                     )
                 }
                 item {
                     ActionCard(
-                        title = "Equipos y entrenadores",
-                        subtitle = "Crea los equipos de la academia y asigna a cada uno su DT.",
-                        action = "Abrir",
+                        title = stringResource(R.string.profile_equipos_y_entrenadores),
+                        subtitle = stringResource(R.string.profile_crea_los_equipos_de_la),
+                        action = stringResource(R.string.profile_abrir),
                         onClick = { onAcademyTeams(m.academyId, academyName) },
                     )
                 }
@@ -164,13 +165,13 @@ fun ProfileScreen(
 
             // ---- Mis hijos (D-08 + código familiar y solicitudes, migración 003) ----
             if (ctx?.isGuardian == true || ctx?.children?.isNotEmpty() == true) {
-                item { SectionHeader("Mis hijos") }
+                item { SectionHeader(stringResource(R.string.profile_mis_hijos)) }
                 if (ctx?.isGuardianAccount == true) {
                     item { FamilyCodeCard(ui.guardianCode, Modifier.padding(horizontal = 16.dp)) }
                     item {
                         Text(
-                            if (ui.requests.isEmpty()) "Solicitudes pendientes: ninguna por ahora."
-                            else "Solicitudes pendientes (${ui.requests.size})",
+                            if (ui.requests.isEmpty()) stringResource(R.string.profile_solicitudes_pendientes_ninguna_por_ahora)
+                            else stringResource(R.string.profile_solicitudes_pendientes_x, ui.requests.size),
                             style = MaterialTheme.typography.titleSmall,
                             modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 4.dp),
                         )
@@ -186,7 +187,7 @@ fun ProfileScreen(
                 }
                 val children = ctx?.children.orEmpty()
                 if (children.isEmpty()) {
-                    item { EmptyState("Aún no hay perfiles", "Crea el perfil de tu hijo menor de 13 años.") }
+                    item { EmptyState(stringResource(R.string.profile_aun_no_hay_perfiles), stringResource(R.string.profile_crea_el_perfil_de_tu)) }
                 }
                 items(children, key = { "ch" + it.id }) { child ->
                     val teams = ui.memberships.filter { it.playerId == child.id }
@@ -200,14 +201,14 @@ fun ProfileScreen(
                 }
                 item {
                     OutlinedButton(onClick = onAddChild, modifier = Modifier.padding(horizontal = 16.dp)) {
-                        Text("Agregar hijo menor de 13")
+                        Text(stringResource(R.string.profile_agregar_hijo_menor_de_13))
                     }
                 }
             }
 
             // ---- Mi perfil de jugador ----
             ctx?.ownPlayer?.let { p ->
-                item { SectionHeader("Mi perfil de jugador") }
+                item { SectionHeader(stringResource(R.string.profile_mi_perfil_de_jugador)) }
                 item {
                     PlayerCard(
                         player = p,
@@ -223,9 +224,9 @@ fun ProfileScreen(
             if (ctx?.ownPlayer != null || ctx?.isGuardian == true) {
                 item {
                     ActionCard(
-                        title = "Unirme a un equipo",
-                        subtitle = "Escanea el QR o escribe el código que te dio el DT. Él recibe tu solicitud y la acepta.",
-                        action = "Abrir",
+                        title = stringResource(R.string.profile_unirme_a_un_equipo),
+                        subtitle = stringResource(R.string.profile_escanea_el_qr_o_escribe),
+                        action = stringResource(R.string.profile_abrir),
                         onClick = onJoinTeam,
                     )
                 }
@@ -249,7 +250,7 @@ fun ProfileScreen(
             if (managed.isNotEmpty()) {
                 // Solicitudes para unirse (se actualizan solas al llegar la notificación)
                 item { TeamJoinRequestsBlock(onChanged = { session.refreshContext() }) }
-                item { SectionHeader("Equipos que gestiono") }
+                item { SectionHeader(stringResource(R.string.profile_equipos_que_gestiono)) }
                 items(managed, key = { "mt" + it.id }) { t ->
                     Card(
                         Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 5.dp),
@@ -261,14 +262,14 @@ fun ProfileScreen(
                             Column(Modifier.weight(1f)) {
                                 Text(t.name, style = MaterialTheme.typography.titleSmall)
                                 Text(
-                                    "${t.category ?: ""} · formato ${t.defaultFormatPlayers} · ${t.halfMinutes}' por tiempo",
+                                    stringResource(R.string.profile_x_formato_x_x_por, t.category ?: "", t.defaultFormatPlayers, t.halfMinutes),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
                             Column {
-                                TextButton(onClick = { onTeamRoster(t.id, t.name) }) { Text("Plantel e invitar") }
-                                TextButton(onClick = { onTeamStats(t.id, t.name) }) { Text("Estadísticas") }
+                                TextButton(onClick = { onTeamRoster(t.id, t.name) }) { Text(stringResource(R.string.profile_plantel_e_invitar)) }
+                                TextButton(onClick = { onTeamStats(t.id, t.name) }) { Text(stringResource(R.string.profile_estadisticas)) }
                                 TextButton(onClick = { onTeamDocs(t.id, t.name) }) { Text(stringResource(R.string.docs_button)) }
                             }
                         }
@@ -286,7 +287,7 @@ fun ProfileScreen(
             }
 
             item {
-                OutlinedButton(onClick = { session.signOut() }, modifier = Modifier.padding(16.dp)) { Text("Cerrar sesión") }
+                OutlinedButton(onClick = { session.signOut() }, modifier = Modifier.padding(16.dp)) { Text(stringResource(R.string.profile_cerrar_sesion)) }
             }
         }
     }
@@ -300,20 +301,20 @@ fun CallupCard(c: Callup, onOpenMatch: (String) -> Unit, onRespond: (Boolean) ->
     ) {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Pill("CONVOCATORIA", WarnAmber)
+                Pill(stringResource(R.string.profile_convocatoria), WarnAmber)
                 Spacer(Modifier.width(8.dp))
-                Text(c.player?.fullName ?: "Jugador", style = MaterialTheme.typography.titleSmall)
+                Text(c.player?.fullName ?: stringResource(R.string.profile_jugador), style = MaterialTheme.typography.titleSmall)
             }
-            Text(c.match?.title ?: "Partido", style = MaterialTheme.typography.bodyLarge)
+            Text(c.match?.title ?: stringResource(R.string.profile_partido), style = MaterialTheme.typography.bodyLarge)
             Text(
                 listOfNotNull(formatDayTime(c.match?.scheduledAt), c.match?.venue).joinToString(" · "),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = { onRespond(true) }) { Text("Confirmar") }
-                OutlinedButton(onClick = { onRespond(false) }) { Text("No asistirá") }
-                TextButton(onClick = { onOpenMatch(c.matchId) }) { Text("Ver") }
+                Button(onClick = { onRespond(true) }) { Text(stringResource(R.string.profile_confirmar)) }
+                OutlinedButton(onClick = { onRespond(false) }) { Text(stringResource(R.string.profile_no_asistira)) }
+                TextButton(onClick = { onOpenMatch(c.matchId) }) { Text(stringResource(R.string.profile_ver)) }
             }
         }
     }
@@ -331,13 +332,13 @@ private fun PlayerCard(player: PlayerRef, teamsText: String, onStats: () -> Unit
             Column(Modifier.weight(1f)) {
                 Text(player.fullName, style = MaterialTheme.typography.titleSmall)
                 Text(
-                    listOfNotNull(player.position, teamsText.ifBlank { null }).joinToString(" · ").ifBlank { "Sin equipo asignado" },
+                    listOfNotNull(player.position, teamsText.ifBlank { null }).joinToString(" · ").ifBlank { stringResource(R.string.profile_sin_equipo_asignado) },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
             Column {
-                TextButton(onClick = onStats) { Text("Estadísticas") }
+                TextButton(onClick = onStats) { Text(stringResource(R.string.profile_estadisticas)) }
                 if (onDocs != null) TextButton(onClick = onDocs) { Text(stringResource(R.string.docs_button)) }
             }
         }

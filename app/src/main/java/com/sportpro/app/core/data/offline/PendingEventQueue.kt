@@ -1,5 +1,7 @@
 package com.sportpro.app.core.data.offline
 
+import com.sportpro.app.R
+import com.sportpro.app.core.AppText
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network
@@ -78,7 +80,7 @@ class PendingEventQueue(
     val errors: SharedFlow<String> = _errors.asSharedFlow()
 
     private val _sent = MutableSharedFlow<String>(extraBufferCapacity = 16)
-    /** Emits the matchId whenever a queued event reaches the server. */
+    /** Emite el id del partido cada vez que un evento de la cola llega al servidor. */
     val sent: SharedFlow<String> = _sent.asSharedFlow()
 
     init {
@@ -164,7 +166,7 @@ class PendingEventQueue(
                     when {
                         e.isDuplicate() -> Outcome.DONE
                         e.isServerAnswer() -> {
-                            _errors.tryEmit("No se pudo guardar «${event.label}»: ${e.friendlyMessage()}")
+                            _errors.tryEmit(AppText.get(R.string.queue_save_failed, event.label, e.friendlyMessage()))
                             Outcome.DROP
                         }
                         else -> Outcome.NETWORK

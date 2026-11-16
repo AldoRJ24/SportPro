@@ -1,4 +1,7 @@
 package com.sportpro.app.ui.admin
+import androidx.compose.ui.res.stringResource
+import com.sportpro.app.R
+import com.sportpro.app.core.AppText
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -24,9 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -41,6 +42,7 @@ import com.sportpro.app.core.data.CreatedInvitation
 import com.sportpro.app.core.data.InvitationRow
 import com.sportpro.app.core.data.formatDayTime
 import com.sportpro.app.core.data.friendlyMessage
+import com.sportpro.app.ui.components.copyToClipboard
 import com.sportpro.app.ui.components.Pill
 import com.sportpro.app.ui.components.QrImage
 import com.sportpro.app.ui.components.SectionHeader
@@ -109,7 +111,7 @@ class InvitesViewModel(
             try {
                 container.account.revokeInvitation(row.id)
                 if (_ui.value.created?.code == row.code) _ui.update { it.copy(created = null) }
-                _messages.tryEmit("Invitación anulada")
+                _messages.tryEmit(AppText.get(R.string.invites_invitacion_anulada))
                 loadHistory()
             } catch (e: Exception) {
                 _messages.tryEmit(e.friendlyMessage())
@@ -124,18 +126,17 @@ fun InvitesScreen(kind: String, academyId: String?, academyName: String?, onBack
     val vm: InvitesViewModel = viewModel(key = "inv-$kind-$academyId") { InvitesViewModel(container, kind, academyId) }
     val ui by vm.ui.collectAsStateWithLifecycle()
     val snack = remember { SnackbarHostState() }
-    val clipboard = LocalClipboardManager.current
     val context = LocalContext.current
     LaunchedEffect(vm) { vm.messages.collect { snack.showSnackbar(it) } }
-    val title = if (kind == "adm") "Invitar administrador" else "Invitar entrenador"
-    val who = if (kind == "adm") "administrador de academias" else "entrenador (DT) de ${academyName ?: "tu academia"}"
+    val title = if (kind == "adm") stringResource(R.string.invites_invitar_administrador) else stringResource(R.string.invites_invitar_entrenador)
+    val who = if (kind == "adm") stringResource(R.string.invites_administrador_de_academias) else stringResource(R.string.invites_entrenador_dt_de_x, academyName ?: stringResource(R.string.invites_tu_academia))
 
     SpScaffold(title = title, onBack = onBack, snackbarHostState = snack) { pad ->
         LazyColumn(Modifier.padding(pad), contentPadding = PaddingValues(bottom = 32.dp)) {
             item {
                 Text(
-                    "Genera un código QR de un solo uso (vence en 7 días). Quien lo escanee abre SportPro y se registra como $who." +
-                        if (kind == "adm") " Deberá registrar su academia para completar el registro." else "",
+                    stringResource(R.string.invites_genera_un_codigo_qr_de, who) +
+                        if (kind == "adm") stringResource(R.string.invites_debera_registrar_su_academia_para) else "",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(16.dp),
@@ -146,7 +147,7 @@ fun InvitesScreen(kind: String, academyId: String?, academyName: String?, onBack
                     onClick = vm::create,
                     enabled = !ui.busy,
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).height(52.dp),
-                ) { Text(if (ui.created == null) "Generar código QR" else "Generar otro código") }
+                ) { Text(if (ui.created == null) stringResource(R.string.invites_generar_codigo_qr) else stringResource(R.string.invites_generar_otro_codigo)) }
             }
             if (ui.busy) item { LinearProgressIndicator(Modifier.fillMaxWidth().padding(16.dp)) }
             ui.created?.let { inv ->
@@ -164,35 +165,35 @@ fun InvitesScreen(kind: String, academyId: String?, academyName: String?, onBack
                             QrImage(link)
                             Text(inv.code, fontSize = 24.sp, fontWeight = FontWeight.Black, letterSpacing = 2.sp)
                             Text(
-                                "Escanéalo con la cámara del teléfono o con «Me invitaron: escanear QR» en el inicio de sesión. Vence: ${formatDayTime(inv.expiresAt)}",
+                                stringResource(R.string.invites_escanealo_con_la_camara_del, formatDayTime(inv.expiresAt)),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 textAlign = TextAlign.Center,
                             )
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                OutlinedButton(onClick = { clipboard.setText(AnnotatedString(inv.code)) }) { Text("Copiar código") }
+                                OutlinedButton(onClick = { copyToClipboard(context, inv.code) }) { Text(stringResource(R.string.invites_copiar_codigo)) }
                                 Button(onClick = {
                                     shareText(
-                                        context, "Invitación a SportPro",
-                                        "Te invito a SportPro como $who. Abre este enlace en tu celular con la app instalada: $link " +
-                                            "(o ingresa el código ${inv.code} en «Regístrate → ¿Te invitaron?»).",
+                                        context, AppText.get(R.string.invites_invitacion_a_sportpro),
+                                        AppText.get(R.string.invites_te_invito_a_sportpro_como, who, link) +
+                                            AppText.get(R.string.invites_o_ingresa_el_codigo_x, inv.code),
                                     )
-                                }) { Text("Compartir") }
+                                }) { Text(stringResource(R.string.invites_compartir)) }
                             }
                         }
                     }
                 }
             }
-            item { SectionHeader("Invitaciones generadas") }
+            item { SectionHeader(stringResource(R.string.invites_invitaciones_generadas)) }
             if (ui.history.isEmpty()) {
-                item { Text("Aún no generaste invitaciones.", modifier = Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodySmall) }
+                item { Text(stringResource(R.string.invites_aun_no_generaste_invitaciones), modifier = Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodySmall) }
             }
             items(ui.history, key = { it.id }) { row ->
                 Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Text(row.code, style = MaterialTheme.typography.titleSmall)
                         Text(
-                            listOfNotNull(row.academyName, row.usedByName?.let { "usada por $it" }, "vence ${formatDayTime(row.expiresAt)}")
+                            listOfNotNull(row.academyName, row.usedByName?.let { stringResource(R.string.invites_usada_por_x, it) }, stringResource(R.string.invites_vence_x, formatDayTime(row.expiresAt)))
                                 .joinToString(" · "),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -200,12 +201,12 @@ fun InvitesScreen(kind: String, academyId: String?, academyName: String?, onBack
                     }
                     when (row.status) {
                         "active" -> {
-                            Pill("Activa", Mint400)
-                            TextButton(onClick = { vm.revoke(row) }) { Text("Anular") }
+                            Pill(stringResource(R.string.invites_activa), Mint400)
+                            TextButton(onClick = { vm.revoke(row) }) { Text(stringResource(R.string.invites_anular)) }
                         }
-                        "used" -> Pill("Usada", MaterialTheme.colorScheme.secondary)
-                        "expired" -> Pill("Vencida", WarnAmber)
-                        else -> Pill("Anulada", ErrorRed)
+                        "used" -> Pill(stringResource(R.string.invites_usada), MaterialTheme.colorScheme.secondary)
+                        "expired" -> Pill(stringResource(R.string.invites_vencida), WarnAmber)
+                        else -> Pill(stringResource(R.string.invites_anulada), ErrorRed)
                     }
                 }
             }

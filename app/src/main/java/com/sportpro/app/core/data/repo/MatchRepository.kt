@@ -267,7 +267,7 @@ class MatchRepository(private val client: SupabaseClient) {
         client.from("match_callups").update(buildJsonObject { put("status", status) }) { filter { eq("id", callupId) } }
     }
 
-    /** One lineup row: player, jersey, starter or substitute, and field position (POR/DEF/MED/DEL). */
+    /** Una fila de la alineación: jugador, dorsal, titular o suplente, y posición en cancha (POR/DEF/MED/DEL). */
     data class LineupEntry(val playerId: String, val jersey: Int?, val starter: Boolean, val position: String?)
 
     /**

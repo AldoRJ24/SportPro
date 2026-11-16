@@ -1,11 +1,17 @@
 package com.sportpro.app.core.data
+import androidx.annotation.StringRes
+import com.sportpro.app.R
+import com.sportpro.app.core.AppText
 
 /** Posiciones fijas: POR, DEF, MED, DEL. El servidor solo acepta estos códigos (check constraint). */
-enum class Position(val code: String, val label: String, val short: String) {
-    POR("POR", "Arquero", "ARQ"),
-    DEF("DEF", "Defensa", "DEF"),
-    MED("MED", "Mediocampista", "MED"),
-    DEL("DEL", "Delantero", "DEL");
+enum class Position(val code: String, @StringRes private val labelRes: Int, val short: String) {
+    POR("POR", R.string.positions_arquero, "ARQ"),
+    DEF("DEF", R.string.positions_defensa, "DEF"),
+    MED("MED", R.string.positions_mediocampista, "MED"),
+    DEL("DEL", R.string.positions_delantero, "DEL");
+
+    /** Nombre visible. Se lee de strings.xml cada vez (el enum solo guarda el id del texto). */
+    val label: String get() = AppText.get(labelRes)
 
     companion object {
         fun of(code: String?): Position? = entries.firstOrNull { it.code == code }
@@ -54,9 +60,9 @@ object Formations {
     /** Problemas para mostrar al DT (titulares incompletos, sin posición, cupos por línea). Vacía = válida. */
     fun problems(formation: Formation, positions: List<Position?>): List<String> {
         val out = mutableListOf<String>()
-        if (positions.size != formation.total) out += "Titulares ${positions.size}/${formation.total}"
+        if (positions.size != formation.total) out += AppText.get(R.string.positions_titulares_x_x, positions.size, formation.total)
         val missing = positions.count { it == null }
-        if (missing > 0) out += "$missing titular(es) sin posición"
+        if (missing > 0) out += AppText.plural(R.plurals.positions_missing_position, missing)
         Position.entries.forEach { p ->
             val have = positions.count { it == p }
             val need = formation.required(p)

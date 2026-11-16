@@ -9,16 +9,16 @@ import io.github.jan.supabase.realtime.Realtime
 import io.github.jan.supabase.storage.Storage
 
 /**
- * Single Supabase client for the whole app.
- * Only the project URL and the publishable key ship in the APK (both from local.properties
- * via BuildConfig). Secret keys never live in the client.
+ * Cliente único de Supabase para toda la app.
+ * En el APK solo van la URL del proyecto y la clave publicable (ambas desde local.properties
+ * vía BuildConfig). Las claves secretas nunca viven en la app.
  */
 object SupabaseProvider {
 
     const val DEEPLINK_SCHEME = "sportpro"
     const val DEEPLINK_AUTH_HOST = "auth-callback"
 
-    /** Public URL of an avatar stored in the «avatars» bucket. */
+    /** URL pública de una foto de perfil guardada en el bucket «avatars». */
     fun avatarUrl(path: String?): String? =
         path?.takeIf { it.isNotBlank() }?.let { "${BuildConfig.SUPABASE_URL}/storage/v1/object/public/avatars/$it" }
 

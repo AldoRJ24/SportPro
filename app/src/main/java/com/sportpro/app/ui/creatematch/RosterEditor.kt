@@ -1,4 +1,6 @@
 package com.sportpro.app.ui.creatematch
+import androidx.compose.ui.res.stringResource
+import com.sportpro.app.R
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -25,7 +27,7 @@ import androidx.compose.ui.unit.dp
 import com.sportpro.app.core.data.ExternalDraft
 import com.sportpro.app.ui.components.PositionChips
 
-/** One external-rival player: dorsal + name + position + titular/suplente. */
+/** Un jugador del rival externo: dorsal + nombre + posición + titular o suplente. */
 @Composable
 fun ExternalRowEditor(
     row: ExternalDraft,
@@ -50,18 +52,18 @@ fun ExternalRowEditor(
                 OutlinedTextField(
                     value = row.name,
                     onValueChange = { v -> onChange(row.copy(name = v.take(60))) },
-                    label = { Text("Nombre") },
+                    label = { Text(stringResource(R.string.roster_editor_nombre)) },
                     singleLine = true,
                     modifier = Modifier.weight(1f),
                 )
                 if (onRemove != null) {
-                    IconButton(onClick = onRemove) { Icon(Icons.Filled.Delete, contentDescription = "Quitar") }
+                    IconButton(onClick = onRemove) { Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.roster_editor_quitar)) }
                 }
             }
             PositionChips(selected = row.position, onSelect = { onChange(row.copy(position = it)) })
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                FilterChip(selected = row.starter, onClick = { onChange(row.copy(starter = true)) }, label = { Text("Titular") })
-                FilterChip(selected = !row.starter, onClick = { onChange(row.copy(starter = false)) }, label = { Text("Suplente") })
+                FilterChip(selected = row.starter, onClick = { onChange(row.copy(starter = true)) }, label = { Text(stringResource(R.string.roster_editor_titular)) })
+                FilterChip(selected = !row.starter, onClick = { onChange(row.copy(starter = false)) }, label = { Text(stringResource(R.string.roster_editor_suplente)) })
             }
         }
     }

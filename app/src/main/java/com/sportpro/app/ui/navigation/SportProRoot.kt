@@ -1,4 +1,6 @@
 package com.sportpro.app.ui.navigation
+import androidx.compose.ui.res.stringResource
+import com.sportpro.app.R
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -97,17 +99,17 @@ private fun ContextErrorScreen(message: String, session: SessionViewModel) {
         Modifier.fillMaxSize().padding(32.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp, androidx.compose.ui.Alignment.CenterVertically),
     ) {
-        Text("No se pudo cargar tu cuenta", style = MaterialTheme.typography.headlineSmall)
+        Text(stringResource(R.string.sport_pro_root_no_se_pudo_cargar_tu), style = MaterialTheme.typography.headlineSmall)
         Text(message)
-        Button(onClick = { session.refreshContext() }) { Text("Reintentar") }
-        TextButton(onClick = { session.signOut() }) { Text("Cerrar sesión") }
+        Button(onClick = { session.refreshContext() }) { Text(stringResource(R.string.sport_pro_root_reintentar)) }
+        TextButton(onClick = { session.signOut() }) { Text(stringResource(R.string.sport_pro_root_cerrar_sesion)) }
     }
 }
 
 @Composable
 private fun MisconfiguredScreen() {
     Column(Modifier.fillMaxSize().padding(32.dp), verticalArrangement = Arrangement.Center) {
-        Text("Falta configuración", style = MaterialTheme.typography.headlineSmall)
-        Text("Agrega SUPABASE_URL y SUPABASE_PUBLISHABLE_KEY en local.properties y vuelve a sincronizar Gradle.")
+        Text(stringResource(R.string.sport_pro_root_falta_configuracion), style = MaterialTheme.typography.headlineSmall)
+        Text(stringResource(R.string.sport_pro_root_agrega_supabase_url_y_supabase))
     }
 }

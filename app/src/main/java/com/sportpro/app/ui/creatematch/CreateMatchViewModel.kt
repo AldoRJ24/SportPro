@@ -1,4 +1,6 @@
 package com.sportpro.app.ui.creatematch
+import com.sportpro.app.R
+import com.sportpro.app.core.AppText
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -50,14 +52,14 @@ data class CreateMatchForm(
         val out = mutableListOf<String>()
         val rows = filledRoster
         val starters = externalStarters
-        if (starters.size != formatPlayers) out += "Titulares ${starters.size}/$formatPlayers"
+        if (starters.size != formatPlayers) out += AppText.get(R.string.create_match_titulares_x_x, starters.size, formatPlayers)
         val gk = starters.count { it.position == Position.POR }
-        if (gk != 1) out += "Debe haber exactamente 1 arquero titular (hay $gk)"
-        if (rows.any { it.name.isBlank() }) out += "Hay filas sin nombre"
-        if (rows.any { it.jersey.toIntOrNull() == null }) out += "Todos necesitan dorsal (0–99)"
+        if (gk != 1) out += AppText.get(R.string.create_match_debe_haber_exactamente_1_arquero, gk)
+        if (rows.any { it.name.isBlank() }) out += AppText.get(R.string.create_match_hay_filas_sin_nombre)
+        if (rows.any { it.jersey.toIntOrNull() == null }) out += AppText.get(R.string.create_match_todos_necesitan_dorsal_0_99)
         val dup = rows.mapNotNull { it.jersey.toIntOrNull() }.groupBy { it }.filter { it.value.size > 1 }.keys
-        if (dup.isNotEmpty()) out += "Dorsales repetidos: ${dup.joinToString()}"
-        if (rows.any { it.position == null }) out += "Asigna la posición de cada jugador"
+        if (dup.isNotEmpty()) out += AppText.get(R.string.create_match_dorsales_repetidos_x, dup.joinToString())
+        if (rows.any { it.position == null }) out += AppText.get(R.string.create_match_asigna_la_posicion_de_cada)
         return out
     }
 }
@@ -107,14 +109,14 @@ class CreateMatchViewModel(private val container: AppContainer) : ViewModel() {
         val time = parseTimeDigits(f.timeDigits)
         val rosterProblems = if (f.externalRival) f.rosterProblems() else emptyList()
         val error = when {
-            f.homeTeamId == null -> "Elige tu equipo."
-            f.externalRival && f.externalName.trim().length < 2 -> "Escribe el nombre del rival externo."
-            !f.externalRival && f.awayTeamId == null -> "Elige el equipo rival."
-            f.formatPlayers !in 5..11 -> "El formato debe ser de 5 a 11 jugadores."
-            f.halfMinutes !in 5..60 -> "Cada tiempo debe durar entre 5 y 60 minutos."
-            date == null -> "Fecha inválida: escribe 8 dígitos (DD/MM/AAAA)."
-            time == null -> "Hora inválida: escribe 4 dígitos (HH:MM, 24 h)."
-            rosterProblems.isNotEmpty() -> "Plantel del rival: " + rosterProblems.joinToString("; ") + "."
+            f.homeTeamId == null -> AppText.get(R.string.create_match_elige_tu_equipo)
+            f.externalRival && f.externalName.trim().length < 2 -> AppText.get(R.string.create_match_escribe_el_nombre_del_rival)
+            !f.externalRival && f.awayTeamId == null -> AppText.get(R.string.create_match_elige_el_equipo_rival)
+            f.formatPlayers !in 5..11 -> AppText.get(R.string.create_match_el_formato_debe_ser_de)
+            f.halfMinutes !in 5..60 -> AppText.get(R.string.create_match_cada_tiempo_debe_durar_entre)
+            date == null -> AppText.get(R.string.create_match_fecha_invalida_escribe_8_digitos)
+            time == null -> AppText.get(R.string.create_match_hora_invalida_escribe_4_digitos)
+            rosterProblems.isNotEmpty() -> AppText.get(R.string.create_match_plantel_del_rival) + rosterProblems.joinToString("; ") + "."
             else -> null
         }
         if (error != null) {

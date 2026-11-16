@@ -29,7 +29,7 @@ import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
-/** Academies, teams, players, family links, follows and stats. */
+/** Academias, equipos, jugadores, vínculos familiares, seguidos y estadísticas. */
 class ClubRepository(private val client: SupabaseClient) {
 
     private fun uid(): String = client.auth.currentUserOrNull()?.id ?: error("No autenticado")
@@ -137,7 +137,7 @@ class ClubRepository(private val client: SupabaseClient) {
             }.decodeRows()
     }
 
-    // ---- Follows (D-19: followers see live matches) ----
+    // ---- Seguir (D-19: los seguidores ven los partidos en vivo) ----
     suspend fun myFollows(): List<FollowRow> =
         client.from("follows").select(Columns.raw("id,academy_id,team_id")).decodeRows()
 
@@ -153,7 +153,7 @@ class ClubRepository(private val client: SupabaseClient) {
         client.from("follows").delete { filter { eq("id", followId) } }
     }
 
-    // ---- Callups (US-04) for my children / myself ----
+    // ---- Convocatorias (US-04) de mis hijos o mías ----
     suspend fun callupsForPlayers(playerIds: List<String>): List<Callup> {
         if (playerIds.isEmpty()) return emptyList()
         return client.from("match_callups")
@@ -171,7 +171,7 @@ class ClubRepository(private val client: SupabaseClient) {
         }
     }
 
-    // ---- Stats (US-11) ----
+    // ---- Estadísticas (US-11) ----
     suspend fun playerStats(playerId: String): PlayerStats =
         client.postgrest.rpc("get_player_stats", buildJsonObject { put("p_player", playerId) })
             .decodeRows<PlayerStats>().firstOrNull() ?: PlayerStats()
@@ -180,7 +180,7 @@ class ClubRepository(private val client: SupabaseClient) {
         client.postgrest.rpc("get_team_stats", buildJsonObject { put("p_team", teamId) })
             .decodeRows<TeamStats>().firstOrNull() ?: TeamStats()
 
-    // ---- Family (D-08: guardian creates the profile of an under-13 child) ----
+    // ---- Familia (D-08: el apoderado crea el perfil de su hijo menor de 13) ----
     suspend fun createChild(first: String, last: String, birthIso: String, position: String?): String =
         client.postgrest.rpc("create_child_player", buildJsonObject {
             put("p_first", first)

@@ -1,4 +1,7 @@
 package com.sportpro.app.ui.summary
+import androidx.compose.ui.res.stringResource
+import com.sportpro.app.R
+import com.sportpro.app.core.AppText
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -97,7 +100,7 @@ class SummaryViewModel(private val container: AppContainer, private val matchId:
                 if (err != null) _messages.tryEmit(err)
                 load()
             } catch (e: Exception) {
-                _messages.tryEmit("No se pudo generar: ${e.friendlyMessage()}")
+                _messages.tryEmit(AppText.get(R.string.summary_no_se_pudo_generar_x, e.friendlyMessage()))
             } finally {
                 _ui.update { it.copy(generating = false) }
             }
@@ -108,7 +111,7 @@ class SummaryViewModel(private val container: AppContainer, private val matchId:
         viewModelScope.launch {
             try {
                 container.matches.saveSummaryEdit(matchId, _ui.value.text)
-                _messages.tryEmit("Edición guardada")
+                _messages.tryEmit(AppText.get(R.string.summary_edicion_guardada))
                 load()
             } catch (e: Exception) {
                 _messages.tryEmit(e.friendlyMessage())
@@ -123,7 +126,7 @@ class SummaryViewModel(private val container: AppContainer, private val matchId:
                 val s = _ui.value
                 if (s.text != (s.summary?.finalText ?: "")) container.matches.saveSummaryEdit(matchId, s.text)
                 container.matches.approveSummary(matchId, s.visibility)
-                _messages.tryEmit("Resumen publicado: ya aparece en Inicio")
+                _messages.tryEmit(AppText.get(R.string.summary_resumen_publicado_ya_aparece_en))
                 load()
             } catch (e: Exception) {
                 _messages.tryEmit(e.friendlyMessage())
@@ -140,51 +143,51 @@ fun SummaryScreen(matchId: String, onBack: () -> Unit) {
     val snack = remember { SnackbarHostState() }
     LaunchedEffect(vm) { vm.messages.collect { snack.showSnackbar(it) } }
 
-    SpScaffold(title = "Resumen con IA", onBack = onBack, snackbarHostState = snack) { pad ->
+    SpScaffold(title = stringResource(R.string.summary_resumen_con_ia), onBack = onBack, snackbarHostState = snack) { pad ->
         Column(
             Modifier.padding(pad).imePadding().verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(
-                "La IA recibe solo la lista de eventos registrados, con seudónimos (sin nombres ni edades). No puede inventar jugadas: si cita a alguien inexistente, el borrador se rechaza. Revísalo y edítalo antes de publicar.",
+                stringResource(R.string.summary_la_ia_recibe_solo_la),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 when (ui.summary?.status) {
-                    "approved" -> Pill("APROBADO", Mint400)
-                    "edited" -> Pill("EDITADO", WarnAmber)
-                    "draft" -> Pill("BORRADOR", WarnAmber)
-                    else -> Pill("SIN GENERAR", MaterialTheme.colorScheme.onSurfaceVariant)
+                    "approved" -> Pill(stringResource(R.string.summary_aprobado), Mint400)
+                    "edited" -> Pill(stringResource(R.string.summary_editado), WarnAmber)
+                    "draft" -> Pill(stringResource(R.string.summary_borrador), WarnAmber)
+                    else -> Pill(stringResource(R.string.summary_sin_generar), MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                Pill("Regeneraciones restantes: ${ui.remaining.coerceAtLeast(0)}", MaterialTheme.colorScheme.secondary)
+                Pill(stringResource(R.string.summary_regeneraciones_restantes_x, ui.remaining.coerceAtLeast(0)), MaterialTheme.colorScheme.secondary)
             }
             if (ui.generating || ui.loading) LinearProgressIndicator(Modifier.fillMaxWidth())
             Button(
                 onClick = vm::generate,
                 enabled = !ui.generating && !ui.approved && ui.remaining > 0,
                 modifier = Modifier.fillMaxWidth(),
-            ) { Text(if (ui.summary == null) "Generar borrador" else "Regenerar") }
+            ) { Text(if (ui.summary == null) stringResource(R.string.summary_generar_borrador) else stringResource(R.string.summary_regenerar)) }
             OutlinedTextField(
                 value = ui.text,
                 onValueChange = vm::onText,
                 enabled = ui.summary != null && !ui.approved,
-                label = { Text("Texto del resumen (editable)") },
+                label = { Text(stringResource(R.string.summary_texto_del_resumen_editable)) },
                 minLines = 6,
                 modifier = Modifier.fillMaxWidth().heightIn(min = 160.dp),
             )
             if (ui.summary != null && !ui.approved) {
-                OutlinedButton(onClick = vm::saveEdit, modifier = Modifier.fillMaxWidth()) { Text("Guardar edición") }
-                Text("Visibilidad de la publicación", style = MaterialTheme.typography.titleSmall)
+                OutlinedButton(onClick = vm::saveEdit, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.summary_guardar_edicion)) }
+                Text(stringResource(R.string.summary_visibilidad_de_la_publicacion), style = MaterialTheme.typography.titleSmall)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf("team" to "Solo mi equipo", "academy" to "Mi academia", "public" to "Todos").forEach { (k, label) ->
+                    listOf("team" to stringResource(R.string.summary_solo_mi_equipo), "academy" to stringResource(R.string.summary_mi_academia), "public" to stringResource(R.string.summary_todos)).forEach { (k, label) ->
                         FilterChip(selected = ui.visibility == k, onClick = { vm.onVisibility(k) }, label = { Text(label) })
                     }
                 }
-                Button(onClick = vm::approve, enabled = ui.text.isNotBlank(), modifier = Modifier.fillMaxWidth()) { Text("Aprobar y publicar") }
+                Button(onClick = vm::approve, enabled = ui.text.isNotBlank(), modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.summary_aprobar_y_publicar)) }
             }
             Text(
-                "Etiqueta al publicar: «Resumen generado con IA y revisado por el entrenador».",
+                stringResource(R.string.summary_etiqueta_al_publicar_resumen_generado),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

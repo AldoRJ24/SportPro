@@ -1,4 +1,6 @@
 package com.sportpro.app.core.data
+import com.sportpro.app.R
+import com.sportpro.app.core.AppText
 
 import java.time.Instant
 import java.time.OffsetDateTime
@@ -15,10 +17,10 @@ fun parseInstant(iso: String?): Instant? =
     iso?.let { runCatching { OffsetDateTime.parse(it).toInstant() }.getOrNull() }
 
 fun formatDayTime(iso: String?): String =
-    parseInstant(iso)?.atZone(ZoneId.systemDefault())?.format(dayTime) ?: "Sin fecha"
+    parseInstant(iso)?.atZone(ZoneId.systemDefault())?.format(dayTime) ?: AppText.get(R.string.time_sin_fecha)
 
 fun formatDay(iso: String?): String =
-    parseInstant(iso)?.atZone(ZoneId.systemDefault())?.format(dayOnly)?.replaceFirstChar { it.uppercase() } ?: "Sin fecha"
+    parseInstant(iso)?.atZone(ZoneId.systemDefault())?.format(dayOnly)?.replaceFirstChar { it.uppercase() } ?: AppText.get(R.string.time_sin_fecha)
 
 fun formatTime(iso: String?): String =
     parseInstant(iso)?.atZone(ZoneId.systemDefault())?.format(timeOnly) ?: "--:--"
@@ -29,9 +31,9 @@ fun timeAgo(iso: String?, nowMs: Long = System.currentTimeMillis()): String {
     val s = ((nowMs - t) / 1000).coerceAtLeast(0)
     return when {
         s < 60 -> "ahora"
-        s < 3600 -> "hace ${s / 60} min"
-        s < 86_400 -> "hace ${s / 3600} h"
-        s < 7 * 86_400 -> "hace ${s / 86_400} d"
+        s < 3600 -> AppText.get(R.string.time_hace_x_min, s / 60)
+        s < 86_400 -> AppText.get(R.string.time_hace_x_h, s / 3600)
+        s < 7 * 86_400 -> AppText.get(R.string.time_hace_x_d, s / 86_400)
         else -> formatDay(iso)
     }
 }
@@ -65,9 +67,9 @@ fun MatchRow.clock(nowMs: Long = System.currentTimeMillis()): MatchClock {
 }
 
 fun MatchRow.statusLabel(nowMs: Long = System.currentTimeMillis()): String = when (status) {
-    "live" -> "EN VIVO · ${clock(nowMs).label}"
-    "halftime" -> "ENTRETIEMPO"
-    "finished" -> "FINALIZADO"
-    "cancelled" -> "CANCELADO"
+    "live" -> AppText.get(R.string.time_en_vivo_x, clock(nowMs).label)
+    "halftime" -> AppText.get(R.string.time_entretiempo)
+    "finished" -> AppText.get(R.string.time_finalizado)
+    "cancelled" -> AppText.get(R.string.time_cancelado)
     else -> formatDayTime(scheduledAt)
 }

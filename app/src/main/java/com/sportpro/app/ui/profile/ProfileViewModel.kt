@@ -1,4 +1,6 @@
 package com.sportpro.app.ui.profile
+import com.sportpro.app.R
+import com.sportpro.app.core.AppText
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -67,7 +69,7 @@ class FamilyViewModel(private val container: AppContainer) : ViewModel() {
         }
     }
 
-    /** New request/notification arrived in real time. */
+    /** Llegó una solicitud o notificación nueva en tiempo real. */
     private fun reloadLight(ctx: UserContext) {
         viewModelScope.launch {
             val requests = if (ctx.isGuardianAccount) runCatching { container.account.guardianRequests() }.getOrDefault(_ui.value.requests) else emptyList()
@@ -84,7 +86,7 @@ class FamilyViewModel(private val container: AppContainer) : ViewModel() {
         viewModelScope.launch {
             try {
                 container.club.respondCallup(callup.id, accept)
-                _ui.update { it.copy(message = if (accept) "Asistencia confirmada" else "Convocatoria rechazada") }
+                _ui.update { it.copy(message = if (accept) AppText.get(R.string.profile_asistencia_confirmada) else AppText.get(R.string.profile_convocatoria_rechazada)) }
                 load(ctx)
             } catch (e: Exception) {
                 _ui.update { it.copy(message = e.friendlyMessage()) }
@@ -92,7 +94,7 @@ class FamilyViewModel(private val container: AppContainer) : ViewModel() {
         }
     }
 
-    /** Guardian accepts or rejects a minor's link request. */
+    /** El apoderado acepta o rechaza la solicitud de vínculo de un menor. */
     fun respondLink(request: GuardianRequest, accept: Boolean, onApproved: () -> Unit) {
         viewModelScope.launch {
             try {
@@ -100,7 +102,7 @@ class FamilyViewModel(private val container: AppContainer) : ViewModel() {
                 _ui.update {
                     it.copy(
                         requests = it.requests.filterNot { r -> r.linkId == request.linkId },
-                        message = if (accept) "${request.playerName} ahora está vinculado a ti" else "Solicitud rechazada",
+                        message = if (accept) AppText.get(R.string.profile_x_ahora_esta_vinculado_a, request.playerName) else AppText.get(R.string.profile_solicitud_rechazada),
                     )
                 }
                 if (accept) onApproved()

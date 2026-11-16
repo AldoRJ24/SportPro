@@ -1,4 +1,6 @@
 package com.sportpro.app.ui.auth
+import com.sportpro.app.R
+import com.sportpro.app.core.AppText
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -64,7 +66,7 @@ class AuthViewModel(private val container: AppContainer) : ViewModel() {
 
     fun signIn(email: String, password: String) {
         if (email.isBlank() || password.isBlank()) {
-            _ui.update { it.copy(error = "Ingresa tu correo y contraseña.") }
+            _ui.update { it.copy(error = AppText.get(R.string.auth_ingresa_tu_correo_y_contrasena)) }
             return
         }
         viewModelScope.launch {
@@ -82,7 +84,7 @@ class AuthViewModel(private val container: AppContainer) : ViewModel() {
     fun applyInvite(raw: String?) {
         val code = InviteLinks.parse(raw)
         if (code == null) {
-            _invite.value = InviteState(error = "Código de invitación inválido")
+            _invite.value = InviteState(error = AppText.get(R.string.auth_codigo_de_invitacion_invalido))
             return
         }
         viewModelScope.launch {
@@ -92,7 +94,7 @@ class AuthViewModel(private val container: AppContainer) : ViewModel() {
                 _invite.value = InviteState(
                     code = code,
                     check = check,
-                    error = if (check.valid) null else (check.reason ?: "Invitación no válida"),
+                    error = if (check.valid) null else (check.reason ?: AppText.get(R.string.auth_invitacion_no_valida)),
                 )
             } catch (e: Exception) {
                 _invite.value = InviteState(code = code, error = e.friendlyMessage())
@@ -114,24 +116,24 @@ class AuthViewModel(private val container: AppContainer) : ViewModel() {
         val minAge = if (type == "jug") 13 else 18
         val who = when (type) {
             "pad" -> "apoderado"
-            "adm" -> "administrador de academia"
+            "adm" -> AppText.get(R.string.auth_administrador_de_academia)
             "dt" -> "entrenador"
             else -> "jugador"
         }
         // Validaciones del formulario en orden; se muestra el primer error encontrado.
         val error = when {
-            inv.code != null && !inv.valid -> "La invitación no es válida: ${inv.error ?: "revísala"}"
-            f.firstName.trim().length < 2 -> "Escribe tu nombre."
-            f.lastName.trim().length < 2 -> "Escribe tu apellido."
-            f.birthDigits.length < 8 -> "Completa la fecha de nacimiento: 8 dígitos (DD/MM/AAAA)."
-            date == null -> "Esa fecha de nacimiento no existe. Revisa día y mes."
-            date.isAfter(LocalDate.now()) -> "La fecha de nacimiento no puede ser futura."
+            inv.code != null && !inv.valid -> AppText.get(R.string.auth_la_invitacion_no_es_valida, inv.error ?: AppText.get(R.string.auth_revisala))
+            f.firstName.trim().length < 2 -> AppText.get(R.string.auth_escribe_tu_nombre)
+            f.lastName.trim().length < 2 -> AppText.get(R.string.auth_escribe_tu_apellido)
+            f.birthDigits.length < 8 -> AppText.get(R.string.auth_completa_la_fecha_de_nacimiento)
+            date == null -> AppText.get(R.string.auth_esa_fecha_de_nacimiento_no)
+            date.isAfter(LocalDate.now()) -> AppText.get(R.string.auth_la_fecha_de_nacimiento_no)
             age != null && age < 13 ->
-                "Los menores de 13 años no crean cuenta: su apoderado crea su perfil en «Mis hijos»."
-            age != null && age < minAge -> "Para registrarte como $who debes ser mayor de edad (18+)."
-            type == "adm" && f.academyName.trim().length < 2 -> "Registra el nombre de tu academia para completar el registro."
-            !f.email.contains("@") -> "Correo inválido."
-            f.password.length < 6 -> "La contraseña debe tener al menos 6 caracteres."
+                AppText.get(R.string.auth_los_menores_de_13_anos)
+            age != null && age < minAge -> AppText.get(R.string.auth_para_registrarte_como_x_debes, who)
+            type == "adm" && f.academyName.trim().length < 2 -> AppText.get(R.string.auth_registra_el_nombre_de_tu)
+            !f.email.contains("@") -> AppText.get(R.string.auth_correo_invalido)
+            f.password.length < 6 -> AppText.get(R.string.auth_la_contrasena_debe_tener_al)
             else -> null
         }
         if (error != null) {
@@ -158,7 +160,7 @@ class AuthViewModel(private val container: AppContainer) : ViewModel() {
                 _form.value = RegisterForm()
                 if (needsConfirm) {
                     _ui.update {
-                        AuthUiState(info = "Cuenta creada. Te enviamos un correo para confirmarla; luego inicia sesión.")
+                        AuthUiState(info = AppText.get(R.string.auth_cuenta_creada_te_enviamos_un))
                     }
                     onDone()
                 } else {
@@ -170,7 +172,7 @@ class AuthViewModel(private val container: AppContainer) : ViewModel() {
                     AuthUiState(
                         // Si el trigger del servidor rechaza el alta, Supabase devuelve un error genérico: se traduce.
                         error = if (msg.contains("Database error", ignoreCase = true)) {
-                            "El servidor rechazó el registro (revisa edad, invitación y datos de la academia)."
+                            AppText.get(R.string.auth_el_servidor_rechazo_el_registro)
                         } else msg,
                     )
                 }

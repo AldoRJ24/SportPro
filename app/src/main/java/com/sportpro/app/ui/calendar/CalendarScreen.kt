@@ -1,5 +1,7 @@
 package com.sportpro.app.ui.calendar
 
+import androidx.compose.ui.res.stringResource
+import com.sportpro.app.R
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -29,12 +31,12 @@ fun CalendarScreen(vm: MatchesViewModel, onOpenMatch: (String) -> Unit, onBell: 
     val upcoming = (ui.live + ui.upcoming)
     val byDay = upcoming.groupBy { formatDay(it.scheduledAt) }
     val past = ui.finished.take(15).groupBy { formatDay(it.scheduledAt) }
-    SpScaffold(title = "Calendario", isTab = true, actions = { BellAction(onBell) }) { pad ->
+    SpScaffold(title = stringResource(R.string.calendar_calendario), isTab = true, actions = { BellAction(onBell) }) { pad ->
         // Primera carga o fallo sin datos: pantalla completa de carga / error con «Reintentar»
         if (ui.all.isEmpty() && ui.loading) { LoadingBox(Modifier.padding(pad)); return@SpScaffold }
         if (ui.all.isEmpty() && ui.error != null) { ErrorBox(ui.error!!, onRetry = { vm.refresh() }, modifier = Modifier.padding(pad)); return@SpScaffold }
         LazyColumn(Modifier.padding(pad), contentPadding = PaddingValues(bottom = 24.dp)) {
-            if (byDay.isEmpty()) item { EmptyState("Sin partidos próximos", "Cuando tu equipo programe un partido aparecerá aquí.") }
+            if (byDay.isEmpty()) item { EmptyState(stringResource(R.string.calendar_sin_partidos_proximos), stringResource(R.string.calendar_cuando_tu_equipo_programe_un)) }
             byDay.forEach { (day, list) ->
                 item { SectionHeader(day) }
                 items(list.sortedBy { parseInstant(it.scheduledAt)?.toEpochMilli() ?: 0L }, key = { "c" + it.id }) { m ->
@@ -42,7 +44,7 @@ fun CalendarScreen(vm: MatchesViewModel, onOpenMatch: (String) -> Unit, onBell: 
                 }
             }
             if (past.isNotEmpty()) {
-                item { SectionHeader("Jugados recientemente") }
+                item { SectionHeader(stringResource(R.string.calendar_jugados_recientemente)) }
                 past.forEach { (day, list) ->
                     item { SectionHeader(day) }
                     items(list, key = { "p" + it.id }) { m ->

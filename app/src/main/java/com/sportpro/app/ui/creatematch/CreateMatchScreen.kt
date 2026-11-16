@@ -1,4 +1,6 @@
 package com.sportpro.app.ui.creatematch
+import androidx.compose.ui.res.stringResource
+import com.sportpro.app.R
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -48,35 +50,35 @@ fun CreateMatchScreen(session: SessionViewModel, onBack: () -> Unit, onCreated: 
     val f by vm.form.collectAsStateWithLifecycle()
     val teams = ctx?.managedTeams.orEmpty()
 
-    SpScaffold(title = "Nuevo partido", onBack = onBack) { pad ->
+    SpScaffold(title = stringResource(R.string.create_match_nuevo_partido), onBack = onBack) { pad ->
         if (teams.isEmpty()) {
-            EmptyState("No gestionas equipos", "Solo el DT o el administrador de la academia crean partidos.", Modifier.padding(pad))
+            EmptyState(stringResource(R.string.create_match_no_gestionas_equipos), stringResource(R.string.create_match_solo_el_dt_o_el), Modifier.padding(pad))
             return@SpScaffold
         }
         Column(
             Modifier.padding(pad).imePadding().verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text("Tu equipo (local)", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.create_match_tu_equipo_local), style = MaterialTheme.typography.titleMedium)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 teams.forEach { t ->
                     FilterChip(selected = f.homeTeamId == t.id, onClick = { vm.selectHome(t) }, label = { Text("${t.name} · ${t.category ?: ""}") })
                 }
             }
 
-            Text("Rival", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.create_match_rival), style = MaterialTheme.typography.titleMedium)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilterChip(selected = f.externalRival, onClick = { vm.update { it.copy(externalRival = true) } }, label = { Text("Externo") })
-                FilterChip(selected = !f.externalRival, onClick = { vm.update { it.copy(externalRival = false) } }, label = { Text("Registrado en SportPro") })
+                FilterChip(selected = f.externalRival, onClick = { vm.update { it.copy(externalRival = true) } }, label = { Text(stringResource(R.string.create_match_externo)) })
+                FilterChip(selected = !f.externalRival, onClick = { vm.update { it.copy(externalRival = false) } }, label = { Text(stringResource(R.string.create_match_registrado_en_sportpro)) })
             }
             if (f.externalRival) {
                 OutlinedTextField(
                     f.externalName, { v -> vm.update { it.copy(externalName = v) } },
-                    label = { Text("Nombre del rival") }, singleLine = true, modifier = Modifier.fillMaxWidth(),
+                    label = { Text(stringResource(R.string.create_match_nombre_del_rival)) }, singleLine = true, modifier = Modifier.fillMaxWidth(),
                 )
                 val starters = f.externalStarters
                 Text(
-                    "Plantel del rival: ${starters.size}/${f.formatPlayers} titulares · dorsal, nombre y posición de cada uno (1 arquero).",
+                    stringResource(R.string.create_match_plantel_del_rival_x_x, starters.size, f.formatPlayers),
                     style = MaterialTheme.typography.titleSmall,
                 )
                 f.externalRoster.forEachIndexed { i, row ->
@@ -87,8 +89,8 @@ fun CreateMatchScreen(session: SessionViewModel, onBack: () -> Unit, onCreated: 
                     )
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = vm::addSubstitute) { Text("Agregar suplente") }
-                    OutlinedButton(onClick = vm::suggestPositions) { Text("Completar posiciones") }
+                    OutlinedButton(onClick = vm::addSubstitute) { Text(stringResource(R.string.create_match_agregar_suplente)) }
+                    OutlinedButton(onClick = vm::suggestPositions) { Text(stringResource(R.string.create_match_completar_posiciones)) }
                 }
                 val problems = f.rosterProblems()
                 if (problems.isNotEmpty()) {
@@ -99,12 +101,12 @@ fun CreateMatchScreen(session: SessionViewModel, onBack: () -> Unit, onCreated: 
                     )
                 }
                 Text(
-                    "Rival externo: escudo por defecto y sin estadísticas para sus jugadores.",
+                    stringResource(R.string.create_match_rival_externo_escudo_por_defecto),
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             } else {
                 val rivals = teams.filter { it.id != f.homeTeamId }
-                if (rivals.isEmpty()) Text("No gestionas otros equipos. Usa un rival externo.", style = MaterialTheme.typography.bodySmall)
+                if (rivals.isEmpty()) Text(stringResource(R.string.create_match_no_gestionas_otros_equipos_usa), style = MaterialTheme.typography.bodySmall)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     rivals.forEach { t ->
                         FilterChip(
@@ -116,7 +118,7 @@ fun CreateMatchScreen(session: SessionViewModel, onBack: () -> Unit, onCreated: 
                 }
             }
 
-            Text("Formato (jugadores en cancha por equipo)", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.create_match_formato_jugadores_en_cancha_por), style = MaterialTheme.typography.titleMedium)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf(5, 7, 9, 11).forEach { n ->
                     FilterChip(
@@ -125,10 +127,10 @@ fun CreateMatchScreen(session: SessionViewModel, onBack: () -> Unit, onCreated: 
                         label = { Text("$n") },
                     )
                 }
-                FilterChip(selected = f.customFormat, onClick = { vm.update { it.copy(customFormat = true) } }, label = { Text("Otro") })
+                FilterChip(selected = f.customFormat, onClick = { vm.update { it.copy(customFormat = true) } }, label = { Text(stringResource(R.string.create_match_otro)) })
             }
             if (f.customFormat) {
-                Text("${f.formatPlayers} vs ${f.formatPlayers}")
+                Text(stringResource(R.string.create_match_x_vs_x, f.formatPlayers, f.formatPlayers))
                 Slider(
                     value = f.formatPlayers.toFloat(),
                     onValueChange = { v -> vm.update { it.copy(formatPlayers = v.toInt()) } },
@@ -136,7 +138,7 @@ fun CreateMatchScreen(session: SessionViewModel, onBack: () -> Unit, onCreated: 
                     steps = 5,
                 )
             }
-            Text("Duración de cada tiempo: ${f.halfMinutes} min", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.create_match_duracion_de_cada_tiempo_x, f.halfMinutes), style = MaterialTheme.typography.titleMedium)
             Slider(
                 value = f.halfMinutes.toFloat(),
                 onValueChange = { v -> vm.update { it.copy(halfMinutes = v.toInt()) } },
@@ -148,7 +150,7 @@ fun CreateMatchScreen(session: SessionViewModel, onBack: () -> Unit, onCreated: 
                     value = f.dateDigits,
                     onValueChange = { v -> vm.update { it.copy(dateDigits = v) } },
                     mask = DATE_MASK,
-                    label = "Fecha",
+                    label = stringResource(R.string.create_match_fecha),
                     isError = f.dateDigits.length == 8 && parseDateDigits(f.dateDigits) == null,
                     supportingText = dateHint(f.dateDigits),
                     modifier = Modifier.weight(1.4f),
@@ -157,19 +159,19 @@ fun CreateMatchScreen(session: SessionViewModel, onBack: () -> Unit, onCreated: 
                     value = f.timeDigits,
                     onValueChange = { v -> vm.update { it.copy(timeDigits = v) } },
                     mask = TIME_MASK,
-                    label = "Hora (24 h)",
+                    label = stringResource(R.string.create_match_hora_24_h),
                     isError = f.timeDigits.length == 4 && parseTimeDigits(f.timeDigits) == null,
                     supportingText = if (f.timeDigits.length < 4) "HH:MM" else null,
                     modifier = Modifier.weight(1f),
                 )
             }
             OutlinedTextField(
-                f.venue, { v -> vm.update { it.copy(venue = v) } }, label = { Text("Sede (opcional)") },
+                f.venue, { v -> vm.update { it.copy(venue = v) } }, label = { Text(stringResource(R.string.create_match_sede_opcional)) },
                 singleLine = true, modifier = Modifier.fillMaxWidth(),
             )
-            Text("¿Quién puede verlo en vivo?", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.create_match_quien_puede_verlo_en_vivo), style = MaterialTheme.typography.titleMedium)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf("followers" to "Seguidores", "public" to "Público", "private" to "Solo academia").forEach { (k, label) ->
+                listOf("followers" to stringResource(R.string.create_match_seguidores), "public" to stringResource(R.string.create_match_publico), "private" to stringResource(R.string.create_match_solo_academia)).forEach { (k, label) ->
                     FilterChip(selected = f.visibility == k, onClick = { vm.update { it.copy(visibility = k) } }, label = { Text(label) })
                 }
             }
@@ -179,8 +181,8 @@ fun CreateMatchScreen(session: SessionViewModel, onBack: () -> Unit, onCreated: 
                 onClick = { vm.create(onCreated) },
                 enabled = !f.busy,
                 modifier = Modifier.fillMaxWidth().height(54.dp),
-            ) { Text("Crear y preparar convocatoria") }
-            OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Cancelar") }
+            ) { Text(stringResource(R.string.create_match_crear_y_preparar_convocatoria)) }
+            OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.create_match_cancelar)) }
         }
     }
 }

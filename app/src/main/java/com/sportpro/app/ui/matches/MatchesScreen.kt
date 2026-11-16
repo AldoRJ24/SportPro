@@ -1,4 +1,6 @@
 package com.sportpro.app.ui.matches
+import androidx.compose.ui.res.stringResource
+import com.sportpro.app.R
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -36,7 +38,7 @@ fun MatchesScreen(
     val ui by vm.ui.collectAsStateWithLifecycle()
     val now = rememberNowMs()
     SpScaffold(
-        title = "Partidos",
+        title = stringResource(R.string.matches_partidos),
         isTab = true,
         navigationIcon = { CreateAction(onCreate) },
         actions = { BellAction(onBell) },
@@ -53,28 +55,28 @@ fun MatchesScreen(
                     if (ui.all.isEmpty()) {
                         item {
                             EmptyState(
-                                "Aún no hay partidos",
-                                if (onCreate != null) "Crea el primero con el botón +." else "Sigue a un equipo en Explorar para ver sus partidos.",
-                                actionLabel = if (onCreate != null) "Crear partido" else null,
+                                stringResource(R.string.matches_aun_no_hay_partidos),
+                                if (onCreate != null) stringResource(R.string.matches_crea_el_primero_con_el) else stringResource(R.string.matches_sigue_a_un_equipo_en),
+                                actionLabel = if (onCreate != null) stringResource(R.string.matches_crear_partido) else null,
                                 onAction = onCreate,
                             )
                         }
                     }
                     if (ui.live.isNotEmpty()) {
-                        item { SectionHeader("En vivo") }
+                        item { SectionHeader(stringResource(R.string.matches_en_vivo)) }
                         item { LiveStrip(ui.live, now, onClick = { onOpenMatch(it.id) }) }
                         items(ui.live, key = { "l" + it.id }) { m ->
                             MatchCard(m, now, onClick = { onOpenMatch(m.id) }, modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp))
                         }
                     }
                     if (ui.upcoming.isNotEmpty()) {
-                        item { SectionHeader("Próximos") }
+                        item { SectionHeader(stringResource(R.string.matches_proximos)) }
                         items(ui.upcoming, key = { "u" + it.id }) { m ->
                             MatchCard(m, now, onClick = { onOpenMatch(m.id) }, modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp))
                         }
                     }
                     if (ui.finished.isNotEmpty()) {
-                        item { SectionHeader("Finalizados") }
+                        item { SectionHeader(stringResource(R.string.matches_finalizados)) }
                         items(ui.finished, key = { "f" + it.id }) { m ->
                             MatchCard(m, now, onClick = { onOpenMatch(m.id) }, modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp))
                         }

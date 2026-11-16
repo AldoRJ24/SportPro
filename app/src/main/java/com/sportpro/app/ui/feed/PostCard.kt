@@ -1,4 +1,7 @@
 package com.sportpro.app.ui.feed
+import androidx.compose.ui.res.stringResource
+import com.sportpro.app.R
+import com.sportpro.app.core.AppText
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -56,18 +59,17 @@ import com.sportpro.app.ui.components.TeamCrest
 import com.sportpro.app.ui.theme.LiveRed
 
 private fun audienceLabel(visibility: String?): String = when (visibility) {
-    "public" -> "Público"
-    "academy" -> "Academia"
-    else -> "Equipo"
+    "public" -> AppText.get(R.string.post_card_publico)
+    "academy" -> AppText.get(R.string.post_card_academia)
+    else -> AppText.get(R.string.post_card_equipo)
 }
 
-private fun likesLabel(n: Int): String = if (n == 1) "1 me gusta" else "$n me gusta"
+private fun likesLabel(n: Int): String = AppText.plural(R.plurals.post_card_likes, n)
 
 private fun commentsLabel(p: FeedPost): String = when {
-    p.comments == 0 && p.commentsEnabled -> "Comentar"
-    p.comments == 0 -> "Comentarios desactivados"
-    p.comments == 1 -> "Ver 1 comentario"
-    else -> "Ver los ${p.comments} comentarios"
+    p.comments == 0 && p.commentsEnabled -> AppText.get(R.string.post_card_comentar)
+    p.comments == 0 -> AppText.get(R.string.post_card_comentarios_desactivados)
+    else -> AppText.plural(R.plurals.post_card_view_comments, p.comments)
 }
 
 /**
@@ -140,7 +142,7 @@ fun PostCard(
                 modifier = Modifier.clickable { expanded = !expanded },
             )
             Text(
-                "Resumen generado con IA y revisado por el DT",
+                stringResource(R.string.post_card_resumen_generado_con_ia_y),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -149,7 +151,7 @@ fun PostCard(
                 IconButton(onClick = onLike) {
                     Icon(
                         Icons.Filled.Favorite,
-                        contentDescription = if (post.liked) "Quitar me gusta" else "Me gusta",
+                        contentDescription = if (post.liked) stringResource(R.string.post_card_quitar_me_gusta) else stringResource(R.string.post_card_me_gusta),
                         tint = if (post.liked) LiveRed else MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
@@ -191,16 +193,16 @@ fun CommentsSheet(
                 .imePadding(),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Comentarios", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                Text(stringResource(R.string.post_card_comentarios), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
                 if (post.canModerate) {
-                    Text("Permitir", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.post_card_permitir), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Spacer(Modifier.width(6.dp))
                     Switch(checked = post.commentsEnabled, onCheckedChange = onToggleEnabled)
                 }
             }
             if (post.canModerate) {
                 Text(
-                    "Como autor puedes eliminar comentarios ofensivos o desactivar los comentarios.",
+                    stringResource(R.string.post_card_como_autor_puedes_eliminar_comentarios),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -214,7 +216,7 @@ fun CommentsSheet(
                 if (!loading && comments.isEmpty()) {
                     item {
                         Text(
-                            if (post.commentsEnabled) "Aún no hay comentarios. ¡Sé el primero!" else "Sin comentarios.",
+                            if (post.commentsEnabled) stringResource(R.string.post_card_aun_no_hay_comentarios_se) else stringResource(R.string.post_card_sin_comentarios),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -238,7 +240,7 @@ fun CommentsSheet(
                         }
                         if (c.canDelete) {
                             IconButton(onClick = { confirm = c }) {
-                                Icon(Icons.Filled.Delete, contentDescription = "Eliminar comentario", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.post_card_eliminar_comentario), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                         }
                     }
@@ -250,16 +252,16 @@ fun CommentsSheet(
                     OutlinedTextField(
                         value = text,
                         onValueChange = { text = it.take(500) },
-                        placeholder = { Text("Escribe un comentario…") },
+                        placeholder = { Text(stringResource(R.string.post_card_escribe_un_comentario)) },
                         maxLines = 3,
                         modifier = Modifier.weight(1f),
                     )
                     Spacer(Modifier.width(8.dp))
-                    Button(onClick = { onSend(text) { text = "" } }, enabled = !sending && text.isNotBlank()) { Text("Publicar") }
+                    Button(onClick = { onSend(text) { text = "" } }, enabled = !sending && text.isNotBlank()) { Text(stringResource(R.string.post_card_publicar)) }
                 }
             } else {
                 Text(
-                    "Los comentarios están desactivados por el autor.",
+                    stringResource(R.string.post_card_los_comentarios_estan_desactivados_por),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -270,20 +272,20 @@ fun CommentsSheet(
     confirm?.let { c ->
         AlertDialog(
             onDismissRequest = { confirm = null },
-            title = { Text("¿Eliminar comentario?") },
+            title = { Text(stringResource(R.string.post_card_eliminar_comentario_2)) },
             text = {
                 Text(
-                    if (c.isMine) "Se quitará tu comentario."
-                    else "Se quitará el comentario de ${c.authorName}. Queda registrado quién lo eliminó.",
+                    if (c.isMine) stringResource(R.string.post_card_se_quitara_tu_comentario)
+                    else stringResource(R.string.post_card_se_quitara_el_comentario_de, c.authorName),
                 )
             },
             confirmButton = {
                 TextButton(onClick = {
                     onDelete(c)
                     confirm = null
-                }) { Text("Eliminar") }
+                }) { Text(stringResource(R.string.post_card_eliminar)) }
             },
-            dismissButton = { TextButton(onClick = { confirm = null }) { Text("Cancelar") } },
+            dismissButton = { TextButton(onClick = { confirm = null }) { Text(stringResource(R.string.post_card_cancelar)) } },
         )
     }
 }

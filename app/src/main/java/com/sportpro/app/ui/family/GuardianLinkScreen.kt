@@ -1,4 +1,7 @@
 package com.sportpro.app.ui.family
+import androidx.compose.ui.res.stringResource
+import com.sportpro.app.R
+import com.sportpro.app.core.AppText
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -73,7 +76,7 @@ class GuardianLinkViewModel(private val container: AppContainer, private val onC
 
     fun request(code8: String) {
         if (code8.length != 8) {
-            _ui.update { it.copy(error = "El código tiene 8 caracteres después de «SP-».") }
+            _ui.update { it.copy(error = AppText.get(R.string.guardian_link_el_codigo_tiene_8_caracteres)) }
             return
         }
         // El usuario escribe 8 caracteres; se arma el formato del código del apoderado: SP-XXXX-XXXX.
@@ -106,10 +109,10 @@ fun GuardianLinkScreen(session: SessionViewModel) {
         Modifier.fillMaxSize().safeDrawingPadding().imePadding().verticalScroll(rememberScrollState()).padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        Text("SPORTPRO", color = Mint400, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-        Text("Vincula a tu apoderado", style = MaterialTheme.typography.headlineSmall)
+        Text(stringResource(R.string.guardian_link_sportpro), color = Mint400, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+        Text(stringResource(R.string.guardian_link_vincula_a_tu_apoderado), style = MaterialTheme.typography.headlineSmall)
         Text(
-            "Hola, ${ctx?.displayName ?: ""}. Como eres menor de edad, para activar tu cuenta necesitamos la autorización de tu apoderado.",
+            stringResource(R.string.guardian_link_hola_x_como_eres_menor, ctx?.displayName ?: ""),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -117,33 +120,33 @@ fun GuardianLinkScreen(session: SessionViewModel) {
         if (pending) {
             Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant), modifier = Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Pill("SOLICITUD ENVIADA", WarnAmber)
+                    Pill(stringResource(R.string.guardian_link_solicitud_enviada), WarnAmber)
                     Text(
-                        "Esperando que ${account?.guardianName ?: "tu apoderado"} acepte la vinculación.",
+                        stringResource(R.string.guardian_link_esperando_que_x_acepte_la, account.guardianName ?: stringResource(R.string.guardian_link_tu_apoderado)),
                         style = MaterialTheme.typography.titleMedium,
                     )
                     Text(
-                        "Cuando la acepte, entrarás automáticamente.",
+                        stringResource(R.string.guardian_link_cuando_la_acepte_entraras_automaticament),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Button(onClick = { session.refreshContext() }) { Text("Actualizar") }
-                        OutlinedButton(onClick = { retyping = true }) { Text("Usar otro código") }
+                        Button(onClick = { session.refreshContext() }) { Text(stringResource(R.string.guardian_link_actualizar)) }
+                        OutlinedButton(onClick = { retyping = true }) { Text(stringResource(R.string.guardian_link_usar_otro_codigo)) }
                     }
                 }
             }
         } else {
             if (account?.guardianStatus == "rejected") {
                 Text(
-                    "${account?.guardianName ?: "El apoderado"} rechazó la solicitud. Revisa el código con tu apoderado.",
+                    stringResource(R.string.guardian_link_x_rechazo_la_solicitud_revisa, account.guardianName ?: stringResource(R.string.guardian_link_el_apoderado)),
                     color = ErrorRed,
                     style = MaterialTheme.typography.bodyMedium,
                 )
             }
             Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant), modifier = Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("CÓDIGO DEL APODERADO", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.guardian_link_codigo_del_apoderado), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     OutlinedTextField(
                         value = code,
                         onValueChange = { v -> code = v.uppercase().filter { it.isLetterOrDigit() }.take(8) },
@@ -165,18 +168,18 @@ fun GuardianLinkScreen(session: SessionViewModel) {
                 onClick = { retyping = false; vm.request(code) },
                 enabled = !ui.busy && code.length == 8,
                 modifier = Modifier.fillMaxWidth().height(54.dp),
-            ) { Text("Solicitar vinculación") }
+            ) { Text(stringResource(R.string.guardian_link_solicitar_vinculacion)) }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Filled.Info, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    "Tu apoderado encuentra su código en Perfil → Mis hijos, y debe revisar y aprobar la solicitud.",
+                    stringResource(R.string.guardian_link_tu_apoderado_encuentra_su_codigo),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
         Spacer(Modifier.height(12.dp))
-        TextButton(onClick = { session.signOut() }) { Text("Cerrar sesión") }
+        TextButton(onClick = { session.signOut() }) { Text(stringResource(R.string.guardian_link_cerrar_sesion)) }
     }
 }

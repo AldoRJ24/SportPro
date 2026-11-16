@@ -1,4 +1,7 @@
 package com.sportpro.app.ui.match
+import com.sportpro.app.core.AppText
+import androidx.compose.ui.res.stringResource
+import com.sportpro.app.R
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -73,13 +76,13 @@ fun MatchDetailScreen(matchId: String, onBack: () -> Unit, onSetup: () -> Unit, 
     val match = ui.match
     val pendingHere = pending.filter { it.matchId == matchId }
 
-    // Snackbar with «Deshacer» for every saved event (§9.4)
+    // Aviso con «Deshacer» por cada evento guardado (§9.4)
     LaunchedEffect(vm) {
         vm.messages.collect { msg ->
             if (msg.undoClientEventId != null) haptics.performHapticFeedback(HapticFeedbackType.LongPress)
             val result = snack.showSnackbar(
                 message = msg.text,
-                actionLabel = if (msg.undoClientEventId != null) "Deshacer" else null,
+                actionLabel = if (msg.undoClientEventId != null) AppText.get(R.string.match_detail_deshacer) else null,
                 duration = if (msg.undoClientEventId != null) SnackbarDuration.Long else SnackbarDuration.Short,
             )
             if (result == SnackbarResult.ActionPerformed && msg.undoClientEventId != null) {
@@ -88,7 +91,7 @@ fun MatchDetailScreen(matchId: String, onBack: () -> Unit, onSetup: () -> Unit, 
         }
     }
 
-    // Screen always on while recording a live match (field use)
+    // Pantalla siempre encendida mientras se registra un partido en vivo (uso en cancha)
     val view = LocalView.current
     val keepOn = ui.canRecord && match?.isLive == true
     DisposableEffect(keepOn) {
@@ -97,11 +100,11 @@ fun MatchDetailScreen(matchId: String, onBack: () -> Unit, onSetup: () -> Unit, 
     }
 
     SpScaffold(
-        title = match?.let { "${it.homeName} vs ${it.awayName}" } ?: "Partido",
+        title = match?.let { stringResource(R.string.match_detail_x_vs_x, it.homeName, it.awayName) } ?: stringResource(R.string.match_detail_partido),
         onBack = onBack,
         snackbarHostState = snack,
         actions = {
-            IconButton(onClick = { vm.load() }) { Icon(Icons.Filled.Refresh, contentDescription = "Actualizar") }
+            IconButton(onClick = { vm.load() }) { Icon(Icons.Filled.Refresh, contentDescription = stringResource(R.string.match_detail_actualizar)) }
         },
     ) { pad ->
         when {
@@ -123,17 +126,17 @@ fun MatchDetailScreen(matchId: String, onBack: () -> Unit, onSetup: () -> Unit, 
                     onSummary = onSummary,
                 )
                 val tabs = buildList {
-                    if (ui.canRecord) add("Registrar")
-                    add("Cronología")
-                    add("Alineación")
+                    if (ui.canRecord) add(stringResource(R.string.match_detail_registrar))
+                    add(stringResource(R.string.match_detail_cronologia))
+                    add(stringResource(R.string.match_detail_alineacion))
                 }
                 var tab by rememberSaveable(tabs.size) { mutableIntStateOf(0) }
                 PrimaryTabRow(selectedTabIndex = tab.coerceIn(0, tabs.lastIndex)) {
                     tabs.forEachIndexed { i, t -> Tab(selected = tab == i, onClick = { tab = i }, text = { Text(t) }) }
                 }
                 when (tabs.getOrNull(tab)) {
-                    "Registrar" -> RecordTab(ui, pendingHere.size, onPick = vm::startDraft, onEdit = { editing = it })
-                    "Cronología" -> TimelineTab(ui, pendingHere, onEdit = if (ui.canCorrect) ({ e: TimelineEvent -> editing = e }) else null)
+                    stringResource(R.string.match_detail_registrar) -> RecordTab(ui, pendingHere.size, onPick = vm::startDraft, onEdit = { editing = it })
+                    stringResource(R.string.match_detail_cronologia) -> TimelineTab(ui, pendingHere, onEdit = if (ui.canCorrect) ({ e: TimelineEvent -> editing = e }) else null)
                     else -> Row(Modifier.fillMaxWidth()) {
                         LineupColumn(match.homeName, ui.playersOf("home"), Modifier.weight(1f))
                         LineupColumn(match.awayName, ui.playersOf("away"), Modifier.weight(1f))
@@ -171,10 +174,10 @@ fun MatchDetailScreen(matchId: String, onBack: () -> Unit, onSetup: () -> Unit, 
     if (confirmFinish) {
         AlertDialog(
             onDismissRequest = { confirmFinish = false },
-            title = { Text("¿Finalizar el partido?") },
-            text = { Text("Se consolidan las estadísticas. Luego el DT aún puede corregir eventos con motivo.") },
-            confirmButton = { TextButton(onClick = { confirmFinish = false; vm.changeState("finish") }) { Text("Finalizar") } },
-            dismissButton = { TextButton(onClick = { confirmFinish = false }) { Text("Cancelar") } },
+            title = { Text(stringResource(R.string.match_detail_finalizar_el_partido)) },
+            text = { Text(stringResource(R.string.match_detail_se_consolidan_las_estadisticas_luego)) },
+            confirmButton = { TextButton(onClick = { confirmFinish = false; vm.changeState("finish") }) { Text(stringResource(R.string.match_detail_finalizar)) } },
+            dismissButton = { TextButton(onClick = { confirmFinish = false }) { Text(stringResource(R.string.match_detail_cancelar)) } },
         )
     }
 }
@@ -195,26 +198,26 @@ private fun ControlBar(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         if (m.isScheduled && ui.isManager) {
-            OutlinedButton(onClick = onSetup, modifier = Modifier.weight(1f)) { Text("Convocatoria y alineación") }
+            OutlinedButton(onClick = onSetup, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.match_detail_convocatoria_y_alineacion)) }
         }
         if (ui.canControl) {
             when (m.status) {
-                "scheduled" -> Button(onClick = onStart, enabled = !ui.busy, modifier = Modifier.weight(1f)) { Text("Iniciar partido") }
+                "scheduled" -> Button(onClick = onStart, enabled = !ui.busy, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.match_detail_iniciar_partido)) }
                 "live" -> {
-                    if (m.period == 1) OutlinedButton(onClick = onHalftime, enabled = !ui.busy, modifier = Modifier.weight(1f)) { Text("Fin 1.er tiempo") }
+                    if (m.period == 1) OutlinedButton(onClick = onHalftime, enabled = !ui.busy, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.match_detail_fin_1_er_tiempo)) }
                     Button(
                         onClick = onFinish, enabled = !ui.busy, modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(containerColor = LiveRed),
-                    ) { Text("Finalizar") }
+                    ) { Text(stringResource(R.string.match_detail_finalizar)) }
                 }
                 "halftime" -> {
-                    Button(onClick = onSecondHalf, enabled = !ui.busy, modifier = Modifier.weight(1f)) { Text("Iniciar 2.º tiempo") }
-                    OutlinedButton(onClick = onFinish, enabled = !ui.busy, modifier = Modifier.weight(1f)) { Text("Finalizar") }
+                    Button(onClick = onSecondHalf, enabled = !ui.busy, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.match_detail_iniciar_2_tiempo)) }
+                    OutlinedButton(onClick = onFinish, enabled = !ui.busy, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.match_detail_finalizar)) }
                 }
             }
         }
         if (m.isFinished && ui.isManager) {
-            Button(onClick = onSummary, modifier = Modifier.weight(1f)) { Text("Resumen IA") }
+            Button(onClick = onSummary, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.match_detail_resumen_ia)) }
         }
     }
 }
@@ -230,14 +233,14 @@ private fun RecordTab(ui: MatchDetailUi, pendingCount: Int, onPick: (com.sportpr
         modifier = Modifier.fillMaxSize(),
     ) {
         if (types.isEmpty()) {
-            item(span = { GridItemSpan(maxLineSpan) }) { EmptyState("Catálogo vacío", "No hay tipos de evento activos.") }
+            item(span = { GridItemSpan(maxLineSpan) }) { EmptyState(stringResource(R.string.match_detail_catalogo_vacio), stringResource(R.string.match_detail_no_hay_tipos_de_evento)) }
         }
         items(types, key = { it.id }) { t ->
             EventButton(t.name, t.icon, t.code, onClick = { onPick(t) })
         }
         item(span = { GridItemSpan(maxLineSpan) }) {
             Text(
-                "Últimos registros" + if (pendingCount > 0) " · $pendingCount sin enviar" else "",
+                stringResource(R.string.match_detail_ultimos_registros) + if (pendingCount > 0) stringResource(R.string.match_detail_x_sin_enviar, pendingCount) else "",
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 8.dp),
@@ -249,7 +252,7 @@ private fun RecordTab(ui: MatchDetailUi, pendingCount: Int, onPick: (com.sportpr
         }
         item(span = { GridItemSpan(maxLineSpan) }) {
             Text(
-                "Mantén presionado un registro para corregirlo o anularlo.",
+                stringResource(R.string.match_detail_manten_presionado_un_registro_para),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.height(40.dp),
@@ -264,7 +267,7 @@ private fun TimelineTab(ui: MatchDetailUi, pending: List<com.sportpro.app.core.d
     LazyColumn(contentPadding = PaddingValues(bottom = 24.dp)) {
         items(pending, key = { "p" + it.clientEventId }) { PendingRow(it) }
         if (events.isEmpty() && pending.isEmpty()) {
-            item { EmptyState("Sin eventos aún", "La cronología se actualiza en tiempo real.") }
+            item { EmptyState(stringResource(R.string.match_detail_sin_eventos_aun), stringResource(R.string.match_detail_la_cronologia_se_actualiza_en)) }
         }
         items(events, key = { it.eventId }) { e ->
             TimelineRow(e, ui::sideName, ui::nameOf, onLongPress = onEdit?.let { f -> { f(e) } })

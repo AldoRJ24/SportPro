@@ -32,6 +32,7 @@ import com.sportpro.app.ui.components.LoadingBox
 import com.sportpro.app.ui.components.SpScaffold
 import com.sportpro.app.ui.navigation.LocalAppContainer
 
+/** Una casilla de estadística: el número grande y debajo su nombre. */
 @Composable
 private fun StatTile(label: String, value: Int, modifier: Modifier = Modifier) {
     Card(modifier, colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
@@ -42,6 +43,7 @@ private fun StatTile(label: String, value: Int, modifier: Modifier = Modifier) {
     }
 }
 
+/** Cuadrícula de casillas de estadística (dos por fila) con la nota de cómo se calculan. */
 @Composable
 private fun StatGrid(tiles: List<Pair<String, Int>>) {
     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -52,14 +54,14 @@ private fun StatGrid(tiles: List<Pair<String, Int>>) {
             }
         }
         Text(
-            "Calculadas en el servidor a partir de los eventos vigentes de partidos finalizados (las correcciones y anulaciones se reflejan sin duplicar).",
+            stringResource(R.string.stats_calculadas_en_el_servidor_a),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
 
-/** US-11: JUG sees own stats, DT the team's, PAD their child's (enforced by the server function). */
+/** US-11: el jugador ve sus estadísticas, el DT las del equipo y el apoderado las de su hijo (lo hace cumplir la función del servidor). */
 @Composable
 fun PlayerStatsScreen(playerId: String, name: String, onBack: () -> Unit) {
     val container = LocalAppContainer.current
@@ -83,9 +85,9 @@ fun PlayerStatsScreen(playerId: String, name: String, onBack: () -> Unit) {
                     }
                     StatGrid(
                     listOf(
-                        "Partidos" to s.matchesPlayed, "Goles" to s.goals, "Asistencias" to s.assists,
-                        "Amarillas" to s.yellowCards, "Rojas" to s.redCards, "Faltas" to s.fouls,
-                        "Atajadas" to s.saves, "Goles en contra" to s.ownGoals,
+                        stringResource(R.string.stats_partidos) to s.matchesPlayed, stringResource(R.string.stats_goles) to s.goals, stringResource(R.string.stats_asistencias) to s.assists,
+                        stringResource(R.string.stats_amarillas) to s.yellowCards, stringResource(R.string.stats_rojas) to s.redCards, stringResource(R.string.stats_faltas) to s.fouls,
+                        stringResource(R.string.stats_atajadas) to s.saves, stringResource(R.string.stats_goles_en_contra) to s.ownGoals,
                     ),
                     )
                 }
@@ -94,6 +96,7 @@ fun PlayerStatsScreen(playerId: String, name: String, onBack: () -> Unit) {
     }
 }
 
+/** Estadísticas del equipo: partidos jugados, ganados, empatados, perdidos y goles. Las calcula el servidor. */
 @Composable
 fun TeamStatsScreen(teamId: String, name: String, onBack: () -> Unit) {
     val container = LocalAppContainer.current
@@ -117,8 +120,8 @@ fun TeamStatsScreen(teamId: String, name: String, onBack: () -> Unit) {
                     }
                     StatGrid(
                     listOf(
-                        "Partidos" to s.matchesPlayed, "Ganados" to s.wins, "Empatados" to s.draws,
-                        "Perdidos" to s.losses, "Goles a favor" to s.goalsFor, "Goles en contra" to s.goalsAgainst,
+                        stringResource(R.string.stats_partidos) to s.matchesPlayed, stringResource(R.string.stats_ganados) to s.wins, stringResource(R.string.stats_empatados) to s.draws,
+                        stringResource(R.string.stats_perdidos) to s.losses, stringResource(R.string.stats_goles_a_favor) to s.goalsFor, stringResource(R.string.stats_goles_en_contra) to s.goalsAgainst,
                     ),
                     )
                 }

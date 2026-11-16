@@ -2,7 +2,7 @@ package com.sportpro.app.ui.navigation
 
 import kotlinx.serialization.Serializable
 
-// Type-safe routes (Navigation Compose 2.10).
+// Rutas con tipos (Navigation Compose 2.10): cada pantalla es una clase y sus parámetros son sus campos.
 @Serializable data object LoginRoute
 @Serializable data object RegisterRoute
 

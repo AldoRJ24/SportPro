@@ -1,5 +1,8 @@
 package com.sportpro.app.ui.admin
 
+import androidx.compose.ui.res.stringResource
+import com.sportpro.app.R
+import com.sportpro.app.core.AppText
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -123,19 +126,19 @@ class AcademyTeamsViewModel(private val container: AppContainer, private val aca
 
     fun createTeam(name: String, category: String, maxAge: Int?, format: Int, half: Int, onDone: () -> Unit) {
         if (name.trim().length < 2 || category.isBlank()) {
-            _messages.tryEmit("Escribe el nombre y la categoría del equipo.")
+            _messages.tryEmit(AppText.get(R.string.academy_teams_escribe_el_nombre_y_la))
             return
         }
         act {
             container.account.createTeam(academyId, name, category, maxAge, format, half)
-            _messages.tryEmit("Equipo creado")
+            _messages.tryEmit(AppText.get(R.string.academy_teams_equipo_creado))
             onDone()
         }
     }
 
     fun assign(team: TeamRef, coach: MemberRow) = act {
         container.account.assignCoach(team.id, coach.userId)
-        _messages.tryEmit("${coach.profile?.fullName ?: "DT"} asignado a ${team.name}")
+        _messages.tryEmit(AppText.get(R.string.academy_teams_x_asignado_a_x, coach.profile?.fullName ?: "DT", team.name))
     }
 
     fun unassign(member: TeamStaffMember) = act { container.account.removeCoach(member.teamId, member.userId) }
@@ -143,13 +146,13 @@ class AcademyTeamsViewModel(private val container: AppContainer, private val aca
     // Foto de la academia: solo el admin llega a esta pantalla y el servidor vuelve a comprobarlo.
     fun setLogo(jpeg: ByteArray, onChanged: () -> Unit) = act {
         container.account.uploadAcademyLogo(academyId, jpeg)
-        _messages.tryEmit("Foto de la academia actualizada en todos sus equipos")
+        _messages.tryEmit(AppText.get(R.string.academy_teams_foto_de_la_academia_actualizada))
         onChanged()
     }
 
     fun removeLogo(onChanged: () -> Unit) = act {
         container.account.removeAcademyLogo(academyId)
-        _messages.tryEmit("Foto de la academia quitada")
+        _messages.tryEmit(AppText.get(R.string.academy_teams_foto_de_la_academia_quitada))
         onChanged()
     }
 }
@@ -179,23 +182,23 @@ fun AcademyTeamsScreen(
         if (uri != null) {
             scope.launch {
                 val jpeg = runCatching { withContext(Dispatchers.Default) { prepareAvatarJpeg(context, uri) } }.getOrNull()
-                if (jpeg == null) snack.showSnackbar("No se pudo leer la imagen") else vm.setLogo(jpeg, onLogoChanged)
+                if (jpeg == null) snack.showSnackbar(AppText.get(R.string.academy_teams_no_se_pudo_leer_la)) else vm.setLogo(jpeg, onLogoChanged)
             }
         }
     }
 
-    SpScaffold(title = "Equipos · $academyName", onBack = onBack, snackbarHostState = snack) { pad ->
+    SpScaffold(title = stringResource(R.string.academy_teams_equipos_x, academyName), onBack = onBack, snackbarHostState = snack) { pad ->
         LazyColumn(Modifier.padding(pad), contentPadding = PaddingValues(bottom = 32.dp)) {
             // Mientras llegan los equipos se muestra una barra de progreso (antes la pantalla parecía vacía)
             if (ui.loading) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
-            item { SectionHeader("Foto de la academia") }
+            item { SectionHeader(stringResource(R.string.academy_teams_foto_de_la_academia)) }
             item {
                 Row(Modifier.padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
                     TeamCrest(ui.academy?.name ?: academyName, ui.academy?.crestPath, size = 72.dp)
                     Spacer(Modifier.width(14.dp))
                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(
-                            "Se muestra en la academia y en todos sus equipos. Solo el administrador puede cambiarla.",
+                            stringResource(R.string.academy_teams_se_muestra_en_la_academia),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -203,28 +206,28 @@ fun AcademyTeamsScreen(
                             OutlinedButton(
                                 onClick = { picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
                                 enabled = !ui.busy,
-                            ) { Text("Cambiar foto") }
+                            ) { Text(stringResource(R.string.academy_teams_cambiar_foto)) }
                             if (ui.academy?.crestPath != null) {
-                                TextButton(onClick = { vm.removeLogo(onLogoChanged) }, enabled = !ui.busy) { Text("Quitar") }
+                                TextButton(onClick = { vm.removeLogo(onLogoChanged) }, enabled = !ui.busy) { Text(stringResource(R.string.academy_teams_quitar)) }
                             }
                         }
                     }
                 }
             }
-            item { SectionHeader("Nuevo equipo") }
+            item { SectionHeader(stringResource(R.string.academy_teams_nuevo_equipo)) }
             item {
                 Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(name, { name = it.take(60) }, label = { Text("Nombre (ej. Halcones)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(name, { name = it.take(60) }, label = { Text(stringResource(R.string.academy_teams_nombre_ej_halcones)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedTextField(category, { category = it.take(20) }, label = { Text("Categoría (ej. Sub-15)") }, singleLine = true, modifier = Modifier.weight(1f))
+                        OutlinedTextField(category, { category = it.take(20) }, label = { Text(stringResource(R.string.academy_teams_categoria_ej_sub_15)) }, singleLine = true, modifier = Modifier.weight(1f))
                         OutlinedTextField(
-                            maxAge, { v -> maxAge = v.filter { it.isDigit() }.take(2) }, label = { Text("Edad máx.") }, singleLine = true,
+                            maxAge, { v -> maxAge = v.filter { it.isDigit() }.take(2) }, label = { Text(stringResource(R.string.academy_teams_edad_max)) }, singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.weight(0.6f),
                         )
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         listOf(5, 7, 9, 11).forEach { n ->
-                            FilterChip(selected = format == n, onClick = { format = n }, label = { Text("$n vs $n") })
+                            FilterChip(selected = format == n, onClick = { format = n }, label = { Text(stringResource(R.string.academy_teams_x_vs_x, n, n)) })
                         }
                     }
                     Button(
@@ -234,11 +237,11 @@ fun AcademyTeamsScreen(
                             }
                         },
                         enabled = !ui.busy,
-                    ) { Text("Crear equipo") }
+                    ) { Text(stringResource(R.string.academy_teams_crear_equipo)) }
                 }
             }
-            item { SectionHeader("Equipos y su DT") }
-            if (!ui.loading && ui.teams.isEmpty()) item { EmptyState("Sin equipos", "Crea el primer equipo de la academia.") }
+            item { SectionHeader(stringResource(R.string.academy_teams_equipos_y_su_dt)) }
+            if (!ui.loading && ui.teams.isEmpty()) item { EmptyState(stringResource(R.string.academy_teams_sin_equipos), stringResource(R.string.academy_teams_crea_el_primer_equipo_de)) }
             items(ui.teams, key = { it.id }) { team ->
                 val staff = ui.staff.filter { it.teamId == team.id }
                 Card(
@@ -252,7 +255,7 @@ fun AcademyTeamsScreen(
                             Text("${team.name} · ${team.category ?: ""}", style = MaterialTheme.typography.titleSmall)
                         }
                         Text(
-                            "Formato ${team.defaultFormatPlayers} vs ${team.defaultFormatPlayers} · ${team.halfMinutes}' por tiempo",
+                            stringResource(R.string.academy_teams_formato_x_vs_x_x, team.defaultFormatPlayers, team.defaultFormatPlayers, team.halfMinutes),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -261,7 +264,7 @@ fun AcademyTeamsScreen(
                                 InputChip(
                                     selected = true,
                                     onClick = { vm.unassign(s) },
-                                    label = { Text("DT: ${s.profile?.fullName ?: "—"} ✕") },
+                                    label = { Text(stringResource(R.string.academy_teams_dt_x, s.profile?.fullName ?: "—")) },
                                     avatar = { Avatar(s.profile?.fullName ?: "?", s.profile?.avatarPath, size = 24.dp) },
                                 )
                             }
@@ -283,14 +286,14 @@ fun AcademyTeamsScreen(
 private fun AssignCoachButton(coaches: List<MemberRow>, enabled: Boolean, onPick: (MemberRow) -> Unit, onInvite: () -> Unit) {
     var open by remember { mutableStateOf(false) }
     Box {
-        OutlinedButton(onClick = { open = true }, enabled = enabled) { Text("Asignar DT") }
+        OutlinedButton(onClick = { open = true }, enabled = enabled) { Text(stringResource(R.string.academy_teams_asignar_dt)) }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
             if (coaches.isEmpty()) {
-                DropdownMenuItem(text = { Text("No hay DT disponibles: invitar uno") }, onClick = { open = false; onInvite() })
+                DropdownMenuItem(text = { Text(stringResource(R.string.academy_teams_no_hay_dt_disponibles_invitar)) }, onClick = { open = false; onInvite() })
             }
             coaches.forEach { c ->
                 DropdownMenuItem(
-                    text = { Text(c.profile?.fullName?.ifBlank { null } ?: "Entrenador") },
+                    text = { Text(c.profile?.fullName?.ifBlank { null } ?: stringResource(R.string.academy_teams_entrenador)) },
                     leadingIcon = { Avatar(c.profile?.fullName ?: "?", c.profile?.avatarPath, size = 28.dp) },
                     onClick = { open = false; onPick(c) },
                 )

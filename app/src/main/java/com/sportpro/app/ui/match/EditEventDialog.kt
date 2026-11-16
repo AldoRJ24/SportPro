@@ -1,4 +1,6 @@
 package com.sportpro.app.ui.match
+import androidx.compose.ui.res.stringResource
+import com.sportpro.app.R
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -32,8 +34,8 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 
 /**
- * Correct or void an event without losing traceability (US-20, Regla C):
- * the server stores the previous version in match_event_revisions and requires a reason.
+ * Corregir o anular un evento sin perder la trazabilidad (US-20, Regla C):
+ * el servidor guarda la versión anterior en match_event_revisions y exige un motivo.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -56,31 +58,31 @@ fun EditEventDialog(
     if (confirmVoid) {
         AlertDialog(
             onDismissRequest = { confirmVoid = false },
-            title = { Text("Anular evento") },
+            title = { Text(stringResource(R.string.edit_event_anular_evento)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("El evento no se borra: queda marcado como anulado y deja de contar en marcador y estadísticas.")
-                    OutlinedTextField(reason, { reason = it }, label = { Text("Motivo (obligatorio)") })
+                    Text(stringResource(R.string.edit_event_el_evento_no_se_borra))
+                    OutlinedTextField(reason, { reason = it }, label = { Text(stringResource(R.string.edit_event_motivo_obligatorio)) })
                 }
             },
             confirmButton = {
-                TextButton(enabled = reason.isNotBlank(), onClick = { onVoid(reason.trim()) }) { Text("Anular") }
+                TextButton(enabled = reason.isNotBlank(), onClick = { onVoid(reason.trim()) }) { Text(stringResource(R.string.edit_event_anular)) }
             },
-            dismissButton = { TextButton(onClick = { confirmVoid = false }) { Text("Cancelar") } },
+            dismissButton = { TextButton(onClick = { confirmVoid = false }) { Text(stringResource(R.string.edit_event_cancelar)) } },
         )
         return
     }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Corregir · ${event.typeName} ${event.minuteLabel}") },
+        title = { Text(stringResource(R.string.edit_event_corregir_x_x, event.typeName, event.minuteLabel)) },
         text = {
             Column(
                 Modifier.heightIn(max = 460.dp).verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 if (!event.isControl && event.code != "substitution") {
-                    Text("Jugador: ${event.playerName ?: "sin asignar"}", style = MaterialTheme.typography.labelLarge)
+                    Text(stringResource(R.string.edit_event_jugador_x, event.playerName ?: stringResource(R.string.edit_event_sin_asignar)), style = MaterialTheme.typography.labelLarge)
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         players.forEach { p ->
                             FilterChip(
@@ -92,12 +94,12 @@ fun EditEventDialog(
                         FilterChip(
                             selected = clearPlayer,
                             onClick = { clearPlayer = !clearPlayer; selectedKey = null },
-                            label = { Text("Sin jugador") },
+                            label = { Text(stringResource(R.string.edit_event_sin_jugador)) },
                         )
                     }
                 }
                 if (event.code == "goal") {
-                    Text("Asistencia (opcional)", style = MaterialTheme.typography.labelLarge)
+                    Text(stringResource(R.string.edit_event_asistencia_opcional), style = MaterialTheme.typography.labelLarge)
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         players.filter { it.playerId != null }.forEach { p ->
                             FilterChip(
@@ -108,22 +110,22 @@ fun EditEventDialog(
                         }
                     }
                 }
-                Text("Minuto", style = MaterialTheme.typography.labelLarge)
+                Text(stringResource(R.string.edit_event_minuto), style = MaterialTheme.typography.labelLarge)
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedButton(onClick = { minute = (minute - 1).coerceAtLeast(0) }) { Text("−") }
                     Text(if (extra > 0) "$minute+$extra'" else "$minute'", style = MaterialTheme.typography.titleMedium)
                     OutlinedButton(onClick = { minute = (minute + 1).coerceAtMost(200) }) { Text("+") }
-                    TextButton(onClick = { extra = (extra + 1).coerceAtMost(30) }) { Text("+añadido") }
-                    if (extra > 0) TextButton(onClick = { extra = 0 }) { Text("Quitar") }
+                    TextButton(onClick = { extra = (extra + 1).coerceAtMost(30) }) { Text(stringResource(R.string.edit_event_anadido)) }
+                    if (extra > 0) TextButton(onClick = { extra = 0 }) { Text(stringResource(R.string.edit_event_quitar)) }
                 }
-                Text("Motivo de la corrección", style = MaterialTheme.typography.labelLarge)
+                Text(stringResource(R.string.edit_event_motivo_de_la_correccion), style = MaterialTheme.typography.labelLarge)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    listOf("Jugador identificado después", "Minuto corregido", "Error de registro").forEach { r ->
+                    listOf(stringResource(R.string.edit_event_jugador_identificado_despues), stringResource(R.string.edit_event_minuto_corregido), stringResource(R.string.edit_event_error_de_registro)).forEach { r ->
                         FilterChip(selected = reason == r, onClick = { reason = r }, label = { Text(r) })
                     }
                 }
-                OutlinedTextField(reason, { reason = it }, label = { Text("Motivo") }, modifier = Modifier.fillMaxWidth())
-                OutlinedButton(onClick = { confirmVoid = true }, modifier = Modifier.fillMaxWidth()) { Text("Anular evento…") }
+                OutlinedTextField(reason, { reason = it }, label = { Text(stringResource(R.string.edit_event_motivo)) }, modifier = Modifier.fillMaxWidth())
+                OutlinedButton(onClick = { confirmVoid = true }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.edit_event_anular_evento_2)) }
             }
         },
         confirmButton = {
@@ -143,8 +145,8 @@ fun EditEventDialog(
                     )
                     onCorrect(patch, reason.trim())
                 },
-            ) { Text("Guardar corrección") }
+            ) { Text(stringResource(R.string.edit_event_guardar_correccion)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.edit_event_cancelar)) } },
     )
 }
