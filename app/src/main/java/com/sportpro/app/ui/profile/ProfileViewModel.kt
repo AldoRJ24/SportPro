@@ -72,7 +72,11 @@ class FamilyViewModel(private val container: AppContainer) : ViewModel() {
         viewModelScope.launch {
             val requests = if (ctx.isGuardianAccount) runCatching { container.account.guardianRequests() }.getOrDefault(_ui.value.requests) else emptyList()
             val notifications = runCatching { container.account.notifications() }.getOrDefault(_ui.value.notifications)
-            _ui.update { it.copy(requests = requests, notifications = notifications) }
+            // También los equipos: si el DT acaba de aceptar una solicitud, el equipo nuevo debe
+            // aparecer en el perfil sin cerrar la app (si falla la red, se deja lo que ya había).
+            val ids = ctx.children.map { it.id } + listOfNotNull(ctx.ownPlayer?.id)
+            val teams = runCatching { container.club.teamsOfPlayers(ids) }.getOrDefault(_ui.value.memberships)
+            _ui.update { it.copy(requests = requests, notifications = notifications, memberships = teams) }
         }
     }
 

@@ -43,6 +43,17 @@
                     android:host="invite"
                     android:scheme="sportpro" />
             </intent-filter>
+            <!-- QR de equipo: sportpro://team/EQ-XXXX-XXXX (abre «Unirme a un equipo») -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="team"
+                    android:scheme="sportpro" />
+            </intent-filter>
             <!-- Confirmación de cuenta desde el correo: sportpro://auth-callback -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />

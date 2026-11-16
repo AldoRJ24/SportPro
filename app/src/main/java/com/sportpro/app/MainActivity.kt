@@ -8,6 +8,7 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.sportpro.app.core.InviteLinks
+import com.sportpro.app.core.TeamLinks
 import io.github.jan.supabase.auth.handleDeeplinks
 import com.sportpro.app.ui.navigation.SportProRoot
 import com.sportpro.app.ui.theme.SportProTheme
@@ -56,6 +57,10 @@ class MainActivity : ComponentActivity() {
         val data = intent?.data ?: return
         if (data.scheme == InviteLinks.SCHEME && data.host == InviteLinks.HOST) {
             InviteLinks.offer(data.lastPathSegment)
+        }
+        // QR de equipo sportpro://team/EQ-XXXX-XXXX: abre «Unirme a un equipo» con el código ya puesto
+        if (data.scheme == TeamLinks.SCHEME && data.host == TeamLinks.HOST) {
+            TeamLinks.offer(data.lastPathSegment)
         }
     }
 }

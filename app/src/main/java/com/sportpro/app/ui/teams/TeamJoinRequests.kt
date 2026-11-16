@@ -23,6 +23,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sportpro.app.core.AppContainer
+import com.sportpro.app.core.TeamLinks
 import com.sportpro.app.core.data.TeamJoinRequest
 import com.sportpro.app.core.data.friendlyMessage
 import com.sportpro.app.core.data.timeAgo
@@ -150,7 +151,8 @@ fun TeamInviteCard(code: String?, onRegenerate: () -> Unit, modifier: Modifier =
             if (code == null) {
                 Text("No se pudo obtener el código del equipo.", style = MaterialTheme.typography.bodySmall)
             } else {
-                QrImage(code, size = 180.dp)
+                // El QR lleva el ENLACE sportpro://team/CÓDIGO: la cámara del teléfono abre la app con él
+                QrImage(TeamLinks.linkFor(code), size = 180.dp)
                 Text(code, style = MaterialTheme.typography.titleLarge, fontFamily = FontFamily.Monospace)
             }
             TextButton(onClick = onRegenerate) { Text("Generar nuevo código") }

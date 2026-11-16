@@ -37,6 +37,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.sportpro.app.R
 import com.sportpro.app.core.InviteLinks
+import com.sportpro.app.core.TeamLinks
 import com.sportpro.app.ui.admin.AcademyTeamsScreen
 import com.sportpro.app.ui.admin.InvitesScreen
 import com.sportpro.app.ui.admin.RedeemInviteDialog
@@ -99,6 +100,22 @@ fun MainShell(session: SessionViewModel) {
     val familyUi by shellFamily.ui.collectAsStateWithLifecycle()
     LaunchedEffect(ctx) { shellFamily.load(ctx) }
     val pendingInvite by InviteLinks.pending.collectAsStateWithLifecycle()
+
+    // QR de equipo escaneado con la cámara del teléfono: abre «Unirme a un equipo».
+    // Esa pantalla consume el código pendiente y busca el equipo sola.
+    val pendingTeam by TeamLinks.pending.collectAsStateWithLifecycle()
+    LaunchedEffect(pendingTeam) {
+        if (pendingTeam != null) nav.navigate(JoinTeamRoute) { launchSingleTop = true }
+    }
+
+    // Cuando el DT responde mi solicitud llega una notificación «team_join_answer». En ese momento
+    // se recarga el contexto de la sesión para que el equipo nuevo aparezca en el perfil al instante
+    // (antes había que cerrar y abrir la app para verlo). La clave es el id de la notificación más
+    // reciente, así solo se recarga una vez por cada aviso nuevo.
+    val newest = familyUi.notifications.firstOrNull()
+    LaunchedEffect(newest?.id) {
+        if (newest != null && newest.isUnread && newest.kind == "team_join_answer") session.refreshContext()
+    }
 
     pendingInvite?.let { code ->
         RedeemInviteDialog(

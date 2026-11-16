@@ -39,6 +39,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sportpro.app.core.AppContainer
+import com.sportpro.app.core.TeamLinks
 import com.sportpro.app.core.data.MyTeamJoinRequest
 import com.sportpro.app.core.data.PlayerRef
 import com.sportpro.app.core.data.TeamCodeCheck
@@ -62,12 +63,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/** Acepta «EQ-ABCD-EFGH», «eq abcd efgh» o solo los 8 caracteres; devuelve el código normalizado o null. */
-fun normalizeTeamCode(raw: String?): String? {
-    val clean = raw.orEmpty().uppercase().filter { it.isLetterOrDigit() }
-    val body = if (clean.length == 10 && clean.startsWith("EQ")) clean.drop(2) else clean
-    return if (body.length == 8) "EQ-${body.take(4)}-${body.drop(4)}" else null
-}
+/**
+ * Acepta el enlace del QR (sportpro://team/EQ-ABCD-EFGH), «EQ-ABCD-EFGH», «eq abcd efgh» o solo
+ * los 8 caracteres; devuelve el código normalizado o null. La lógica vive en [TeamLinks.parse].
+ */
+fun normalizeTeamCode(raw: String?): String? = TeamLinks.parse(raw)
 
 data class JoinTeamUi(
     val checking: Boolean = false,
@@ -148,6 +148,15 @@ fun JoinTeamScreen(session: SessionViewModel, onBack: () -> Unit) {
     // Quiénes pueden unirse: mi perfil de jugador (si tengo) y mis hijos vinculados
     val candidates: List<PlayerRef> = listOfNotNull(ctx?.ownPlayer) + ctx?.children.orEmpty()
     var selectedId by rememberSaveable { mutableStateOf<String?>(null) }
+    // Si la app se abrió escaneando el QR del equipo con la cámara del teléfono, el código llega
+    // por TeamLinks: se escribe en el campo y se busca el equipo sin que el usuario toque nada.
+    val pendingCode by TeamLinks.pending.collectAsStateWithLifecycle()
+    LaunchedEffect(pendingCode) {
+        TeamLinks.consume()?.let { code ->
+            typed = code
+            vm.check(code)
+        }
+    }
 
     SpScaffold(title = "Unirme a un equipo", onBack = onBack, snackbarHostState = snack) { pad ->
         Column(
