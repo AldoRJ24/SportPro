@@ -5,6 +5,7 @@ import com.sportpro.app.SupabaseProvider
 import com.sportpro.app.core.data.offline.PendingEventQueue
 import com.sportpro.app.core.data.repo.AccountRepository
 import com.sportpro.app.core.data.repo.AuthRepository
+import com.sportpro.app.core.data.repo.ChallengeRepository
 import com.sportpro.app.core.data.repo.ClubRepository
 import com.sportpro.app.core.data.repo.DocumentRepository
 import com.sportpro.app.core.data.repo.FeeRepository
@@ -33,5 +34,6 @@ class AppContainer(context: Context) {
     val fees: FeeRepository = FeeRepository(client)
     val documents: DocumentRepository = DocumentRepository(client)
     val tryouts: TryoutRepository = TryoutRepository(client)
+    val challenges: ChallengeRepository = ChallengeRepository(client)
     val queue: PendingEventQueue = PendingEventQueue(context.applicationContext, matches, appScope)
 }

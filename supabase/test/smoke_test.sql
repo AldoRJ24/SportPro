@@ -99,9 +99,10 @@ select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');  -- DT
 select pg_temp.expect_eq((select count(*) from public.player_private_data)::int, 1, 'DT del equipo SÍ ve datos');
 
 -- ===== Partido: DT crea, convoca, confirma, alinea, designa operador =====
-select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000002');
 insert into public.matches (id, home_team_id, away_team_id, format_players, half_minutes, visibility, venue)
 values ('e0000000-0000-0000-0000-000000000001','c0000000-0000-0000-0000-000000000001','c0000000-0000-0000-0000-000000000002', 7, 25, 'followers', 'Cancha 1');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
 select pg_temp.expect_eq((select academy_id from public.matches where id='e0000000-0000-0000-0000-000000000001'), 'b0000000-0000-0000-0000-000000000001'::uuid, 'academia del partido derivada por trigger');
 select pg_temp.expect_fail($$update public.matches set home_score=9 where id='e0000000-0000-0000-0000-000000000001'$$, 'cliente no puede editar marcador');
 select pg_temp.expect_fail($$select public.change_match_state('e0000000-0000-0000-0000-000000000001','start')$$, 'no inicia sin alineación');
@@ -875,6 +876,105 @@ select pg_temp.expect_eq((select count(*) from public.my_matches())::int, 0, 'al
 set role anon;
 select pg_temp.expect_fail($$select * from public.my_matches()$$, 'anon no consulta mis partidos');
 select pg_temp.expect_fail($$select public.toggle_match_favorite('e0000000-0000-0000-0000-000000000009')$$, 'anon no marca favoritos');
+reset role;
+
+-- =====================================================================
+-- DESAFÍOS ENTRE EQUIPOS (migración 015).
+-- =====================================================================
+-- Segunda academia verificada: Orlando (…007) pasa a ser DT de «Tigres» (Sub-14)
+select pg_temp.as_su();
+insert into public.academies (id, name, city, status) values ('b0000000-0000-0000-0000-000000000002','Academia Rival','Lima','verified');
+insert into public.academy_memberships (academy_id,user_id,role) values ('b0000000-0000-0000-0000-000000000002','a0000000-0000-0000-0000-000000000007','dt');
+insert into public.teams (id, academy_id, name, category, max_age, default_format_players) values
+ ('c0000000-0000-0000-0000-000000000011','b0000000-0000-0000-0000-000000000002','Tigres','Sub-14',14,7),
+ ('c0000000-0000-0000-0000-000000000012','b0000000-0000-0000-0000-000000000002','Mayores','Sub-17',17,11);
+insert into public.team_staff values ('c0000000-0000-0000-0000-000000000011','a0000000-0000-0000-0000-000000000007','dt');
+
+-- El camino anterior queda cerrado: no se crea directo un partido contra el equipo de otro DT
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+select pg_temp.expect_fail($$insert into public.matches (home_team_id, away_team_id, format_players, half_minutes) values ('c0000000-0000-0000-0000-000000000001','c0000000-0000-0000-0000-000000000011', 7, 25)$$, 'no se crea directo un partido contra el equipo de otro entrenador');
+
+-- Lista de rivales: nombre del entrenador y regla de división (Halcones es Sub-15)
+select pg_temp.expect_eq((select eligible from public.challenge_rival_teams('c0000000-0000-0000-0000-000000000001','b0000000-0000-0000-0000-000000000002') where name = 'Tigres'), true, 'Sub-15 puede desafiar a Sub-14');
+select pg_temp.expect_eq((select coach_name from public.challenge_rival_teams('c0000000-0000-0000-0000-000000000001','b0000000-0000-0000-0000-000000000002') where name = 'Tigres'), 'Orlando Extraño', 'la lista muestra el nombre del entrenador rival');
+select pg_temp.expect_eq((select eligible from public.challenge_rival_teams('c0000000-0000-0000-0000-000000000001','b0000000-0000-0000-0000-000000000002') where name = 'Mayores'), false, 'Sub-15 no puede desafiar a Sub-17');
+select pg_temp.expect_eq((select reason is not null from public.challenge_rival_teams('c0000000-0000-0000-0000-000000000001','b0000000-0000-0000-0000-000000000002') where name = 'Mayores'), true, 'un rival no disponible explica el motivo');
+
+-- Validaciones al enviar
+select pg_temp.expect_fail($$select public.challenge_create('c0000000-0000-0000-0000-000000000001','c0000000-0000-0000-0000-000000000012', 7, 25, now() + interval '2 days')$$, 'desafío fuera de división rechazado');
+select pg_temp.expect_fail($$select public.challenge_create('c0000000-0000-0000-0000-000000000001','c0000000-0000-0000-0000-000000000011', 4, 25, now() + interval '2 days')$$, 'formato menor a 5 rechazado');
+select pg_temp.expect_fail($$select public.challenge_create('c0000000-0000-0000-0000-000000000001','c0000000-0000-0000-0000-000000000011', 12, 25, now() + interval '2 days')$$, 'formato mayor a 11 rechazado');
+select pg_temp.expect_fail($$select public.challenge_create('c0000000-0000-0000-0000-000000000001','c0000000-0000-0000-0000-000000000011', 7, 25, now() + interval '30 minutes')$$, 'desafío con menos de 1 hora de anticipación rechazado');
+select pg_temp.expect_fail($$select public.challenge_create('c0000000-0000-0000-0000-000000000001','c0000000-0000-0000-0000-000000000001', 7, 25, now() + interval '2 days')$$, 'un equipo no se desafía a sí mismo');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000006');
+select pg_temp.expect_fail($$select public.challenge_create('c0000000-0000-0000-0000-000000000001','c0000000-0000-0000-0000-000000000011', 7, 25, now() + interval '2 days')$$, 'un seguidor no puede desafiar');
+select pg_temp.expect_fail($$select * from public.challenge_rival_teams('c0000000-0000-0000-0000-000000000001','b0000000-0000-0000-0000-000000000002')$$, 'un seguidor no consulta rivales de un equipo ajeno');
+
+-- 1) Desafío RECHAZADO
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+select set_config('t.ch1', public.challenge_create('c0000000-0000-0000-0000-000000000001','c0000000-0000-0000-0000-000000000011', 9, 30, now() + interval '2 days', 'Cancha Central', 'followers')::text, false) is not null;
+select pg_temp.expect_fail($$select public.challenge_create('c0000000-0000-0000-0000-000000000001','c0000000-0000-0000-0000-000000000011', 7, 25, now() + interval '3 days')$$, 'no hay dos desafíos pendientes contra el mismo rival');
+select pg_temp.expect_fail(format($$select public.challenge_respond(%L, true)$$, current_setting('t.ch1')), 'quien desafía no puede aceptarse a sí mismo');
+select pg_temp.expect_fail($$insert into public.match_challenges (home_team_id, away_team_id, format_players, half_minutes, scheduled_at, created_by) values ('c0000000-0000-0000-0000-000000000001','c0000000-0000-0000-0000-000000000011', 7, 25, now() + interval '5 days', auth.uid())$$, 'los desafíos no se escriben directo en la tabla');
+select pg_temp.expect_fail($$update public.match_challenges set status = 'accepted'$$, 'un desafío no se acepta escribiendo en la tabla');
+select pg_temp.as_su();
+select pg_temp.expect_eq((select count(*) from public.notifications where kind = 'match_challenge' and user_id = 'a0000000-0000-0000-0000-000000000007' and data->>'challenge_id' = current_setting('t.ch1'))::int, 1, 'el entrenador rival recibe el desafío');
+select pg_temp.expect_eq((select body like '%9 vs 9%' and body like '%30 min por tiempo%' and body like '%Cancha Central%' from public.notifications where kind = 'match_challenge' and data->>'challenge_id' = current_setting('t.ch1')), true, 'la notificación trae los ajustes del partido');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000006');
+select pg_temp.expect_eq((select count(*) from public.match_challenges)::int, 0, 'un tercero no ve desafíos ajenos');
+select pg_temp.expect_eq((select count(*) from public.my_challenges())::int, 0, 'un tercero no tiene desafíos');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000007');
+select pg_temp.expect_eq((select incoming and not outgoing from public.my_challenges() where id = current_setting('t.ch1')::uuid), true, 'el desafiado lo ve como recibido');
+select pg_temp.expect_eq((select home_coach_name from public.my_challenges() where id = current_setting('t.ch1')::uuid), 'Diego DT', 'el desafiado ve quién lo desafía');
+select pg_temp.expect_eq(public.challenge_respond(current_setting('t.ch1')::uuid, false, 'Ese día tenemos torneo') is null, true, 'rechazar no crea partido');
+select pg_temp.expect_fail(format($$select public.challenge_respond(%L, true)$$, current_setting('t.ch1')), 'un desafío respondido no se responde otra vez');
+select pg_temp.as_su();
+select pg_temp.expect_eq((select status from public.match_challenges where id = current_setting('t.ch1')::uuid), 'rejected', 'el desafío rechazado se conserva con su estado');
+select pg_temp.expect_eq((select count(*) from public.notifications where kind = 'match_challenge_rejected' and user_id = 'a0000000-0000-0000-0000-000000000003' and body like '%torneo%')::int, 1, 'quien desafió recibe el rechazo con el motivo');
+
+-- 2) Desafío CANCELADO por quien lo envió
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+select set_config('t.ch2', public.challenge_create('c0000000-0000-0000-0000-000000000001','c0000000-0000-0000-0000-000000000011', 7, 25, now() + interval '2 days')::text, false) is not null;
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000007');
+select pg_temp.expect_fail(format($$select public.challenge_cancel(%L)$$, current_setting('t.ch2')), 'el desafiado no cancela: solo responde');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+select public.challenge_cancel(current_setting('t.ch2')::uuid);
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000007');
+select pg_temp.expect_fail(format($$select public.challenge_respond(%L, true)$$, current_setting('t.ch2')), 'un desafío cancelado no se acepta');
+
+-- 3) Desafío ACEPTADO: se crea el partido
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+select set_config('t.ch3', public.challenge_create('c0000000-0000-0000-0000-000000000001','c0000000-0000-0000-0000-000000000011', 9, 30, now() + interval '2 days', 'Cancha Central', 'public')::text, false) is not null;
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000007');
+select set_config('t.chm', public.challenge_respond(current_setting('t.ch3')::uuid, true)::text, false) is not null;
+select pg_temp.as_su();
+select pg_temp.expect_eq((select home_team_id::text || '|' || away_team_id::text || '|' || format_players || '|' || half_minutes || '|' || status || '|' || coalesce(venue, '')
+                          from public.matches where id = current_setting('t.chm')::uuid),
+  'c0000000-0000-0000-0000-000000000001|c0000000-0000-0000-0000-000000000011|9|30|scheduled|Cancha Central', 'al aceptar se crea el partido con los ajustes del desafío');
+select pg_temp.expect_eq((select created_by from public.matches where id = current_setting('t.chm')::uuid), 'a0000000-0000-0000-0000-000000000003'::uuid, 'el partido queda a nombre de quien desafió');
+select pg_temp.expect_eq((select academy_id from public.matches where id = current_setting('t.chm')::uuid), 'b0000000-0000-0000-0000-000000000001'::uuid, 'el partido pertenece a la academia local');
+select pg_temp.expect_eq((select status || '|' || (match_id is not null) from public.match_challenges where id = current_setting('t.ch3')::uuid), 'accepted|true', 'el desafío queda aceptado y enlazado a su partido');
+select pg_temp.expect_eq((select count(*) from public.notifications where kind = 'match_challenge_accepted' and user_id = 'a0000000-0000-0000-0000-000000000003' and data->>'match_id' = current_setting('t.chm'))::int, 1, 'quien desafió recibe la aceptación con el partido');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+select pg_temp.expect_eq((select by_staff from public.my_matches() where match_id = current_setting('t.chm')::uuid), true, 'el DT local ve el partido en su lista');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000007');
+select pg_temp.expect_eq((select by_staff from public.my_matches() where match_id = current_setting('t.chm')::uuid), true, 'el DT visitante ve el partido en su lista');
+
+-- 4) Desafío VENCIDO: pendiente a menos de 1 hora del partido
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+select set_config('t.ch4', public.challenge_create('c0000000-0000-0000-0000-000000000001','c0000000-0000-0000-0000-000000000011', 7, 25, now() + interval '2 days')::text, false) is not null;
+select pg_temp.as_su();
+update public.match_challenges set scheduled_at = now() + interval '20 minutes' where id = current_setting('t.ch4')::uuid;
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000007');
+select pg_temp.expect_fail(format($$select public.challenge_respond(%L, true)$$, current_setting('t.ch4')), 'un desafío vencido no se acepta');
+select pg_temp.expect_eq((select status from public.my_challenges() where id = current_setting('t.ch4')::uuid), 'expired', 'un pendiente fuera de plazo se muestra como vencido');
+
+-- Ajustes de notificaciones: los desafíos son «solicitudes»
+select pg_temp.as_su();
+select pg_temp.expect_eq(public._notification_category('match_challenge_accepted'), 'requests', 'los avisos de desafíos entran en la categoría solicitudes');
+set role anon;
+select pg_temp.expect_fail($$select * from public.my_challenges()$$, 'anon no consulta desafíos');
+select pg_temp.expect_fail($$select public.challenge_create('c0000000-0000-0000-0000-000000000001','c0000000-0000-0000-0000-000000000011', 7, 25, now() + interval '2 days')$$, 'anon no envía desafíos');
 reset role;
 
 select pg_temp.as_su();

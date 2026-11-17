@@ -40,6 +40,9 @@ import kotlinx.serialization.Serializable
 // Ajustes de notificaciones (migración 010)
 @Serializable data object NotificationSettingsRoute
 
+// Desafíos entre equipos (migración 015)
+@Serializable data object ChallengesRoute
+
 // Avisos de pruebas (migración 011)
 @Serializable data object TryoutsRoute
 @Serializable data class TryoutDetailRoute(val tryoutId: String)

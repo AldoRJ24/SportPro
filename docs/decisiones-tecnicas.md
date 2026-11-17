@@ -114,7 +114,7 @@ Cada decisión sigue el mismo formato: el problema, lo que se decidió, por qué
 
 **Decisión.** El reloj, las formaciones, los jugadores en cancha y las validaciones de formularios son funciones Kotlin sin dependencias de Android. Viven en `core/data/` y se prueban con JUnit en la PC.
 
-**Por qué.** Los 101 tests corren en segundos y sin celular.
+**Por qué.** Los 114 tests corren en segundos y sin celular.
 
 **Costo.** Hubo que sacar alguna validación del ViewModel hacia el modelo del formulario.
 
@@ -177,6 +177,16 @@ Cada decisión sigue el mismo formato: el problema, lo que se decidió, por qué
 **Por qué.** Un fondo blanco con texto negro se lee mejor bajo el sol que un tema oscuro, y un solo color de marca mantiene la pantalla limpia.
 
 **Costo.** No hay modo oscuro. Los colores viven en `ui/theme/Color.kt`; agregarlo exigiría definir una segunda paleta.
+
+## 17. Un partido entre academias necesita el sí de ambos entrenadores
+
+**Problema.** Un DT podía crear un partido contra el equipo de otra academia sin que su entrenador se enterara ni lo aceptara.
+
+**Decisión.** Contra el equipo de otro entrenador se envía un desafío (`match_challenges`). El partido solo se crea cuando el desafiado acepta, y lo crea el servidor con los ajustes propuestos. La política de inserción de `matches` ya no permite crear directo un partido contra un equipo que uno no gestiona. La regla de división (edad máxima a 1 de distancia) se valida en el servidor; la app solo muestra los equipos apagados con el motivo.
+
+**Por qué.** El acuerdo entre dos entrenadores es una regla de negocio: si viviera solo en la app, otra versión de la app podría saltársela.
+
+**Costo.** Un paso más antes de tener el partido. A cambio, el rival nunca encuentra en su lista un partido que no aceptó.
 
 ## Antecedente
 

@@ -45,6 +45,7 @@ import com.sportpro.app.ui.admin.RedeemInviteDialog
 import com.sportpro.app.ui.components.LocalUnreadCount
 import com.sportpro.app.ui.profile.FamilyViewModel
 import com.sportpro.app.ui.calendar.CalendarScreen
+import com.sportpro.app.ui.challenges.ChallengesScreen
 import com.sportpro.app.ui.creatematch.CreateMatchScreen
 import com.sportpro.app.ui.creatematch.MatchSetupScreen
 import com.sportpro.app.ui.docs.PlayerDocsScreen
@@ -168,7 +169,11 @@ fun MainShell(session: SessionViewModel) {
                     HomeScreen(ctx, onOpenMatch = openMatch, onCreate = onCreate, onBell = onBell)
                 }
                 composable<MatchesRoute> {
-                    MatchesScreen(matchesVm, onOpenMatch = openMatch, onCreate = onCreate, onBell = onBell)
+                    MatchesScreen(
+                        matchesVm, onOpenMatch = openMatch, onCreate = onCreate, onBell = onBell,
+                        // Solo quien gestiona equipos puede desafiar o ser desafiado
+                        onChallenges = if (canCreate) ({ nav.navigate(ChallengesRoute) }) else null,
+                    )
                 }
                 composable<ExploreRoute> {
                     ExploreScreen(
@@ -267,6 +272,21 @@ fun MainShell(session: SessionViewModel) {
                             matchesVm.refresh(true)
                             nav.navigate(MatchSetupRoute(id)) { popUpTo<CreateMatchRoute> { inclusive = true } }
                         },
+                        // Desafío enviado: todavía no hay partido, se muestra la lista de desafíos
+                        onChallengeSent = {
+                            nav.navigate(ChallengesRoute) { popUpTo<CreateMatchRoute> { inclusive = true } }
+                        },
+                    )
+                }
+                composable<ChallengesRoute> {
+                    ChallengesScreen(
+                        onBack = { nav.popBackStack() },
+                        onOpenMatch = openMatch,
+                        onAccepted = { id ->
+                            matchesVm.refresh(true)
+                            openMatch(id)
+                        },
+                        onCreate = { nav.navigate(CreateMatchRoute) },
                     )
                 }
                 composable<MatchSetupRoute> { entry ->
@@ -289,6 +309,7 @@ fun MainShell(session: SessionViewModel) {
                         onOpenTarget = { target ->
                             when (target) {
                                 is NotificationTarget.Match -> openMatch(target.matchId)
+                                NotificationTarget.Challenges -> nav.navigate(ChallengesRoute)
                                 NotificationTarget.Feed -> nav.navigateToTab(HomeRoute)
                                 NotificationTarget.Profile -> nav.navigateToTab(ProfileRoute)
                                 NotificationTarget.MyFees -> nav.navigate(FeeStatementRoute())

@@ -5,9 +5,12 @@ import com.sportpro.app.core.AppText
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sportpro.app.core.AppContainer
+import com.sportpro.app.core.data.AcademyRef
+import com.sportpro.app.core.data.Challenges
 import com.sportpro.app.core.data.ExternalDraft
 import com.sportpro.app.core.data.Formations
 import com.sportpro.app.core.data.Position
+import com.sportpro.app.core.data.RivalTeam
 import com.sportpro.app.core.data.TeamRef
 import com.sportpro.app.core.data.friendlyMessage
 import com.sportpro.app.ui.components.parseDateDigits
@@ -19,6 +22,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -39,7 +43,28 @@ data class CreateMatchForm(
     val visibility: String = "followers",
     val busy: Boolean = false,
     val error: String? = null,
+    // ---- Rival registrado en SportPro: academia → equipo (migración 015) ----
+    /** Academias que se pueden elegir como rival (verificadas y la propia). */
+    val academies: List<AcademyRef> = emptyList(),
+    /** Texto del buscador de academias. */
+    val academyQuery: String = "",
+    val rivalAcademyId: String? = null,
+    /** Equipos de la academia elegida, con su entrenador y si están en mi división. */
+    val rivalTeams: List<RivalTeam> = emptyList(),
+    val rivalsLoading: Boolean = false,
 ) {
+    /** Academias que pasan el buscador. */
+    val shownAcademies: List<AcademyRef> get() = Challenges.filterAcademies(academies, academyQuery)
+    val rivalAcademy: AcademyRef? get() = academies.firstOrNull { it.id == rivalAcademyId }
+    val rivalTeam: RivalTeam? get() = rivalTeams.firstOrNull { it.teamId == awayTeamId }
+
+    /**
+     * true = el rival es el equipo de OTRO entrenador: no se crea el partido, se le envía un
+     * desafío para que lo acepte o rechace. Si también gestiono al rival, se crea directo.
+     */
+    fun isChallenge(managedTeamIds: Set<String>): Boolean =
+        !externalRival && awayTeamId != null && awayTeamId !in managedTeamIds
+
     val filledRoster: List<ExternalDraft> get() = externalRoster.filter { it.name.isNotBlank() || it.jersey.isNotBlank() }
     val externalStarters: List<ExternalDraft> get() = filledRoster.filter { it.starter }
 
@@ -94,8 +119,60 @@ class CreateMatchViewModel(private val container: AppContainer) : ViewModel() {
     fun update(transform: (CreateMatchForm) -> CreateMatchForm) =
         _form.update { transform(it).withRosterSize().copy(error = null) }
 
-    fun selectHome(team: TeamRef) = update {
-        it.copy(homeTeamId = team.id, formatPlayers = team.defaultFormatPlayers, halfMinutes = team.halfMinutes)
+    init { loadAcademies() }
+
+    // Academias que el usuario puede ver (verificadas y la suya), para elegir rival registrado.
+    private fun loadAcademies() {
+        viewModelScope.launch {
+            try {
+                val list = container.club.visibleAcademies()
+                _form.update { it.copy(academies = list) }
+            } catch (_: Exception) {
+                // Sin lista de academias todavía se puede crear un partido contra un rival externo
+            }
+        }
+    }
+
+    // Al cambiar de equipo local cambia la división permitida: se vuelve a pedir la lista de rivales.
+    fun selectHome(team: TeamRef) {
+        update {
+            it.copy(
+                homeTeamId = team.id, formatPlayers = team.defaultFormatPlayers, halfMinutes = team.halfMinutes,
+                awayTeamId = null, rivalTeams = emptyList(),
+            )
+        }
+        _form.value.rivalAcademyId?.let { loadRivals(team.id, it) }
+    }
+
+    fun setAcademyQuery(query: String) = update { it.copy(academyQuery = query.take(40)) }
+
+    /** Elige la academia rival y trae sus equipos. Con null vuelve al buscador de academias. */
+    fun selectAcademy(academyId: String?) {
+        update { it.copy(rivalAcademyId = academyId, awayTeamId = null, rivalTeams = emptyList()) }
+        val home = _form.value.homeTeamId
+        if (academyId != null && home != null) loadRivals(home, academyId)
+    }
+
+    // El servidor devuelve cada equipo con su entrenador y si está dentro de mi división (-1 a +1).
+    private fun loadRivals(homeTeamId: String, academyId: String) {
+        viewModelScope.launch {
+            _form.update { it.copy(rivalsLoading = true) }
+            try {
+                val teams = container.challenges.rivalTeams(homeTeamId, academyId)
+                // Si mientras tanto el usuario cambió de equipo o de academia, esta respuesta ya no sirve
+                _form.update {
+                    if (it.homeTeamId == homeTeamId && it.rivalAcademyId == academyId) it.copy(rivalTeams = teams, rivalsLoading = false)
+                    else it
+                }
+            } catch (e: Exception) {
+                _form.update { it.copy(rivalsLoading = false, error = e.friendlyMessage()) }
+            }
+        }
+    }
+
+    /** Solo se puede elegir un equipo que el servidor marcó como disponible. */
+    fun selectRival(team: RivalTeam) {
+        if (team.eligible) update { it.copy(awayTeamId = team.teamId) }
     }
 
     fun setRow(index: Int, row: ExternalDraft) = update { f ->
@@ -122,7 +199,11 @@ class CreateMatchViewModel(private val container: AppContainer) : ViewModel() {
     }
 
     // Valida en el celular (mensajes claros) y luego crea en el servidor, que vuelve a validar.
-    fun create(onCreated: (String) -> Unit) {
+    /**
+     * [managedTeamIds]: equipos que gestiona el usuario. Si el rival registrado NO es suyo, en vez
+     * de crear el partido se envía un desafío y se llama a [onChallengeSent].
+     */
+    fun create(managedTeamIds: Set<String>, onCreated: (String) -> Unit, onChallengeSent: () -> Unit) {
         val f = _form.value
         val date = parseDateDigits(f.dateDigits)
         val time = parseTimeDigits(f.timeDigits)
@@ -132,7 +213,30 @@ class CreateMatchViewModel(private val container: AppContainer) : ViewModel() {
             return
         }
         // Fecha y hora locales (DD/MM/AAAA + HH:MM) → instante con zona horaria (ISO-8601) para el servidor.
-        val iso = LocalDateTime.of(date!!, time!!).atZone(ZoneId.systemDefault()).toOffsetDateTime().toString()
+        val start = LocalDateTime.of(date!!, time!!).atZone(ZoneId.systemDefault())
+        val iso = start.toOffsetDateTime().toString()
+        if (f.isChallenge(managedTeamIds)) {
+            // Las alineaciones se cierran 1 hora antes: el servidor exige esa anticipación
+            if (start.toInstant().isBefore(Instant.now().plusSeconds(3600))) {
+                _form.update { it.copy(error = AppText.get(R.string.create_match_desafio_con_una_hora)) }
+                return
+            }
+            viewModelScope.launch {
+                _form.update { it.copy(busy = true) }
+                try {
+                    container.challenges.create(
+                        homeTeamId = f.homeTeamId!!, awayTeamId = f.awayTeamId!!,
+                        formatPlayers = f.formatPlayers, halfMinutes = f.halfMinutes,
+                        scheduledAtIso = iso, venue = f.venue.trim().ifBlank { null }, visibility = f.visibility,
+                    )
+                    _form.update { it.copy(busy = false) }
+                    onChallengeSent()
+                } catch (e: Exception) {
+                    _form.update { it.copy(busy = false, error = e.friendlyMessage()) }
+                }
+            }
+            return
+        }
         viewModelScope.launch {
             _form.update { it.copy(busy = true) }
             try {

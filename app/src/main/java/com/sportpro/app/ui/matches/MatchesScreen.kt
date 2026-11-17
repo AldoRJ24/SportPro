@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
@@ -26,6 +27,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -64,6 +66,8 @@ fun MatchesScreen(
     onOpenMatch: (String) -> Unit,
     onCreate: (() -> Unit)?,
     onBell: () -> Unit,
+    /** null = el usuario no gestiona equipos y no ve el acceso a «Desafíos». */
+    onChallenges: (() -> Unit)? = null,
 ) {
     val ui by vm.ui.collectAsStateWithLifecycle()
     val now = rememberNowMs()
@@ -91,6 +95,13 @@ fun MatchesScreen(
             ui.loading && ui.all.isEmpty() -> LoadingBox(Modifier.padding(pad))
             ui.error != null && ui.all.isEmpty() -> ErrorBox(ui.error!!, onRetry = { vm.refresh() }, modifier = Modifier.padding(pad))
             else -> Column(Modifier.padding(pad).fillMaxSize()) {
+                // Acceso a los desafíos entre equipos (solo DT y administradores)
+                if (onChallenges != null) {
+                    TextButton(onClick = onChallenges, modifier = Modifier.padding(horizontal = 8.dp)) {
+                        Text(stringResource(R.string.matches_desafios))
+                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
+                    }
+                }
                 // Los filtros solo tienen sentido si hay partidos que filtrar
                 if (ui.all.isNotEmpty()) {
                     FilterBar(ui.filter, ui.origins, onQuery = vm::setQuery, onOrigin = vm::setOrigin, onStatus = vm::setStatus)

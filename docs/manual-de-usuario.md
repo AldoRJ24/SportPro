@@ -51,7 +51,7 @@ Los niños menores de 13 años no tienen cuenta: su apoderado crea su perfil.
 | Pestaña | Qué muestra |
 |---|---|
 | Inicio | Solo publicaciones, con me gusta y comentarios. El «+» crea un partido (solo DT y administrador) |
-| Partidos | Tus partidos: los de los equipos y academias que sigues, los de tus hijos, los de los equipos que diriges y tus favoritos. Tiene buscador, filtros y una estrella para marcar favoritos |
+| Partidos | El DT y el administrador ven arriba el acceso a «Desafíos». Tus partidos: los de los equipos y academias que sigues, los de tus hijos, los de los equipos que diriges y tus favoritos. Tiene buscador, filtros y una estrella para marcar favoritos |
 | Explorar | Avisos de pruebas, y buscador de academias y equipos para seguirlos |
 | Calendario | Partidos por día y los jugados recientemente |
 | Perfil | Tus datos, tus hijos, convocatorias, equipos que gestionas, mensualidades, documentos y opciones de administración |

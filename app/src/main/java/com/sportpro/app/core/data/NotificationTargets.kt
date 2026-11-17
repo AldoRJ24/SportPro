@@ -20,6 +20,8 @@ sealed interface NotificationTarget {
     data class TeamFees(val teamId: String, val playerId: String?) : NotificationTarget
     /** Aviso de prueba (nueva inscripción, respuesta o cancelación). */
     data class Tryout(val tryoutId: String) : NotificationTarget
+    /** Lista de desafíos entre equipos (uno nuevo, rechazado o cancelado). */
+    data object Challenges : NotificationTarget
     /** Documentos de un jugador. */
     data class PlayerDocs(val playerId: String) : NotificationTarget
 }
@@ -35,6 +37,10 @@ val NOTIFICATION_CATEGORIES: List<String> = listOf("callups", "live", "comments"
 fun notificationTarget(kind: String, data: (String) -> String?): NotificationTarget? = when {
     kind == "callup" || kind == "match_live" ->
         data("match_id")?.let { NotificationTarget.Match(it) }
+
+    // Desafío aceptado: ya existe el partido y se abre directo. El resto va a la lista de desafíos
+    kind.startsWith("match_challenge") ->
+        data("match_id")?.let { NotificationTarget.Match(it) } ?: NotificationTarget.Challenges
 
     kind.startsWith("post_comment") -> NotificationTarget.Feed
 
