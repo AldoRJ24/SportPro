@@ -798,5 +798,34 @@ set role anon;
 select pg_temp.expect_fail($$select public.check_team_code('EQ-AAAA-BBBB')$$, 'anon no consulta códigos de equipo');
 reset role;
 
+-- =====================================================================
+-- CIERRE DE HUECOS (migración 013).
+-- =====================================================================
+-- Estado de la academia: solo el superadmin (…001). El dueño del proyecto (SQL Editor) también.
+select pg_temp.as_su();
+update public.academies set status = 'suspended' where id = 'b0000000-0000-0000-0000-000000000001';
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000002');
+select pg_temp.expect_fail($$update public.academies set status = 'verified' where id = 'b0000000-0000-0000-0000-000000000001'$$, 'el admin no puede volver a verificar su academia suspendida');
+update public.academies set city = 'Lima Norte' where id = 'b0000000-0000-0000-0000-000000000001';
+select pg_temp.expect_eq((select city from public.academies where id = 'b0000000-0000-0000-0000-000000000001'), 'Lima Norte', 'el admin sí puede editar los demás datos de su academia');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000001');
+update public.academies set status = 'verified' where id = 'b0000000-0000-0000-0000-000000000001';
+select pg_temp.expect_eq((select status from public.academies where id = 'b0000000-0000-0000-0000-000000000001'), 'verified', 'el superadmin sí cambia el estado de una academia');
+
+-- Notificaciones: se pueden marcar como leídas, pero no reescribir ni borrar
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+select pg_temp.expect_fail($$update public.notifications set title = 'Cambiado' where user_id = auth.uid()$$, 'un usuario no reescribe el texto de sus notificaciones');
+select pg_temp.expect_fail($$delete from public.notifications where user_id = auth.uid()$$, 'un usuario no borra notificaciones');
+select pg_temp.expect_fail($$insert into public.notifications (user_id, kind, title) values (auth.uid(), 'falsa', 'Falsa')$$, 'un usuario no crea notificaciones a mano');
+with u as (update public.notifications set read_at = now() where user_id = auth.uid() and read_at is null returning 1)
+select pg_temp.expect_eq((select count(*) from u) > 0, true, 'marcar como leída sí está permitido');
+select pg_temp.expect_fail($$insert into public.invitations (code, kind) values ('ADM-AAAA-BBBB', 'adm')$$, 'un usuario no crea invitaciones escribiendo en la tabla');
+set role anon;
+select pg_temp.expect_fail($$select count(*) from public.notifications$$, 'anon no lee notificaciones');
+select pg_temp.expect_fail($$select count(*) from public.invitations$$, 'anon no lee invitaciones');
+select pg_temp.expect_fail($$select public.can_publish_avatar('a0000000-0000-0000-0000-000000000002')$$, 'anon no ejecuta funciones internas de permisos');
+select pg_temp.expect_eq((public.check_invitation('ADM-ZZZZ-ZZZZ')->>'valid')::boolean, false, 'anon sí puede validar un código de invitación antes de registrarse');
+reset role;
+
 select pg_temp.as_su();
 \echo '=== TODAS LAS PRUEBAS PASARON ==='
