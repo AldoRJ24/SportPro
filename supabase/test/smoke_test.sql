@@ -977,5 +977,101 @@ select pg_temp.expect_fail($$select * from public.my_challenges()$$, 'anon no co
 select pg_temp.expect_fail($$select public.challenge_create('c0000000-0000-0000-0000-000000000001','c0000000-0000-0000-0000-000000000011', 7, 25, now() + interval '2 days')$$, 'anon no envía desafíos');
 reset role;
 
+-- =====================================================================
+-- ENLACE DEL ÁRBITRO (migración 016). Partido …009: Leones (admin …002) vs rival externo.
+-- =====================================================================
+-- Solo quien gestiona el equipo local genera el código
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+select pg_temp.expect_fail($$select public.referee_link_get('e0000000-0000-0000-0000-000000000009')$$, 'un DT de otro equipo no genera el QR del árbitro');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000002');
+select set_config('t.ref1', public.referee_link_get('e0000000-0000-0000-0000-000000000009'), false) is not null;
+select pg_temp.expect_eq(current_setting('t.ref1') ~ '^[0-9a-f]{64}$', true, 'el código del árbitro tiene 64 caracteres al azar');
+select pg_temp.expect_eq(public.referee_link_get('e0000000-0000-0000-0000-000000000009'), current_setting('t.ref1'), 'volver a pedirlo devuelve el mismo código');
+select set_config('t.ref2', public.referee_link_get('e0000000-0000-0000-0000-000000000009', true), false) is not null;
+select pg_temp.expect_eq(current_setting('t.ref2') <> current_setting('t.ref1'), true, 'regenerar entrega un código distinto');
+select pg_temp.expect_fail($$select * from public.match_referee_links$$, 'el DT no lee la tabla de códigos directo');
+select pg_temp.expect_fail($$insert into public.match_referee_links (match_id, token) values ('e0000000-0000-0000-0000-000000000009', repeat('a', 64))$$, 'nadie crea códigos escribiendo en la tabla');
+
+-- Ids de tipos de evento (la página los recibe de referee_match; anon no lee la tabla)
+select pg_temp.as_su();
+select set_config('t.goal', (select id from public.event_types where code = 'goal' and academy_id is null)::text, false) is not null;
+select set_config('t.mend', (select id from public.event_types where code = 'match_end' and academy_id is null)::text, false) is not null;
+select set_config('t.pen', (select id from public.event_types where code = 'penalty' and academy_id is null)::text, false) is not null;
+
+-- La página del árbitro, SIN sesión (rol anónimo)
+select pg_temp.as_su();
+set role anon;
+select pg_temp.expect_fail(format($$select public.referee_match(%L)$$, current_setting('t.ref1')), 'el código anterior deja de servir al regenerar');
+select pg_temp.expect_fail($$select public.referee_match('abc')$$, 'un código mal formado no sirve');
+select pg_temp.expect_fail($$select public.referee_match(repeat('0', 64))$$, 'un código inventado no sirve');
+select pg_temp.expect_fail($$select * from public.match_referee_links$$, 'anon no lee la tabla de códigos');
+select pg_temp.expect_eq((public.referee_match(current_setting('t.ref2'))->'match'->>'home_name'), 'Leones', 'con el código, la página ve el partido');
+select pg_temp.expect_eq((select count(*) from jsonb_array_elements(public.referee_match(current_setting('t.ref2'))->'event_types') t where t->>'group_kind' = 'control')::int, 0, 'la página no ofrece los eventos de control como botones');
+select pg_temp.expect_fail(format($$select public.referee_record_event(%L, gen_random_uuid(), current_setting('t.goal')::uuid, 1, 5, 0, 'home')$$, current_setting('t.ref2')), 'no se registra antes de iniciar');
+select pg_temp.expect_fail(format($$select public.referee_change_state(%L, 'start')$$, current_setting('t.ref2')), 'el árbitro no inicia sin alineaciones completas');
+reset role;
+
+-- Se fuerza el partido «en vivo» (como superusuario, solo en esta prueba)
+alter table public.matches disable trigger trg_matches_start_formation;
+update public.matches set status = 'live', period = 1, period_started_at = now(), clock_running = true, started_at = now()
+ where id = 'e0000000-0000-0000-0000-000000000009';
+alter table public.matches enable trigger trg_matches_start_formation;
+
+set role anon;
+select set_config('t.cev', gen_random_uuid()::text, false) is not null;
+select set_config('t.rev', public.referee_record_event(current_setting('t.ref2'), current_setting('t.cev')::uuid,
+  current_setting('t.goal')::uuid, 1, 7, 0, 'home',
+  'd0000001-0000-0000-0000-000000000002')::text, false) is not null;
+select pg_temp.expect_eq(public.referee_record_event(current_setting('t.ref2'), current_setting('t.cev')::uuid,
+  current_setting('t.goal')::uuid, 1, 7, 0, 'home',
+  'd0000001-0000-0000-0000-000000000002')::text, current_setting('t.rev'), 'un reintento devuelve el mismo evento (no duplica)');
+select pg_temp.expect_eq((public.referee_match(current_setting('t.ref2'))->'match'->>'home_score'), '1', 'el gol del árbitro suma al marcador');
+select pg_temp.expect_eq((select e->>'player_name' from jsonb_array_elements(public.referee_match(current_setting('t.ref2'))->'events') e where e->>'id' = current_setting('t.rev')), 'Rival1 L.', 'la página muestra al menor como «Nombre I.»');
+select pg_temp.expect_fail(format($$select public.referee_record_event(%L, gen_random_uuid(), current_setting('t.goal')::uuid, 1, 8, 0, 'home', 'd0000001-0000-0000-0000-000000000001')$$, current_setting('t.ref2')), 'no se registra un jugador de otro equipo');
+select pg_temp.expect_fail(format($$select public.referee_record_event(%L, gen_random_uuid(), current_setting('t.mend')::uuid, 1, 8, 0, 'none')$$, current_setting('t.ref2')), 'el final no se registra como evento suelto');
+select pg_temp.expect_fail(format($$select public.referee_record_event(%L, gen_random_uuid(), current_setting('t.pen')::uuid, 1, 8, 0, 'home')$$, current_setting('t.ref2')), 'un penal sin resultado se rechaza');
+select pg_temp.expect_fail(format($$select public.referee_void_event(%L, %L, 'x')$$, current_setting('t.ref2'), current_setting('t.rev')), 'anular exige motivo');
+select public.referee_void_event(current_setting('t.ref2'), current_setting('t.rev')::uuid, 'Gol mal anotado');
+select pg_temp.expect_eq((public.referee_match(current_setting('t.ref2'))->'match'->>'home_score'), '0', 'al anular, el marcador se recalcula');
+reset role;
+select pg_temp.expect_eq((select count(*) from public.match_events where id = current_setting('t.rev')::uuid and status = 'voided')::int, 1, 'el evento anulado no se borra');
+select pg_temp.expect_eq((select reason from public.match_event_revisions where event_id = current_setting('t.rev')::uuid), 'Árbitro: Gol mal anotado', 'la anulación guarda la versión anterior con el motivo');
+select pg_temp.expect_eq((select count(*) from public.audit_log where action = 'referee_event' and entity_id = current_setting('t.rev')::uuid)::int, 1, 'el registro del árbitro queda en auditoría');
+
+-- Entretiempo, segundo tiempo y final desde la página
+set role anon;
+select public.referee_change_state(current_setting('t.ref2'), 'halftime');
+select pg_temp.expect_eq((public.referee_match(current_setting('t.ref2'))->'match'->>'status'), 'halftime', 'el árbitro marca el entretiempo');
+select public.referee_change_state(current_setting('t.ref2'), 'second_half');
+select public.referee_change_state(current_setting('t.ref2'), 'finish');
+select pg_temp.expect_eq((public.referee_match(current_setting('t.ref2'))->'match'->>'status'), 'finished', 'el árbitro finaliza el partido y la página aún lo muestra');
+select pg_temp.expect_fail(format($$select public.referee_record_event(%L, gen_random_uuid(), current_setting('t.goal')::uuid, 2, 40, 0, 'home')$$, current_setting('t.ref2')), 'con el partido finalizado ya no se registra');
+reset role;
+select pg_temp.expect_eq((select count(*) from public.match_events e join public.event_types t on t.id = e.event_type_id where e.match_id = 'e0000000-0000-0000-0000-000000000009' and t.code in ('first_half_end','second_half_start','match_end'))::int, 3, 'cada cambio de estado deja su evento en la cronología');
+
+-- Vence solo 3 horas después del final
+update public.matches set finished_at = now() - interval '4 hours' where id = 'e0000000-0000-0000-0000-000000000009';
+set role anon;
+select pg_temp.expect_fail(format($$select public.referee_match(%L)$$, current_setting('t.ref2')), 'el código vence 3 horas después del final');
+reset role;
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000002');
+select pg_temp.expect_fail($$select public.referee_link_get('e0000000-0000-0000-0000-000000000009')$$, 'no se genera QR de árbitro para un partido terminado');
+
+-- Desactivar a mano: el DT de Halcones con el partido programado del desafío
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+select set_config('t.ref3', public.referee_link_get(current_setting('t.chm')::uuid), false) is not null;
+select public.referee_link_revoke(current_setting('t.chm')::uuid);
+select pg_temp.as_su();
+set role anon;
+select pg_temp.expect_fail(format($$select public.referee_match(%L)$$, current_setting('t.ref3')), 'un código desactivado por el DT deja de servir');
+select pg_temp.expect_fail($$select public.referee_link_get('e0000000-0000-0000-0000-000000000009')$$, 'anon no genera códigos');
+reset role;
+
+-- El cambio de estado desde la app sigue funcionando igual (lo usa el DT)
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000006');
+select pg_temp.expect_fail(format($$select public.change_match_state(%L, 'start')$$, current_setting('t.chm')), 'un seguidor sigue sin poder cambiar el estado');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+select pg_temp.expect_fail(format($$select public.change_match_state(%L, 'start')$$, current_setting('t.chm')), 'el DT sigue sin poder iniciar sin alineaciones');
+
 select pg_temp.as_su();
 \echo '=== TODAS LAS PRUEBAS PASARON ==='

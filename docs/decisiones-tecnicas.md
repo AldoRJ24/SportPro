@@ -114,7 +114,7 @@ Cada decisión sigue el mismo formato: el problema, lo que se decidió, por qué
 
 **Decisión.** El reloj, las formaciones, los jugadores en cancha y las validaciones de formularios son funciones Kotlin sin dependencias de Android. Viven en `core/data/` y se prueban con JUnit en la PC.
 
-**Por qué.** Los 114 tests corren en segundos y sin celular.
+**Por qué.** Los 119 tests corren en segundos y sin celular.
 
 **Costo.** Hubo que sacar alguna validación del ViewModel hacia el modelo del formulario.
 
@@ -187,6 +187,16 @@ Cada decisión sigue el mismo formato: el problema, lo que se decidió, por qué
 **Por qué.** El acuerdo entre dos entrenadores es una regla de negocio: si viviera solo en la app, otra versión de la app podría saltársela.
 
 **Costo.** Un paso más antes de tener el partido. A cambio, el rival nunca encuentra en su lista un partido que no aceptó.
+
+## 18. El árbitro registra sin cuenta, con un código por partido
+
+**Problema.** El árbitro casi nunca es miembro de la academia y no va a crear una cuenta para un solo partido.
+
+**Decisión.** El DT genera un QR con un código secreto de un solo partido. El QR abre una página web publicada en Vercel que llama a cuatro funciones del servidor; cada una valida el código y luego aplica las mismas reglas que la app. Para no duplicar lógica, el cambio de estado del partido se separó en una función interna (`_match_apply_state`) que usan tanto la app como la página.
+
+**Por qué.** Es la forma más simple para el árbitro (escanear y empezar) sin abrir las tablas al público: el rol anónimo sigue sin permisos sobre ninguna tabla.
+
+**Costo.** Quien obtenga el QR puede registrar eventos de ese partido. Se mitiga con el vencimiento, el botón para cambiar o desactivar el código y la auditoría. La página consulta el partido cada 4 segundos en lugar de usar Realtime, porque Realtime filtra por permisos de usuario y el árbitro no tiene sesión.
 
 ## Antecedente
 

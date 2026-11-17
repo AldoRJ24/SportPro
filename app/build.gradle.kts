@@ -29,6 +29,8 @@ android {
 
         buildConfigField("String", "SUPABASE_URL", "\"${localProps.getProperty("SUPABASE_URL", "")}\"")
         buildConfigField("String", "SUPABASE_PUBLISHABLE_KEY", "\"${localProps.getProperty("SUPABASE_PUBLISHABLE_KEY", "")}\"")
+        // Dirección de la página del árbitro publicada en Vercel (no es secreta)
+        buildConfigField("String", "REFEREE_WEB_URL", "\"${localProps.getProperty("REFEREE_WEB_URL", "")}\"")
     }
 
     buildTypes {

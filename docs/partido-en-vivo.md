@@ -169,7 +169,11 @@ sequenceDiagram
 - **Control humano:** se permiten hasta 3 generaciones, el DT puede editar el texto y nada se publica sin su aprobación.
 - **Clave protegida:** la clave de Gemini es un secreto de la Edge Function. No está en la app.
 
-## 11. Dónde está cada parte en el código
+## 11. Registro por el árbitro desde la web
+
+El DT del equipo local pulsa «QR del árbitro» en el partido. El árbitro lo escanea y registra desde una página web, sin cuenta, con el mismo flujo de 3 toques, la misma cola sin conexión y el mismo «Deshacer». Lo que registra entra en `match_events`, así que la app lo muestra al instante por Realtime. Detalles de publicación y seguridad en `referee-web/README.md` y `docs/seguridad.md`.
+
+## 12. Dónde está cada parte en el código
 
 | Parte | Archivo |
 |---|---|
@@ -183,3 +187,5 @@ sequenceDiagram
 | Llamadas al servidor y Realtime | `core/data/repo/MatchRepository.kt` |
 | Reglas del servidor | `supabase/migrations/20261107000000_sportpro_core.sql` |
 | Resumen con IA | `supabase/functions/generate-match-summary/index.ts` |
+| QR del árbitro (app) | `ui/match/RefereeQrDialog.kt`, `core/RefereeLinks.kt` |
+| Página del árbitro | `referee-web/` |

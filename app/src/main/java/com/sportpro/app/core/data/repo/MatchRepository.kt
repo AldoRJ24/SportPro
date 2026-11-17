@@ -80,6 +80,19 @@ class MatchRepository(private val client: SupabaseClient) {
     suspend fun toggleFavorite(matchId: String): Boolean =
         client.postgrest.rpc("toggle_match_favorite", buildJsonObject { put("p_match", matchId) }).decodeScalar()
 
+    // Código secreto del QR del árbitro (solo el DT del equipo local). Con regenerate = true se
+    // crea uno nuevo y el anterior deja de servir al instante.
+    suspend fun refereeToken(matchId: String, regenerate: Boolean = false): String =
+        client.postgrest.rpc("referee_link_get", buildJsonObject {
+            put("p_match", matchId)
+            put("p_regenerate", regenerate)
+        }).decodeScalar()
+
+    // Desactiva el QR del árbitro (por ejemplo, si se compartió por error).
+    suspend fun revokeRefereeLink(matchId: String) {
+        client.postgrest.rpc("referee_link_revoke", buildJsonObject { put("p_match", matchId) })
+    }
+
     suspend fun getMatch(matchId: String): MatchRow? =
         client.from("matches").select(Columns.raw(MATCH_COLS)) { filter { eq("id", matchId) } }
             .decodeRows<MatchRow>().firstOrNull()

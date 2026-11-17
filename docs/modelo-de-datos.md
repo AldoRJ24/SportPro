@@ -1,6 +1,6 @@
 # Modelo de datos
 
-La base de datos es PostgreSQL en Supabase. Tiene **37 tablas** en el esquema `public`, todas con Row Level Security activado. Se crean con las 15 migraciones de `supabase/migrations/`.
+La base de datos es PostgreSQL en Supabase. Tiene **38 tablas** en el esquema `public`, todas con Row Level Security activado. Se crean con las 16 migraciones de `supabase/migrations/`.
 
 Reglas que valen para todas las tablas:
 
@@ -76,6 +76,7 @@ El diagrama muestra solo las relaciones principales. Las tablas completas están
 | `match_events` | Cada evento del partido: tipo, periodo, minuto, añadido, lado, jugador y datos extra | No se borra ni se edita directo. Lleva `client_event_id` para que un reenvío no lo duplique |
 | `match_event_revisions` | Versión anterior de un evento cada vez que se corrige o anula, con quién y por qué | La escribe un trigger |
 | `match_challenges` | Desafío de un equipo a otro: ajustes propuestos (jugadores, minutos, fecha, sede), estado (pendiente, aceptado, rechazado, cancelado) y el partido creado al aceptar | Solo lo ven quienes gestionan los dos equipos. «Vencido» se calcula |
+| `match_referee_links` | Código secreto del QR del árbitro de cada partido, quién lo creó y si se desactivó | Nadie la lee directo: el DT obtiene el código con `referee_link_get`. Uno activo por partido |
 | `match_favorites` | Partidos que cada usuario marcó con la estrella | Preferencia personal: solo la ve su dueño y se cambia con `toggle_match_favorite` |
 
 ## 4. Resumen con IA y feed
@@ -133,6 +134,7 @@ La app llama a funciones SQL (RPC) para todo lo que cambia datos sensibles. Las 
 |---|---|
 | Partido | `change_match_state`, `set_match_operator`, `correct_match_event`, `void_match_event`, `get_match_timeline`, `get_match_lineup` |
 | Desafíos | `challenge_rival_teams`, `challenge_create`, `challenge_respond`, `challenge_cancel`, `my_challenges` |
+| Árbitro | `referee_link_get`, `referee_link_revoke` (DT); `referee_match`, `referee_record_event`, `referee_change_state`, `referee_void_event` (página, con el código del QR) |
 | Lista de partidos | `my_matches` (qué partidos le corresponden al usuario y por qué), `toggle_match_favorite` |
 | Estadísticas | `get_player_stats`, `get_team_stats` |
 | Resumen con IA | `build_ai_payload`, `upsert_ai_summary`, `save_summary_edit`, `approve_summary` |

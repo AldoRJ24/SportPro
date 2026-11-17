@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <!-- El enlace lleva el código secreto: que no se envíe a otras páginas ni lo indexen buscadores -->
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#ffffff">
+  <title>SportPro Árbitro</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <!-- Encabezado fijo: marcador, reloj y estado del partido -->
+  <header class="scoreboard" id="scoreboard" hidden>
+    <div class="meta" id="meta"></div>
+    <div class="teams">
+      <div class="team"><span class="team-name" id="home-name"></span></div>
+      <div class="score"><span id="home-score">0</span><span class="dash">–</span><span id="away-score">0</span></div>
+      <div class="team"><span class="team-name" id="away-name"></span></div>
+    </div>
+    <div class="status-row">
+      <span class="pill" id="status-pill"></span>
+      <span class="clock" id="clock"></span>
+      <span class="net" id="net"></span>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- Mensaje de carga, de error o de «escanea el QR» -->
+    <section class="notice" id="notice">
+      <p class="notice-title">Cargando el partido…</p>
+    </section>
+
+    <!-- Botones de estado: iniciar, entretiempo, segundo tiempo, finalizar -->
+    <section class="controls" id="controls" hidden></section>
+
+    <!-- Botones de evento (se muestran con el partido en juego) -->
+    <section id="record" hidden>
+      <h2 class="section-title">Registrar</h2>
+      <div class="event-grid" id="event-grid"></div>
+    </section>
+
+    <!-- Cronología separada por lados, como en la app -->
+    <section id="timeline-section" hidden>
+      <h2 class="section-title">Cronología</h2>
+      <p class="hint">Toca un evento para anularlo.</p>
+      <div class="timeline-head"><span id="tl-home"></span><span></span><span id="tl-away"></span></div>
+      <ol class="timeline" id="timeline"></ol>
+    </section>
+  </main>
+
+  <!-- Hoja inferior de 3 pasos: equipo → jugador → (dato extra) -->
+  <div class="sheet-backdrop" id="sheet-backdrop" hidden>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+      <div class="sheet-head">
+        <h3 id="sheet-title"></h3>
+        <button class="icon-btn" id="sheet-close" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="minute-row" id="minute-row">
+        <button class="round" id="min-down" aria-label="Restar un minuto">−</button>
+        <span class="minute" id="minute-label"></span>
+        <button class="round" id="min-up" aria-label="Sumar un minuto">+</button>
+      </div>
+      <p class="sheet-step" id="sheet-step"></p>
+      <div class="options" id="sheet-options"></div>
+    </div>
+  </div>
+
+  <!-- Aviso inferior (con «Deshacer» justo después de registrar) -->
+  <div class="toast" id="toast" hidden>
+    <span id="toast-text"></span>
+    <button class="toast-action" id="toast-action" hidden>Deshacer</button>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

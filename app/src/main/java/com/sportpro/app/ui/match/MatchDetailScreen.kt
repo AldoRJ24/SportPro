@@ -73,6 +73,7 @@ fun MatchDetailScreen(matchId: String, onBack: () -> Unit, onSetup: () -> Unit, 
     val haptics = LocalHapticFeedback.current
     var editing by remember { mutableStateOf<TimelineEvent?>(null) }
     var confirmFinish by remember { mutableStateOf(false) }
+    var showRefereeQr by remember { mutableStateOf(false) }
     val match = ui.match
     val pendingHere = pending.filter { it.matchId == matchId }
 
@@ -125,6 +126,12 @@ fun MatchDetailScreen(matchId: String, onBack: () -> Unit, onSetup: () -> Unit, 
                     onSetup = onSetup,
                     onSummary = onSummary,
                 )
+                // QR del árbitro: solo el DT o el admin del equipo local, antes o durante el partido
+                if (ui.isManager && (match.isScheduled || match.isLive)) {
+                    TextButton(onClick = { showRefereeQr = true }, modifier = Modifier.padding(horizontal = 8.dp)) {
+                        Text(stringResource(R.string.referee_button))
+                    }
+                }
                 val tabs = buildList {
                     if (ui.canRecord) add(stringResource(R.string.match_detail_registrar))
                     add(stringResource(R.string.match_detail_cronologia))
@@ -169,6 +176,10 @@ fun MatchDetailScreen(matchId: String, onBack: () -> Unit, onSetup: () -> Unit, 
             onCorrect = { patch, reason -> vm.correct(e, patch, reason); editing = null },
             onVoid = { reason -> vm.void(e, reason); editing = null },
         )
+    }
+
+    if (showRefereeQr) {
+        RefereeQrDialog(matchId = matchId, onDismiss = { showRefereeQr = false })
     }
 
     if (confirmFinish) {

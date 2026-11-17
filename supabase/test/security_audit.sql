@@ -37,13 +37,26 @@ select pg_temp.expect_none(
     where grantee = 'anon' and table_schema = 'public'),
   'anon no tiene permisos sobre ninguna columna');
 
--- 3) anon solo puede ejecutar check_invitation (valida el código antes de registrarse)
+-- 3) anon solo puede ejecutar una LISTA CERRADA de funciones:
+--    · check_invitation: valida el código de invitación antes de registrarse;
+--    · referee_*: la página web del árbitro, que no tiene cuenta. Cada una exige el código
+--      secreto del QR (migración 016).
 select pg_temp.expect_none(
   (select string_agg(p.proname, ', ' order by p.proname)
      from pg_proc p join pg_namespace n on n.oid = p.pronamespace
     where n.nspname = 'public' and has_function_privilege('anon', p.oid, 'execute')
-      and p.proname <> 'check_invitation'),
-  'anon solo puede ejecutar check_invitation');
+      and p.proname not in ('check_invitation', 'referee_match', 'referee_record_event',
+                            'referee_change_state', 'referee_void_event')),
+  'anon solo puede ejecutar check_invitation y las 4 funciones del árbitro');
+
+-- 3b) La tabla de enlaces del árbitro no se lee ni se escribe desde la app: el código secreto
+--     solo sale por referee_link_get, y solo para el DT del partido
+select pg_temp.expect_none(
+  (select string_agg(distinct grantee || ':' || privilege_type, ', ')
+     from information_schema.role_table_grants
+    where table_schema = 'public' and table_name = 'match_referee_links'
+      and grantee in ('anon', 'authenticated')),
+  'nadie lee ni escribe directo los códigos del árbitro');
 
 -- 4) Nadie con sesión puede vaciar tablas ni crear triggers o referencias
 select pg_temp.expect_none(
@@ -62,7 +75,7 @@ select pg_temp.expect_none(
       and table_name in ('audit_log', 'platform_admins', 'notifications', 'invitations', 'notification_prefs',
                          'fee_plans', 'fee_players', 'fee_charges', 'fee_payments', 'player_documents',
                          'tryouts', 'tryout_applications', 'team_join_requests', 'post_likes', 'post_comments',
-                         'match_summaries', 'match_summary_versions', 'match_event_revisions', 'match_operators', 'match_favorites', 'match_challenges',
+                         'match_summaries', 'match_summary_versions', 'match_event_revisions', 'match_operators', 'match_favorites', 'match_challenges', 'match_referee_links',
                          'guardian_player_links')),
   'las tablas sensibles solo se escriben por funciones');
 

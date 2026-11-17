@@ -588,6 +588,17 @@
     <string name="challenges_reject_title">Rechazar el desafío</string>
     <string name="challenges_msg_accepted">Desafío aceptado: el partido ya está en tu lista.</string>
     <string name="challenges_msg_rejected">Desafío rechazado.</string>
+    <string name="referee_button">QR del árbitro</string>
+    <string name="referee_title">QR del árbitro</string>
+    <string name="referee_explain">El árbitro escanea este QR con la cámara de su celular y registra los eventos desde una página web, sin crear cuenta. Lo que registre aparece al instante en la app.</string>
+    <string name="referee_warning">Quien tenga este QR puede registrar eventos de este partido. Muéstralo solo al árbitro. Vence 3 horas después de terminar el partido.</string>
+    <string name="referee_copy">Copiar enlace</string>
+    <string name="referee_new_code">Generar un código nuevo</string>
+    <string name="referee_disable">Desactivar el QR</string>
+    <string name="referee_close">Cerrar</string>
+    <string name="referee_copied">Enlace copiado.</string>
+    <string name="referee_renewed">Código nuevo: el anterior ya no sirve.</string>
+    <string name="referee_missing_url">Falta la dirección de la página del árbitro. Agrega REFEREE_WEB_URL=https://… en local.properties y vuelve a compilar.</string>
     <string name="challenges_msg_cancelled">Desafío cancelado.</string>
     <string name="matches_desafios">Desafíos entre equipos</string>
 

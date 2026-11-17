@@ -31,7 +31,8 @@ Recomendación: si el proyecto de Supabase actual es el mismo que usaba aquella 
 | 1 | Todas las tablas de `public` tienen RLS activado | OK |
 | 2 | El rol anónimo no tiene permisos sobre ninguna tabla | OK |
 | 3 | El rol anónimo no tiene permisos sobre ninguna columna | OK |
-| 4 | El rol anónimo solo puede ejecutar `check_invitation` | OK |
+| 4 | El rol anónimo solo puede ejecutar `check_invitation` y las 4 funciones del árbitro | OK |
+| 4b | Nadie lee ni escribe directo los códigos del árbitro | OK |
 | 5 | Un usuario con sesión no tiene `TRUNCATE`, `TRIGGER` ni `REFERENCES` | OK |
 | 6 | Las tablas sensibles solo se escriben por funciones | OK |
 | 7 | No hay permiso de borrado sobre jugadores, plantel, partidos ni eventos | OK |
@@ -40,7 +41,9 @@ Recomendación: si el proyecto de Supabase actual es el mismo que usaba aquella 
 | 10 | El bucket `documents` es privado | OK |
 | 11 | No hay políticas de modificación ni borrado sobre los documentos | OK |
 
-`check_invitation` es la única excepción a propósito: valida un código de invitación en la pantalla de registro, antes de que exista una sesión. Solo devuelve si el código es válido y a qué academia corresponde.
+`check_invitation` es una excepción a propósito: valida un código de invitación en la pantalla de registro, antes de que exista una sesión. Solo devuelve si el código es válido y a qué academia corresponde.
+
+La segunda excepción son las cuatro funciones de la página del árbitro (migración 016, posterior a esta revisión): `referee_match`, `referee_record_event`, `referee_change_state` y `referee_void_event`. Ver la sección 5.
 
 ## 3. Hallazgos y correcciones
 
@@ -80,13 +83,31 @@ Tablas agregadas en las migraciones 008 a 011, con su política de lectura. Ning
 
 Cada política está cubierta por la prueba de humo con casos de «quién ve» y «quién no ve», incluido un usuario ajeno a la academia.
 
-## 5. Límites de esta revisión
+## 5. Página del árbitro sin cuenta (migración 016)
+
+El árbitro registra el partido desde una página web sin crear cuenta. Es la decisión de seguridad más delicada del proyecto, así que se documenta aparte.
+
+| Medida | Detalle |
+|---|---|
+| Código secreto | 64 caracteres hexadecimales al azar (244 bits). Solo sirve para un partido |
+| Código fuera de los registros | Va después de `#` en el enlace: el navegador no lo envía al servidor de la página ni a otras páginas |
+| Vencimiento | Deja de servir 3 horas después de terminar el partido |
+| Control del DT | Puede generar un código nuevo (el anterior deja de servir al instante) o desactivarlo |
+| Superficie mínima | La página no lee tablas. Solo llama a 4 funciones que validan el código y hacen una acción concreta |
+| Mismas reglas | Los triggers de `match_events` validan tipo, equipo y jugador; iniciar exige alineaciones completas |
+| Privacidad | Los menores aparecen como «Nombre I.»; no se muestran fotos |
+| Trazabilidad | Cada acción va a `audit_log` con el enlace usado; anular exige motivo y guarda la versión anterior |
+| Cabeceras web | `no-referrer`, `noindex`, sin incrustar en otras páginas y solo conexiones a Supabase |
+
+**Riesgo aceptado:** quien obtenga el QR puede registrar eventos de ese partido hasta que el DT lo cambie o lo desactive. Se aceptó porque el usuario pidió que el árbitro no necesite cuenta; el daño queda limitado a un solo partido y todo lo que haga queda trazado y se puede anular.
+
+## 6. Límites de esta revisión
 
 - **Entorno local.** La auditoría corre sobre un Postgres que imita lo mínimo de Supabase. Los permisos por defecto se configuraron igual que en Supabase, pero la comprobación definitiva es ejecutar la migración 013 en el proyecto real.
 - **No es una prueba de penetración.** Se revisaron permisos, políticas y flujos; no se atacó la app ni la red.
 - **Configuración del panel.** No se revisaron ajustes que viven fuera del repositorio, como los proveedores de inicio de sesión activos o los límites de envío de correo.
 
-## 6. Cómo repetir la revisión
+## 7. Cómo repetir la revisión
 
 Con Docker Desktop abierto, desde Git Bash:
 
@@ -114,12 +135,13 @@ from information_schema.role_table_grants
 where grantee = 'anon' and table_schema = 'public';
 ```
 
-Funciones que el rol anónimo puede ejecutar, aparte de `check_invitation`:
+Funciones que el rol anónimo puede ejecutar, aparte de las permitidas:
 
 ```sql
 select p.proname
 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
 where n.nspname = 'public'
   and has_function_privilege('anon', p.oid, 'execute')
-  and p.proname <> 'check_invitation';
+  and p.proname not in ('check_invitation', 'referee_match', 'referee_record_event',
+                        'referee_change_state', 'referee_void_event');
 ```
