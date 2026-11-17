@@ -76,6 +76,7 @@ Tablas agregadas en las migraciones 008 a 011, con su política de lectura. Ning
 | `notification_prefs` | Solo su dueño |
 | `tryouts` | Cualquier usuario si el aviso está abierto y la academia verificada; quien lo gestiona; quien se inscribió |
 | `tryout_applications` | Quien envió la inscripción y quien gestiona el aviso |
+| `match_favorites` (migración 014, posterior a esta revisión) | Solo su dueño |
 
 Cada política está cubierta por la prueba de humo con casos de «quién ve» y «quién no ve», incluido un usuario ajeno a la academia.
 

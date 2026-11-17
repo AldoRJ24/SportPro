@@ -7,6 +7,7 @@ import com.sportpro.app.core.data.ExternalPlayer
 import com.sportpro.app.core.data.IdRow
 import com.sportpro.app.core.data.LineupPlayer
 import com.sportpro.app.core.data.MatchRow
+import com.sportpro.app.core.data.MatchScope
 import com.sportpro.app.core.data.OperatorRow
 import com.sportpro.app.core.data.SummaryRow
 import com.sportpro.app.core.data.TimelineEvent
@@ -61,6 +62,23 @@ class MatchRepository(private val client: SupabaseClient) {
             order("scheduled_at", Order.DESCENDING)
             limit(100)
         }.decodeRows()
+
+    // «Mis partidos»: el SERVIDOR decide cuáles le corresponden al usuario (equipos que sigue,
+    // donde juega su hijo, los que dirige, donde juega él y sus favoritos) y por qué motivo.
+    suspend fun myMatchScopes(): List<MatchScope> =
+        client.postgrest.rpc("my_matches").decodeRows()
+
+    // Trae los partidos de una lista de ids (los que devolvió myMatchScopes), con sus equipos.
+    suspend fun listMatchesByIds(ids: List<String>): List<MatchRow> =
+        if (ids.isEmpty()) emptyList()
+        else client.from("matches").select(Columns.raw(MATCH_COLS)) {
+            filter { isIn("id", ids) }
+            order("scheduled_at", Order.DESCENDING)
+        }.decodeRows()
+
+    // Marca o desmarca un partido como favorito. Devuelve true si quedó marcado.
+    suspend fun toggleFavorite(matchId: String): Boolean =
+        client.postgrest.rpc("toggle_match_favorite", buildJsonObject { put("p_match", matchId) }).decodeScalar()
 
     suspend fun getMatch(matchId: String): MatchRow? =
         client.from("matches").select(Columns.raw(MATCH_COLS)) { filter { eq("id", matchId) } }

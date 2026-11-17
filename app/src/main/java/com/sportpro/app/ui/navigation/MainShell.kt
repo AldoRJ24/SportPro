@@ -165,7 +165,7 @@ fun MainShell(session: SessionViewModel) {
         Box(Modifier.fillMaxSize().padding(inner)) {
             NavHost(nav, startDestination = HomeRoute) {
                 composable<HomeRoute> {
-                    HomeScreen(matchesVm, ctx, onOpenMatch = openMatch, onCreate = onCreate, onBell = onBell)
+                    HomeScreen(ctx, onOpenMatch = openMatch, onCreate = onCreate, onBell = onBell)
                 }
                 composable<MatchesRoute> {
                     MatchesScreen(matchesVm, onOpenMatch = openMatch, onCreate = onCreate, onBell = onBell)

@@ -37,7 +37,7 @@ import com.sportpro.app.core.data.friendlyMessage
 import com.sportpro.app.ui.components.Pill
 import com.sportpro.app.ui.components.SpScaffold
 import com.sportpro.app.ui.navigation.LocalAppContainer
-import com.sportpro.app.ui.theme.Mint400
+import com.sportpro.app.ui.theme.SuccessGreen
 import com.sportpro.app.ui.theme.WarnAmber
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -155,7 +155,7 @@ fun SummaryScreen(matchId: String, onBack: () -> Unit) {
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 when (ui.summary?.status) {
-                    "approved" -> Pill(stringResource(R.string.summary_aprobado), Mint400)
+                    "approved" -> Pill(stringResource(R.string.summary_aprobado), SuccessGreen)
                     "edited" -> Pill(stringResource(R.string.summary_editado), WarnAmber)
                     "draft" -> Pill(stringResource(R.string.summary_borrador), WarnAmber)
                     else -> Pill(stringResource(R.string.summary_sin_generar), MaterialTheme.colorScheme.onSurfaceVariant)

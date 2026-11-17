@@ -139,8 +139,9 @@ En Supabase → **SQL Editor**, ejecuta las migraciones de `supabase/migrations/
 | 011 | `20261116110000_tryouts.sql` | Avisos de pruebas e inscripciones |
 | 012 | `20261116120000_roster_admin.sql` | Dorsal y baja de jugadores con motivo |
 | 013 | `20261116130000_security_hardening.sql` | Cierre de huecos de la revisión final de seguridad |
+| 014 | `20261117100000_match_favorites.sql` | Partidos favoritos y lista «mis partidos» |
 
-Las migraciones 002 a 013 se pueden volver a ejecutar sin romper nada.
+Las migraciones 002 a 014 se pueden volver a ejecutar sin romper nada.
 
 ### 4. Autenticación
 
@@ -192,7 +193,7 @@ Nadie puede darse a sí mismo un rol: el tipo de cuenta lo fija el servidor al r
 ## Seguridad y privacidad
 
 - **Claves:** en el APK y en el repositorio solo va la clave publicable, leída de `local.properties` mediante `BuildConfig`. La clave secreta, `service_role`, la contraseña de Postgres y la clave de Gemini nunca salen del servidor.
-- **Row Level Security** en las 35 tablas. El rol anónimo no tiene permisos sobre ninguna tabla.
+- **Row Level Security** en las 36 tablas. El rol anónimo no tiene permisos sobre ninguna tabla.
 - **Escritura por funciones:** las tablas sensibles (pagos, documentos, notificaciones, inscripciones, auditoría) no aceptan escrituras directas; solo funciones del servidor que validan permisos.
 - **Menores:** aparecen como «Nombre I.» para quien no es su apoderado ni su staff, no tienen foto, sus datos sensibles están en una tabla aparte y la IA solo recibe seudónimos (`J1`, `R1`…).
 - **Documentos:** bucket privado; cada archivo se abre con una URL firmada que vence en 5 minutos.
@@ -202,25 +203,25 @@ El detalle de la revisión final está en [docs/seguridad.md](docs/seguridad.md)
 
 ## Pruebas
 
-Tests unitarios de la lógica pura (89 tests, sin red ni emulador):
+Tests unitarios de la lógica pura (101 tests, sin red ni emulador):
 
 ```bash
 ./gradlew.bat testDebugUnitTest
 ```
 
-Pruebas de SQL (auditoría de seguridad de 11 reglas y prueba de humo de 317 checks). Con Docker Desktop abierto y desde Git Bash:
+Pruebas de SQL (auditoría de seguridad de 11 reglas y prueba de humo de 337 checks). Con Docker Desktop abierto y desde Git Bash:
 
 ```bash
 bash supabase/test/run_local.sh
 ```
 
-El script levanta un Postgres desechable, aplica las 13 migraciones dos veces para comprobar que son repetibles, audita los permisos y recorre los flujos completos con usuarios de prueba ficticios. No toca el proyecto real de Supabase.
+El script levanta un Postgres desechable, aplica las 14 migraciones dos veces para comprobar que son repetibles, audita los permisos y recorre los flujos completos con usuarios de prueba ficticios. No toca el proyecto real de Supabase.
 
 ## Documentación
 
 | Documento | Contenido |
 |---|---|
-| [docs/modelo-de-datos.md](docs/modelo-de-datos.md) | Las 35 tablas y qué guarda cada una |
+| [docs/modelo-de-datos.md](docs/modelo-de-datos.md) | Las 36 tablas y qué guarda cada una |
 | [docs/partido-en-vivo.md](docs/partido-en-vivo.md) | Flujo del partido: reloj, registro, tiempo real y modo sin conexión |
 | [docs/decisiones-tecnicas.md](docs/decisiones-tecnicas.md) | Decisiones de diseño y sus motivos |
 | [docs/seguridad.md](docs/seguridad.md) | Revisión final de seguridad y sus hallazgos |

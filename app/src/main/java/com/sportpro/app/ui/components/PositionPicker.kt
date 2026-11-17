@@ -12,15 +12,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.sportpro.app.core.data.Formation
 import com.sportpro.app.core.data.Position
-import com.sportpro.app.ui.theme.Mint400
+import com.sportpro.app.ui.theme.SuccessGreen
 import com.sportpro.app.ui.theme.WarnAmber
 
 fun positionColor(p: Position?): Color = when (p) {
-    Position.POR -> Color(0xFFFFB020)
-    Position.DEF -> Color(0xFF4FC3F7)
-    Position.MED -> Color(0xFF3DDC97)
-    Position.DEL -> Color(0xFFFF7A59)
-    null -> Color(0xFF8AA19C)
+    Position.POR -> Color(0xFFB45309)
+    Position.DEF -> Color(0xFF0369A1)
+    Position.MED -> Color(0xFF15803D)
+    Position.DEL -> Color(0xFFC2410C)
+    null -> Color(0xFF64748B)
 }
 
 /** Small colored badge: ARQ / DEF / MED / DEL. */
@@ -51,7 +51,7 @@ fun FormationCounter(formation: Formation, positions: List<Position?>, modifier:
         Position.entries.forEach { p ->
             val have = positions.count { it == p }
             val need = formation.required(p)
-            Pill("${p.short} $have/$need", if (have == need) Mint400 else WarnAmber)
+            Pill("${p.short} $have/$need", if (have == need) SuccessGreen else WarnAmber)
         }
     }
 }

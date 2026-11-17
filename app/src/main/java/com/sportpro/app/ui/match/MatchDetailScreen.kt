@@ -264,14 +264,21 @@ private fun RecordTab(ui: MatchDetailUi, pendingCount: Int, onPick: (com.sportpr
 @Composable
 private fun TimelineTab(ui: MatchDetailUi, pending: List<com.sportpro.app.core.data.offline.PendingEvent>, onEdit: ((TimelineEvent) -> Unit)?) {
     val events = ui.ordered.reversed()
-    LazyColumn(contentPadding = PaddingValues(bottom = 24.dp)) {
-        items(pending, key = { "p" + it.clientEventId }) { PendingRow(it) }
-        if (events.isEmpty() && pending.isEmpty()) {
-            item { EmptyState(stringResource(R.string.match_detail_sin_eventos_aun), stringResource(R.string.match_detail_la_cronologia_se_actualiza_en)) }
-        }
-        items(events, key = { it.eventId }) { e ->
-            TimelineRow(e, ui::sideName, ui::nameOf, onLongPress = onEdit?.let { f -> { f(e) } })
+    Column(Modifier.fillMaxSize()) {
+        // Cada equipo tiene su mitad, como en «Alineación»: local a la izquierda, visitante a la derecha
+        if (events.isNotEmpty()) {
+            TimelineSidesHeader(ui.sideName("home"), ui.sideName("away"))
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+        }
+        LazyColumn(contentPadding = PaddingValues(bottom = 24.dp)) {
+            items(pending, key = { "p" + it.clientEventId }) { PendingRow(it) }
+            if (events.isEmpty() && pending.isEmpty()) {
+                item { EmptyState(stringResource(R.string.match_detail_sin_eventos_aun), stringResource(R.string.match_detail_la_cronologia_se_actualiza_en)) }
+            }
+            items(events, key = { it.eventId }) { e ->
+                SidedTimelineRow(e, ui::nameOf, onLongPress = onEdit?.let { f -> { f(e) } })
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            }
         }
     }
 }

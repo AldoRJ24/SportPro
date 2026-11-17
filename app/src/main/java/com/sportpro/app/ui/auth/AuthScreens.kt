@@ -49,7 +49,7 @@ import com.sportpro.app.ui.components.dateHint
 import com.sportpro.app.ui.components.parseDateDigits
 import com.sportpro.app.ui.components.scanQr
 import com.sportpro.app.ui.theme.ErrorRed
-import com.sportpro.app.ui.theme.Mint400
+import com.sportpro.app.ui.theme.BrandBlue
 import com.sportpro.app.ui.theme.WarnAmber
 
 @Composable
@@ -64,7 +64,7 @@ private fun AuthFrame(content: @Composable ColumnScope.() -> Unit) {
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Spacer(Modifier.height(16.dp))
-        Text(stringResource(R.string.auth_sportpro), fontSize = 40.sp, fontWeight = FontWeight.Black, color = Mint400)
+        Text(stringResource(R.string.auth_sportpro), fontSize = 40.sp, fontWeight = FontWeight.Black, color = BrandBlue)
         Text(
             stringResource(R.string.auth_gestion_de_academias_y_partidos),
             style = MaterialTheme.typography.bodyMedium,
@@ -79,7 +79,7 @@ private fun AuthFrame(content: @Composable ColumnScope.() -> Unit) {
 private fun Messages(ui: AuthUiState) {
     if (ui.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
     ui.error?.let { Text(it, color = ErrorRed, style = MaterialTheme.typography.bodyMedium) }
-    ui.info?.let { Text(it, color = Mint400, style = MaterialTheme.typography.bodyMedium) }
+    ui.info?.let { Text(it, color = BrandBlue, style = MaterialTheme.typography.bodyMedium) }
 }
 
 @Composable
@@ -129,7 +129,7 @@ private fun TypeCard(title: String, subtitle: String, selected: Boolean, onClick
         onClick = onClick,
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
-        border = if (selected) BorderStroke(2.dp, Mint400) else null,
+        border = if (selected) BorderStroke(2.dp, BrandBlue) else null,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
     ) {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -160,7 +160,7 @@ fun RegisterScreen(vm: AuthViewModel, onBackToLogin: () -> Unit) {
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Pill(stringResource(R.string.auth_invitacion_x, invite.code.orEmpty()), Mint400)
+                    Pill(stringResource(R.string.auth_invitacion_x, invite.code.orEmpty()), BrandBlue)
                     Text(
                         if (kind == "adm") stringResource(R.string.auth_te_estas_registrando_como_administrador)
                         else stringResource(R.string.auth_te_estas_registrando_como_entrenador, invite.check?.academyName ?: stringResource(R.string.auth_la_academia)),

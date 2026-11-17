@@ -827,5 +827,55 @@ select pg_temp.expect_fail($$select public.can_publish_avatar('a0000000-0000-000
 select pg_temp.expect_eq((public.check_invitation('ADM-ZZZZ-ZZZZ')->>'valid')::boolean, false, 'anon sí puede validar un código de invitación antes de registrarse');
 reset role;
 
+-- =====================================================================
+-- FAVORITOS Y «MIS PARTIDOS» (migración 014).
+-- =====================================================================
+-- Partido PÚBLICO de Leones (equipo sin DT y que nadie sigue): lo crea el admin
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000002');
+insert into public.matches (id, home_team_id, away_external_name, format_players, half_minutes, visibility, venue)
+values ('e0000000-0000-0000-0000-000000000009','c0000000-0000-0000-0000-000000000002','Visitante Libre', 7, 25, 'public', 'Cancha 9');
+select pg_temp.expect_eq((select by_staff from public.my_matches() where match_id = 'e0000000-0000-0000-0000-000000000009'), true, 'el admin ve los partidos de su academia como propios');
+
+-- Extraño: PUEDE ver el partido público, pero no aparece en «mis partidos»
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000007');
+select pg_temp.expect_eq((select count(*) from public.matches where id = 'e0000000-0000-0000-0000-000000000009')::int, 1, 'un partido público es visible para cualquiera con sesión');
+select pg_temp.expect_eq((select count(*) from public.my_matches())::int, 0, 'quien no sigue a nadie no tiene partidos en su lista');
+
+-- Favoritos: marcar, aparecer, desmarcar
+select pg_temp.expect_eq(public.toggle_match_favorite('e0000000-0000-0000-0000-000000000009'), true, 'marcar favorito devuelve true');
+select pg_temp.expect_eq((select is_favorite and not by_follow from public.my_matches() where match_id = 'e0000000-0000-0000-0000-000000000009'), true, 'el favorito entra a la lista aunque no siga al equipo');
+select pg_temp.expect_fail($$select public.toggle_match_favorite('e0000000-0000-0000-0000-000000000001')$$, 'no se marca favorito un partido que no se puede ver');
+select pg_temp.expect_fail($$insert into public.match_favorites (user_id, match_id) values (auth.uid(), 'e0000000-0000-0000-0000-000000000009')$$, 'los favoritos no se escriben directo en la tabla');
+select pg_temp.expect_fail($$delete from public.match_favorites$$, 'los favoritos no se borran directo en la tabla');
+
+-- Seguidor de Halcones: ve el partido de Halcones, no el de Leones ni los favoritos ajenos
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000006');
+select pg_temp.expect_eq((select by_follow from public.my_matches() where match_id = 'e0000000-0000-0000-0000-000000000001'), true, 'el seguidor ve los partidos del equipo que sigue');
+select pg_temp.expect_eq((select count(*) from public.my_matches() where match_id = 'e0000000-0000-0000-0000-000000000009')::int, 0, 'el seguidor no ve partidos de equipos que no sigue');
+select pg_temp.expect_eq((select count(*) from public.match_favorites)::int, 0, 'nadie ve los favoritos de otro usuario');
+
+-- Apoderada: partidos donde juega su hijo
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000005');
+select pg_temp.expect_eq((select by_child from public.my_matches() where match_id = 'e0000000-0000-0000-0000-000000000001'), true, 'la apoderada ve los partidos del equipo de su hijo');
+select pg_temp.expect_eq((select count(*) from public.my_matches() where match_id = 'e0000000-0000-0000-0000-000000000009')::int, 0, 'la apoderada no ve partidos de otro equipo aunque sean de su academia');
+
+-- DT: partidos de los equipos que dirige
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+select pg_temp.expect_eq((select by_staff from public.my_matches() where match_id = 'e0000000-0000-0000-0000-000000000001'), true, 'el DT ve los partidos del equipo que dirige');
+select pg_temp.expect_eq((select count(*) from public.my_matches() where match_id = 'e0000000-0000-0000-0000-000000000009')::int, 0, 'el DT no ve partidos de un equipo que no dirige');
+
+-- Operadora: el partido que le asignaron
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000004');
+select pg_temp.expect_eq((select by_staff from public.my_matches() where match_id = 'e0000000-0000-0000-0000-000000000001'), true, 'la operadora ve el partido que registra');
+
+-- Desmarcar
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000007');
+select pg_temp.expect_eq(public.toggle_match_favorite('e0000000-0000-0000-0000-000000000009'), false, 'desmarcar favorito devuelve false');
+select pg_temp.expect_eq((select count(*) from public.my_matches())::int, 0, 'al desmarcar, el partido sale de la lista');
+set role anon;
+select pg_temp.expect_fail($$select * from public.my_matches()$$, 'anon no consulta mis partidos');
+select pg_temp.expect_fail($$select public.toggle_match_favorite('e0000000-0000-0000-0000-000000000009')$$, 'anon no marca favoritos');
+reset role;
+
 select pg_temp.as_su();
 \echo '=== TODAS LAS PRUEBAS PASARON ==='

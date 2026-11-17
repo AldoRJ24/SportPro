@@ -67,7 +67,7 @@ import com.sportpro.app.ui.components.UiMessageEffect
 import com.sportpro.app.ui.components.parseDateDigits
 import com.sportpro.app.ui.navigation.LocalAppContainer
 import com.sportpro.app.ui.theme.LiveRed
-import com.sportpro.app.ui.theme.Mint400
+import com.sportpro.app.ui.theme.SuccessGreen
 import com.sportpro.app.ui.theme.WarnAmber
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -270,7 +270,7 @@ private fun StatePill(state: DocState) {
         DocState.MISSING -> stringResource(R.string.docs_state_missing) to LiveRed
         DocState.OPTIONAL -> stringResource(R.string.docs_state_optional) to MaterialTheme.colorScheme.onSurfaceVariant
         DocState.PENDING -> stringResource(R.string.docs_state_pending) to WarnAmber
-        DocState.APPROVED -> stringResource(R.string.docs_state_approved) to Mint400
+        DocState.APPROVED -> stringResource(R.string.docs_state_approved) to SuccessGreen
         DocState.REJECTED -> stringResource(R.string.docs_state_rejected) to LiveRed
         DocState.EXPIRED -> stringResource(R.string.docs_state_expired) to LiveRed
     }
@@ -442,7 +442,7 @@ private fun TeamDocRow(row: DocTeamRow, onClick: () -> Unit) {
             Column(Modifier.weight(1f)) {
                 Text(row.playerName, style = MaterialTheme.typography.bodyLarge)
                 if (row.complete) {
-                    Text(stringResource(R.string.docs_team_complete), style = small, color = Mint400)
+                    Text(stringResource(R.string.docs_team_complete), style = small, color = SuccessGreen)
                 } else {
                     // Los códigos (dni, medical…) se traducen a su nombre visible
                     val names = row.missing.map { docTypeLabel(it) }.joinToString(", ")

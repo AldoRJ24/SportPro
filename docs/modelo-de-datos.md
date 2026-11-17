@@ -1,6 +1,6 @@
 # Modelo de datos
 
-La base de datos es PostgreSQL en Supabase. Tiene **35 tablas** en el esquema `public`, todas con Row Level Security activado. Se crean con las 13 migraciones de `supabase/migrations/`.
+La base de datos es PostgreSQL en Supabase. Tiene **36 tablas** en el esquema `public`, todas con Row Level Security activado. Se crean con las 14 migraciones de `supabase/migrations/`.
 
 Reglas que valen para todas las tablas:
 
@@ -75,6 +75,7 @@ El diagrama muestra solo las relaciones principales. Las tablas completas están
 | `event_types` | Catálogo de tipos de evento (gol, penal, tarjetas, cambio, falta, atajada…), con su icono y qué datos exige | Cada academia puede tener tipos propios |
 | `match_events` | Cada evento del partido: tipo, periodo, minuto, añadido, lado, jugador y datos extra | No se borra ni se edita directo. Lleva `client_event_id` para que un reenvío no lo duplique |
 | `match_event_revisions` | Versión anterior de un evento cada vez que se corrige o anula, con quién y por qué | La escribe un trigger |
+| `match_favorites` | Partidos que cada usuario marcó con la estrella | Preferencia personal: solo la ve su dueño y se cambia con `toggle_match_favorite` |
 
 ## 4. Resumen con IA y feed
 
@@ -130,6 +131,7 @@ La app llama a funciones SQL (RPC) para todo lo que cambia datos sensibles. Las 
 | Tema | Funciones |
 |---|---|
 | Partido | `change_match_state`, `set_match_operator`, `correct_match_event`, `void_match_event`, `get_match_timeline`, `get_match_lineup` |
+| Lista de partidos | `my_matches` (qué partidos le corresponden al usuario y por qué), `toggle_match_favorite` |
 | Estadísticas | `get_player_stats`, `get_team_stats` |
 | Resumen con IA | `build_ai_payload`, `upsert_ai_summary`, `save_summary_edit`, `approve_summary` |
 | Cuentas y familia | `my_account`, `redeem_invitation`, `request_guardian_link`, `respond_guardian_link`, `create_child_player` |

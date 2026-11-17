@@ -32,7 +32,7 @@ import com.sportpro.app.core.data.GuardianRequest
 import com.sportpro.app.core.data.formatDayTime
 import com.sportpro.app.ui.components.copyToClipboard
 import com.sportpro.app.ui.components.Crest
-import com.sportpro.app.ui.theme.Mint400
+import com.sportpro.app.ui.theme.BrandBlue
 
 fun shareText(context: Context, subject: String, text: String) {
     val send = Intent(Intent.ACTION_SEND).apply {
@@ -68,7 +68,7 @@ fun FamilyCodeCard(code: String?, modifier: Modifier = Modifier) {
                     Text(code ?: "…", fontSize = 26.sp, fontWeight = FontWeight.Black, letterSpacing = 2.sp)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         TextButton(onClick = { code?.let { copyToClipboard(context, it) } }, enabled = code != null) {
-                            Text(stringResource(R.string.family_cards_copiar_codigo), color = Mint400)
+                            Text(stringResource(R.string.family_cards_copiar_codigo), color = BrandBlue)
                         }
                         TextButton(
                             onClick = {
@@ -78,7 +78,7 @@ fun FamilyCodeCard(code: String?, modifier: Modifier = Modifier) {
                                 }
                             },
                             enabled = code != null,
-                        ) { Text(stringResource(R.string.family_cards_compartir), color = Mint400) }
+                        ) { Text(stringResource(R.string.family_cards_compartir), color = BrandBlue) }
                     }
                 }
             }

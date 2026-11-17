@@ -47,7 +47,7 @@ import com.sportpro.app.ui.components.SpScaffold
 import com.sportpro.app.ui.components.UiMessageEffect
 import com.sportpro.app.ui.navigation.LocalAppContainer
 import com.sportpro.app.ui.theme.LiveRed
-import com.sportpro.app.ui.theme.Mint400
+import com.sportpro.app.ui.theme.SuccessGreen
 import com.sportpro.app.ui.theme.WarnAmber
 
 /** Qué diálogo está abierto y sobre qué cobro. Solo uno a la vez. */
@@ -178,7 +178,7 @@ private fun StatusPill(row: FeeStatementRow) {
     val (text, color) = when {
         row.isOpen && row.isAwaitingReview -> stringResource(R.string.fees_status_reported) to WarnAmber
         row.status == "overdue" -> stringResource(R.string.fees_status_overdue) to LiveRed
-        row.status == "paid" -> stringResource(R.string.fees_status_paid) to Mint400
+        row.status == "paid" -> stringResource(R.string.fees_status_paid) to SuccessGreen
         row.status == "waived" -> stringResource(R.string.fees_status_waived) to MaterialTheme.colorScheme.secondary
         else -> stringResource(R.string.fees_status_pending) to WarnAmber
     }
@@ -264,7 +264,7 @@ private fun PaymentDetails(row: FeeStatementRow, muted: Color) {
     Text(stringResource(R.string.fees_payment_reported_by, row.reportedByName ?: unknown), style = small, color = muted)
     when (row.paymentStatus) {
         "reported" -> Text(stringResource(R.string.fees_payment_awaiting), style = small, color = WarnAmber)
-        "confirmed" -> Text(stringResource(R.string.fees_payment_confirmed_by, row.decidedByName ?: unknown), style = small, color = Mint400)
+        "confirmed" -> Text(stringResource(R.string.fees_payment_confirmed_by, row.decidedByName ?: unknown), style = small, color = SuccessGreen)
         "rejected" -> Text(stringResource(R.string.fees_payment_rejected, row.decisionReason.orEmpty()), style = small, color = LiveRed)
         "voided" -> Text(stringResource(R.string.fees_payment_voided, row.decisionReason.orEmpty()), style = small, color = LiveRed)
     }

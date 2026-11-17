@@ -712,14 +712,9 @@
     <!-- ui/home/HomeScreen.kt -->
     <string name="home_sportpro">SportPro</string>
     <string name="home_hola_x">Hola, %1$s</string>
-    <string name="home_en_vivo_ahora">En vivo ahora</string>
-    <string name="home_publicaciones">Publicaciones</string>
     <string name="home_no_se_pudieron_cargar_las">No se pudieron cargar las publicaciones</string>
     <string name="home_aun_no_hay_publicaciones">Aún no hay publicaciones</string>
     <string name="home_cuando_un_dt_apruebe_el">Cuando un DT apruebe el resumen con IA de un partido, aparecerá aquí.</string>
-    <string name="home_resultados_y_proximos_partidos">Resultados y próximos partidos</string>
-    <string name="home_tu_inicio_esta_vacio">Tu inicio está vacío</string>
-    <string name="home_sigue_academias_y_equipos_en">Sigue academias y equipos en Explorar para ver sus partidos aquí.</string>
 
     <!-- ui/match/EditEventDialog.kt -->
     <string name="edit_event_anular_evento">Anular evento</string>
@@ -825,12 +820,27 @@
     <!-- ui/matches/MatchesScreen.kt -->
     <string name="matches_partidos">Partidos</string>
     <string name="matches_aun_no_hay_partidos">Aún no hay partidos</string>
-    <string name="matches_crea_el_primero_con_el">Crea el primero con el botón +.</string>
-    <string name="matches_sigue_a_un_equipo_en">Sigue a un equipo en Explorar para ver sus partidos.</string>
+    <string name="matches_sigue_a_un_equipo_en">Aquí aparecen los partidos de los equipos y academias que sigues, los de tus hijos y los de los equipos que diriges. Sigue a un equipo en Explorar para empezar.</string>
     <string name="matches_crear_partido">Crear partido</string>
     <string name="matches_en_vivo">En vivo</string>
     <string name="matches_proximos">Próximos</string>
     <string name="matches_finalizados">Finalizados</string>
+    <string name="matches_buscar">Buscar equipo, categoría o sede</string>
+    <string name="matches_borrar_busqueda">Borrar búsqueda</string>
+    <string name="matches_filtro_todos">Todos</string>
+    <string name="matches_filtro_favoritos">Favoritos</string>
+    <string name="matches_filtro_sigo">Sigo</string>
+    <string name="matches_filtro_mis_hijos">Mis hijos</string>
+    <string name="matches_filtro_mis_equipos">Mis equipos</string>
+    <string name="matches_filtro_donde_juego">Donde juego</string>
+    <string name="matches_estado_todos">Cualquier estado</string>
+    <string name="matches_sin_resultados">Ningún partido con estos filtros</string>
+    <string name="matches_sin_resultados_ayuda">Prueba con otra búsqueda o quita los filtros.</string>
+    <string name="matches_sin_favoritos">Aún no tienes favoritos</string>
+    <string name="matches_sin_favoritos_ayuda">Toca la estrella de un partido para guardarlo aquí.</string>
+    <string name="matches_quitar_filtros">Quitar filtros</string>
+    <string name="match_card_marcar_favorito">Marcar como favorito</string>
+    <string name="match_card_quitar_favorito">Quitar de favoritos</string>
 
     <!-- ui/navigation/MainShell.kt -->
     <string name="main_shell_inicio">Inicio</string>

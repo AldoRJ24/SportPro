@@ -64,7 +64,7 @@ import com.sportpro.app.ui.components.SpScaffold
 import com.sportpro.app.ui.components.roleLabel
 import com.sportpro.app.ui.navigation.LocalAppContainer
 import com.sportpro.app.ui.theme.ErrorRed
-import com.sportpro.app.ui.theme.Mint400
+import com.sportpro.app.ui.theme.SuccessGreen
 import com.sportpro.app.ui.theme.WarnAmber
 
 @Composable
@@ -129,7 +129,7 @@ fun MatchSetupScreen(matchId: String, onBack: () -> Unit, onGoLive: () -> Unit) 
                             TeamPositionMenu(tp, enabled = !ui.busy) { p -> vm.setTeamPosition(side, tp, p) }
                             Spacer(Modifier.width(6.dp))
                             when (callup?.status) {
-                                "confirmed" -> Pill(stringResource(R.string.match_setup_confirmado), Mint400)
+                                "confirmed" -> Pill(stringResource(R.string.match_setup_confirmado), SuccessGreen)
                                 "declined" -> Pill(stringResource(R.string.match_setup_no_asiste), ErrorRed)
                                 "pending" -> Pill(stringResource(R.string.match_setup_pendiente), WarnAmber)
                                 else -> {}
@@ -212,7 +212,7 @@ fun MatchSetupScreen(matchId: String, onBack: () -> Unit, onGoLive: () -> Unit) 
                     item {
                         val problems = ui.externalProblems(match.formatPlayers)
                         Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            if (problems.isEmpty()) Pill(stringResource(R.string.match_setup_plantel_completo), Mint400)
+                            if (problems.isEmpty()) Pill(stringResource(R.string.match_setup_plantel_completo), SuccessGreen)
                             else Text(problems.joinToString(" · "), color = WarnAmber, style = MaterialTheme.typography.bodySmall)
                         }
                     }

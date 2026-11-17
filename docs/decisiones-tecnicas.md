@@ -114,7 +114,7 @@ Cada decisión sigue el mismo formato: el problema, lo que se decidió, por qué
 
 **Decisión.** El reloj, las formaciones, los jugadores en cancha y las validaciones de formularios son funciones Kotlin sin dependencias de Android. Viven en `core/data/` y se prueban con JUnit en la PC.
 
-**Por qué.** Los 89 tests corren en segundos y sin celular.
+**Por qué.** Los 101 tests corren en segundos y sin celular.
 
 **Costo.** Hubo que sacar alguna validación del ViewModel hacia el modelo del formulario.
 
@@ -157,6 +157,26 @@ Cada decisión sigue el mismo formato: el problema, lo que se decidió, por qué
 **Por qué.** Se detectan errores sin tocar los datos reales. El script aplica todo dos veces para comprobar que repetir no rompe nada.
 
 **Costo.** El entorno local imita solo lo mínimo de Supabase (roles, `auth.uid()` y tablas de Storage). No reemplaza la prueba final en el proyecto real.
+
+## 15. La lista de partidos la decide el servidor
+
+**Problema.** La pestaña «Partidos» mostraba todo lo que el usuario tenía permiso de ver, incluidos partidos públicos de academias que no le interesan.
+
+**Decisión.** La función `my_matches` devuelve solo los partidos del usuario y el motivo de cada uno: sigue al equipo o a la academia, juega su hijo, dirige el equipo, juega él o lo marcó como favorito. La app trae esos partidos y aplica en memoria el buscador y los filtros.
+
+**Por qué.** «Poder ver» y «querer ver» son cosas distintas. El permiso sigue en las políticas de fila; la relevancia se calcula en un único lugar del servidor y vale igual para cualquier cliente.
+
+**Costo.** Dos consultas en lugar de una al abrir la pestaña. Los filtros no vuelven a consultar: trabajan sobre la lista ya descargada (máximo 100 partidos).
+
+## 16. Tema claro en azul, blanco y negro
+
+**Problema.** La app se usa al aire libre y debe verse sobria.
+
+**Decisión.** Un solo tema claro: fondo blanco, texto negro y un único azul de marca para la acción principal y lo seleccionado. El verde, el ámbar y el rojo se reservan para estados (pagado, pendiente, error, en vivo).
+
+**Por qué.** Un fondo blanco con texto negro se lee mejor bajo el sol que un tema oscuro, y un solo color de marca mantiene la pantalla limpia.
+
+**Costo.** No hay modo oscuro. Los colores viven en `ui/theme/Color.kt`; agregarlo exigiría definir una segunda paleta.
 
 ## Antecedente
 

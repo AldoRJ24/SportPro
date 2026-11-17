@@ -53,7 +53,7 @@ import com.sportpro.app.ui.components.UiMessageEffect
 import com.sportpro.app.ui.navigation.LocalAppContainer
 import com.sportpro.app.ui.session.SessionViewModel
 import com.sportpro.app.ui.theme.LiveRed
-import com.sportpro.app.ui.theme.Mint400
+import com.sportpro.app.ui.theme.SuccessGreen
 
 /**
  * Detalle de un aviso de prueba. Según quién lo abre:
@@ -220,7 +220,7 @@ private fun TryoutInfoCard(t: Tryout) {
             Text(stringResource(R.string.tryouts_positions_wanted, positionsLabel(t.positions)), color = muted)
             Text(
                 pluralStringResource(R.plurals.tryouts_slots_left, t.slotsLeft, t.slotsLeft, t.slots),
-                color = if (t.slotsLeft == 0) LiveRed else Mint400,
+                color = if (t.slotsLeft == 0) LiveRed else SuccessGreen,
             )
             t.notes?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
         }

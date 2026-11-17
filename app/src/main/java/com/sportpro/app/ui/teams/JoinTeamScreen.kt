@@ -56,7 +56,7 @@ import com.sportpro.app.ui.components.scanQr
 import com.sportpro.app.ui.navigation.LocalAppContainer
 import com.sportpro.app.ui.session.SessionViewModel
 import com.sportpro.app.ui.theme.LiveRed
-import com.sportpro.app.ui.theme.Mint400
+import com.sportpro.app.ui.theme.SuccessGreen
 import com.sportpro.app.ui.theme.WarnAmber
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -270,7 +270,7 @@ private fun MyRequestRow(r: MyTeamJoinRequest) {
                 )
             }
             when (r.status) {
-                "approved" -> Pill(stringResource(R.string.join_team_aceptada), Mint400)
+                "approved" -> Pill(stringResource(R.string.join_team_aceptada), SuccessGreen)
                 "rejected" -> Pill(stringResource(R.string.join_team_rechazada), LiveRed)
                 else -> Pill(stringResource(R.string.join_team_pendiente), WarnAmber)
             }

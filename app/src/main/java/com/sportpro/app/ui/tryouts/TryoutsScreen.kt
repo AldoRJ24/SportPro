@@ -46,7 +46,7 @@ import com.sportpro.app.ui.components.SpScaffold
 import com.sportpro.app.ui.components.TeamCrest
 import com.sportpro.app.ui.navigation.LocalAppContainer
 import com.sportpro.app.ui.theme.LiveRed
-import com.sportpro.app.ui.theme.Mint400
+import com.sportpro.app.ui.theme.SuccessGreen
 import com.sportpro.app.ui.theme.WarnAmber
 
 /** «Arquero, Delantero» a partir de los códigos; lista vacía = «Todas las posiciones». */
@@ -58,7 +58,7 @@ fun positionsLabel(codes: List<String>): String =
 /** Etiqueta y color del estado de una inscripción. */
 @Composable
 fun applicationStatus(status: String): Pair<String, Color> = when (status) {
-    "approved" -> stringResource(R.string.tryouts_app_approved) to Mint400
+    "approved" -> stringResource(R.string.tryouts_app_approved) to SuccessGreen
     "rejected" -> stringResource(R.string.tryouts_app_rejected) to LiveRed
     "withdrawn" -> stringResource(R.string.tryouts_app_withdrawn) to MaterialTheme.colorScheme.onSurfaceVariant
     else -> stringResource(R.string.tryouts_app_pending) to WarnAmber
@@ -207,7 +207,7 @@ private fun TryoutCard(t: Tryout, onClick: () -> Unit) {
                 Text(
                     pluralStringResource(R.plurals.tryouts_slots_left, t.slotsLeft, t.slotsLeft, t.slots),
                     style = MaterialTheme.typography.bodySmall,
-                    color = if (t.slotsLeft == 0) LiveRed else Mint400,
+                    color = if (t.slotsLeft == 0) LiveRed else SuccessGreen,
                 )
                 // Solo quien gestiona recibe este número del servidor
                 if (t.canManage && t.pendingCount > 0) {
@@ -228,7 +228,7 @@ fun TryoutStatusPill(t: Tryout) {
     when {
         t.status == "cancelled" -> Pill(stringResource(R.string.tryouts_status_cancelled), LiveRed)
         t.status == "closed" -> Pill(stringResource(R.string.tryouts_status_closed), WarnAmber)
-        t.myApplications > 0 -> Pill(stringResource(R.string.tryouts_status_applied), Mint400)
+        t.myApplications > 0 -> Pill(stringResource(R.string.tryouts_status_applied), SuccessGreen)
     }
 }
 

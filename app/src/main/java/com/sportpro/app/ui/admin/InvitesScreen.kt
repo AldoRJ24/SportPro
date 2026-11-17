@@ -50,7 +50,7 @@ import com.sportpro.app.ui.components.SpScaffold
 import com.sportpro.app.ui.family.shareText
 import com.sportpro.app.ui.navigation.LocalAppContainer
 import com.sportpro.app.ui.theme.ErrorRed
-import com.sportpro.app.ui.theme.Mint400
+import com.sportpro.app.ui.theme.SuccessGreen
 import com.sportpro.app.ui.theme.WarnAmber
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -201,7 +201,7 @@ fun InvitesScreen(kind: String, academyId: String?, academyName: String?, onBack
                     }
                     when (row.status) {
                         "active" -> {
-                            Pill(stringResource(R.string.invites_activa), Mint400)
+                            Pill(stringResource(R.string.invites_activa), SuccessGreen)
                             TextButton(onClick = { vm.revoke(row) }) { Text(stringResource(R.string.invites_anular)) }
                         }
                         "used" -> Pill(stringResource(R.string.invites_usada), MaterialTheme.colorScheme.secondary)

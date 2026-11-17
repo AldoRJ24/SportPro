@@ -58,7 +58,7 @@ import com.sportpro.app.ui.components.SpScaffold
 import com.sportpro.app.ui.components.UiMessageEffect
 import com.sportpro.app.ui.navigation.LocalAppContainer
 import com.sportpro.app.ui.theme.LiveRed
-import com.sportpro.app.ui.theme.Mint400
+import com.sportpro.app.ui.theme.SuccessGreen
 import com.sportpro.app.ui.theme.WarnAmber
 
 /** Aviso fijo y honesto: esta parte registra pagos, no cobra de verdad. */
@@ -90,7 +90,7 @@ private fun debtStatus(debt: Double, overdue: Int, reported: Int): Pair<String, 
     )
     reported > 0 -> Pair(pluralStringResource(R.plurals.fees_reported_count, reported, reported), WarnAmber)
     debt > 0.0 -> Pair(stringResource(R.string.fees_debt_line, Fees.money(debt)), WarnAmber)
-    else -> Pair(stringResource(R.string.fees_up_to_date), Mint400)
+    else -> Pair(stringResource(R.string.fees_up_to_date), SuccessGreen)
 }
 
 // ---------------------------------------------------------------------

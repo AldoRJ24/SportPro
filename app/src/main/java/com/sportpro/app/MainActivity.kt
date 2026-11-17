@@ -16,10 +16,10 @@ import com.sportpro.app.ui.theme.SportProTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Always-dark UI: light icons on transparent system bars.
+        // Tema claro: iconos oscuros sobre barras del sistema transparentes.
         enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
-            navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+            statusBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
         )
         // Solo en el primer arranque (no al rotar la pantalla) se procesan los enlaces que abrieron la app.
         if (savedInstanceState == null) {

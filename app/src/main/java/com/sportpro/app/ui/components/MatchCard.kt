@@ -12,6 +12,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -32,8 +37,9 @@ import com.sportpro.app.core.data.MatchRow
 import com.sportpro.app.core.data.clock
 import com.sportpro.app.core.data.formatDayTime
 import com.sportpro.app.core.data.statusLabel
+import com.sportpro.app.ui.theme.FavoriteGold
 import com.sportpro.app.ui.theme.LiveRed
-import com.sportpro.app.ui.theme.Mint400
+import com.sportpro.app.ui.theme.SuccessGreen
 import com.sportpro.app.ui.theme.ScoreStyle
 import com.sportpro.app.ui.theme.WarnAmber
 
@@ -46,6 +52,9 @@ fun MatchCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     onLongClick: (() -> Unit)? = null,
+    /** null = la tarjeta no muestra estrella (por ejemplo en el Calendario). */
+    favorite: Boolean? = null,
+    onToggleFavorite: (() -> Unit)? = null,
 ) {
     val a11y = "${match.homeName} ${match.homeScore}, ${match.awayName} ${match.awayScore}, ${match.statusLabel(nowMs)}"
     Card(
@@ -59,14 +68,26 @@ fun MatchCard(
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 StatusBadge(match, nowMs)
-                Spacer(Modifier.weight(1f))
                 Text(
                     listOfNotNull(match.category, match.venue).joinToString(" · "),
+                    modifier = Modifier.weight(1f).padding(start = 8.dp),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.End,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
+                // Estrella de favorito: dorada si está marcado, gris tenue si no
+                if (favorite != null && onToggleFavorite != null) {
+                    val label = stringResource(if (favorite) R.string.match_card_quitar_favorito else R.string.match_card_marcar_favorito)
+                    IconButton(onClick = onToggleFavorite, modifier = Modifier.padding(start = 4.dp).size(36.dp)) {
+                        Icon(
+                            Icons.Filled.Star,
+                            contentDescription = label,
+                            tint = if (favorite) FavoriteGold else MaterialTheme.colorScheme.outline.copy(alpha = 0.55f),
+                        )
+                    }
+                }
             }
             Spacer(Modifier.height(12.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -115,7 +136,7 @@ fun StatusBadge(match: MatchRow, nowMs: Long) {
     when (match.status) {
         "live" -> LivePill(stringResource(R.string.match_card_en_vivo_x, match.clock(nowMs).label))
         "halftime" -> Pill(stringResource(R.string.match_card_entretiempo), WarnAmber)
-        "finished" -> Pill(stringResource(R.string.match_card_finalizado), Mint400)
+        "finished" -> Pill(stringResource(R.string.match_card_finalizado), SuccessGreen)
         "cancelled" -> Pill(stringResource(R.string.match_card_cancelado), MaterialTheme.colorScheme.onSurfaceVariant)
         else -> Pill(formatDayTime(match.scheduledAt).uppercase(), MaterialTheme.colorScheme.secondary)
     }
