@@ -143,8 +143,11 @@ En Supabase → **SQL Editor**, ejecuta las migraciones de `supabase/migrations/
 | 014 | `20261117100000_match_favorites.sql` | Partidos favoritos y lista «mis partidos» |
 | 015 | `20261117110000_match_challenges.sql` | Desafíos entre equipos de distintas academias |
 | 016 | `20261117120000_referee_links.sql` | QR del árbitro: registro desde una página web sin cuenta |
+| 017 | `20261117130000_lineup_flow.sql` | Alineaciones de partidos acordados: envío, plazo, autocompletado y confirmación |
 
-Las migraciones 002 a 016 se pueden volver a ejecutar sin romper nada.
+Las migraciones 002 a 017 se pueden volver a ejecutar sin romper nada.
+
+**Tarea programada (recomendado).** La migración 017 confirma las alineaciones 1 hora antes de cada partido acordado. Para que ocurra a la hora exacta, activa **pg_cron** en Supabase → **Database → Extensions** y vuelve a ejecutar la 017. Sin pg_cron también funciona, pero la confirmación (y sus avisos) ocurre recién cuando alguien abre el partido.
 
 ### 4. Autenticación
 
@@ -196,7 +199,7 @@ Nadie puede darse a sí mismo un rol: el tipo de cuenta lo fija el servidor al r
 ## Seguridad y privacidad
 
 - **Claves:** en el APK y en el repositorio solo va la clave publicable, leída de `local.properties` mediante `BuildConfig`. La clave secreta, `service_role`, la contraseña de Postgres y la clave de Gemini nunca salen del servidor.
-- **Row Level Security** en las 38 tablas. El rol anónimo no tiene permisos sobre ninguna tabla y solo ejecuta una lista cerrada de funciones: validar una invitación y las cuatro de la página del árbitro, que exigen el código secreto del QR.
+- **Row Level Security** en las 39 tablas. El rol anónimo no tiene permisos sobre ninguna tabla y solo ejecuta una lista cerrada de funciones: validar una invitación y las cuatro de la página del árbitro, que exigen el código secreto del QR.
 - **Escritura por funciones:** las tablas sensibles (pagos, documentos, notificaciones, inscripciones, auditoría) no aceptan escrituras directas; solo funciones del servidor que validan permisos.
 - **Menores:** aparecen como «Nombre I.» para quien no es su apoderado ni su staff, no tienen foto, sus datos sensibles están en una tabla aparte y la IA solo recibe seudónimos (`J1`, `R1`…).
 - **Documentos:** bucket privado; cada archivo se abre con una URL firmada que vence en 5 minutos.
@@ -206,25 +209,25 @@ El detalle de la revisión final está en [docs/seguridad.md](docs/seguridad.md)
 
 ## Pruebas
 
-Tests unitarios de la lógica pura (119 tests, sin red ni emulador):
+Tests unitarios de la lógica pura (128 tests, sin red ni emulador):
 
 ```bash
 ./gradlew.bat testDebugUnitTest
 ```
 
-Pruebas de SQL (auditoría de seguridad de 12 reglas y prueba de humo de 412 checks). Con Docker Desktop abierto y desde Git Bash:
+Pruebas de SQL (auditoría de seguridad de 12 reglas y prueba de humo de 449 checks). Con Docker Desktop abierto y desde Git Bash:
 
 ```bash
 bash supabase/test/run_local.sh
 ```
 
-El script levanta un Postgres desechable, aplica las 16 migraciones dos veces para comprobar que son repetibles, audita los permisos y recorre los flujos completos con usuarios de prueba ficticios. No toca el proyecto real de Supabase.
+El script levanta un Postgres desechable, aplica las 17 migraciones dos veces para comprobar que son repetibles, audita los permisos y recorre los flujos completos con usuarios de prueba ficticios. No toca el proyecto real de Supabase.
 
 ## Documentación
 
 | Documento | Contenido |
 |---|---|
-| [docs/modelo-de-datos.md](docs/modelo-de-datos.md) | Las 38 tablas y qué guarda cada una |
+| [docs/modelo-de-datos.md](docs/modelo-de-datos.md) | Las 39 tablas y qué guarda cada una |
 | [docs/partido-en-vivo.md](docs/partido-en-vivo.md) | Flujo del partido: reloj, registro, tiempo real y modo sin conexión |
 | [docs/decisiones-tecnicas.md](docs/decisiones-tecnicas.md) | Decisiones de diseño y sus motivos |
 | [referee-web/README.md](referee-web/README.md) | Página web del árbitro: cómo publicarla en Vercel y cómo se usa |

@@ -42,6 +42,10 @@ fun notificationTarget(kind: String, data: (String) -> String?): NotificationTar
     kind.startsWith("match_challenge") ->
         data("match_id")?.let { NotificationTarget.Match(it) } ?: NotificationTarget.Challenges
 
+    // Alineaciones de un partido acordado (enviada, completada o confirmada): se abre el partido
+    kind.startsWith("match_lineup") ->
+        data("match_id")?.let { NotificationTarget.Match(it) }
+
     kind.startsWith("post_comment") -> NotificationTarget.Feed
 
     // El admin recibe «pago por confirmar»: va directo a los movimientos de ese jugador

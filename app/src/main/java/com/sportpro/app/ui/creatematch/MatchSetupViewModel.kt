@@ -10,6 +10,8 @@ import com.sportpro.app.core.data.ExternalDraft
 import com.sportpro.app.core.data.ExternalPlayer
 import com.sportpro.app.core.data.Formation
 import com.sportpro.app.core.data.Formations
+import com.sportpro.app.core.data.LineupFlow
+import com.sportpro.app.core.data.LineupStatus
 import com.sportpro.app.core.data.MatchRow
 import com.sportpro.app.core.data.MemberRow
 import com.sportpro.app.core.data.Position
@@ -58,7 +60,13 @@ data class MatchSetupUi(
     val members: List<MemberRow> = emptyList(),
     val operatorId: String? = null,
     val busy: Boolean = false,
+    /** Estado de las alineaciones (partidos acordados por desafío, migración 017). */
+    val status: LineupStatus? = null,
 ) {
+    /** El operador lo designa el DT local; en un partido acordado el visitante no ve esa sección. */
+    val canManageHome: Boolean get() = status?.side("home")?.canEdit ?: true
+    /** ¿Se puede editar ahora? (plazo de 1 hora antes y confirmación; lo valida también el servidor). */
+    fun editable(nowMs: Long): Boolean = match?.let { LineupFlow.editable(it, status, nowMs) } ?: false
     fun callupOf(playerId: String): Callup? = callups.firstOrNull { it.playerId == playerId }
     val externalStarters: List<ExternalPlayer> get() = external.filter { it.isStarter }
     // Validación del rival externo antes de iniciar (mismas reglas que al crear el partido).
@@ -107,9 +115,15 @@ class MatchSetupViewModel(private val container: AppContainer, private val match
                     return@launch
                 }
                 val lineup = container.matches.lineup(matchId)
-                val sides = buildList {
-                    add(SideSetup("home", match.homeTeamId, match.homeName, container.club.teamPlayers(match.homeTeamId)))
-                    match.awayTeamId?.let { add(SideSetup("away", it, match.awayName, container.club.teamPlayers(it))) }
+                // En un partido acordado, cada entrenador ve y arma SOLO su lado
+                val status = if (match.lineupFlow) runCatching { container.matches.lineupStatus(matchId) }.getOrNull() else null
+                val candidates = buildList {
+                    add(Triple("home", match.homeTeamId, match.homeName))
+                    match.awayTeamId?.let { add(Triple("away", it, match.awayName)) }
+                }
+                val shown = LineupFlow.visibleSides(candidates.map { it.first }, status)
+                val sides = candidates.filter { it.first in shown }.map { (side, teamId, name) ->
+                    SideSetup(side, teamId, name, container.club.teamPlayers(teamId))
                 }.map { s ->
                     // Si ya había una alineación guardada, se reconstruyen roles y posiciones y se detecta la formación.
                     val existing = lineup.filter { it.teamSide == s.side && it.playerId != null }
@@ -129,6 +143,7 @@ class MatchSetupViewModel(private val container: AppContainer, private val match
                     MatchSetupUi(
                         loading = false, match = match, sides = sides, callups = callups,
                         external = external, members = members.distinctBy { m -> m.userId }, operatorId = op?.userId,
+                        status = status,
                     )
                 }
             } catch (e: Exception) {
@@ -257,6 +272,13 @@ class MatchSetupViewModel(private val container: AppContainer, private val match
                 MatchRepository.LineupEntry(pid, jersey[pid], role == LineupRole.STARTER, current.positionOf(pid)?.code)
             }
             container.matches.saveLineup(matchId, current.side, entries)
+            // Partido acordado: además de guardar, se ENVÍA (el servidor valida titulares y arquero)
+            if (_ui.value.status?.flow == true) {
+                container.matches.submitLineup(matchId, current.side)
+                _ui.update { it.copy(status = container.matches.lineupStatus(matchId)) }
+                _messages.tryEmit(AppText.get(R.string.lineup_sent, current.teamName))
+                return@act
+            }
             _messages.tryEmit(
                 AppText.get(R.string.match_setup_alineacion_de_x_guardada_x, current.teamName, current.formation.name) +
                     AppText.get(R.string.match_setup_x_titulares_x_suplentes, entries.count { it.starter }, entries.count { !it.starter }),

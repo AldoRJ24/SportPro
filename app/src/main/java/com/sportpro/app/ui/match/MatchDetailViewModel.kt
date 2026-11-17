@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.sportpro.app.core.AppContainer
 import com.sportpro.app.core.data.EventType
 import com.sportpro.app.core.data.LineupPlayer
+import com.sportpro.app.core.data.LineupStatus
 import com.sportpro.app.core.data.MatchRow
 import com.sportpro.app.core.data.Position
 import com.sportpro.app.core.data.onFieldPlayers
@@ -63,6 +64,8 @@ data class MatchDetailUi(
     val eventTypes: List<EventType> = emptyList(),
     val isManager: Boolean = false,
     val isOperator: Boolean = false,
+    /** Estado de las alineaciones de un partido acordado (migración 017). */
+    val lineupStatus: LineupStatus? = null,
     val busy: Boolean = false,
     val draft: EventDraft? = null,
 ) {
@@ -181,10 +184,16 @@ class MatchDetailViewModel(private val container: AppContainer, private val matc
                 val types = container.matches.eventTypes()
                 val manager = container.matches.isManager(matchId)
                 val operator = container.matches.isOperator(matchId)
+                // Partido acordado y programado: estado de alineaciones (y cierre si ya es la hora)
+                val status = if (match.lineupFlow && match.isScheduled) runCatching { container.matches.lineupStatus(matchId) }.getOrNull() else null
+                // Si esta llamada confirmó las alineaciones, se relee el partido y la alineación
+                val confirmedNow = status?.confirmed == true && match.lineupsConfirmedAt == null
+                val fresh = if (confirmedNow) container.matches.getMatch(matchId) ?: match else match
+                val freshLineup = if (confirmedNow) container.matches.lineup(matchId) else lineup
                 _ui.update {
                     it.copy(
-                        loading = false, match = match, timeline = timeline, lineup = lineup,
-                        eventTypes = types, isManager = manager, isOperator = operator,
+                        loading = false, match = fresh, timeline = timeline, lineup = freshLineup,
+                        eventTypes = types, isManager = manager, isOperator = operator, lineupStatus = status,
                     )
                 }
             } catch (e: Exception) {

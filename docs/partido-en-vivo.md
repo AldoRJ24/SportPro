@@ -30,6 +30,7 @@ Cada cambio de estado crea además un evento de control (inicio, fin del primer 
 2. **Convocatoria.** El DT convoca jugadores (`match_callups`). Un trigger avisa a cada apoderado y al jugador. Solo quien confirma puede ser alineado.
 3. **Alineación.** El DT elige la formación (siempre un arquero). «Armar automático» propone titulares entre los confirmados según su posición habitual.
 4. **Operador.** El DT designa a la persona que registrará los eventos. Solo puede haber un operador activo por partido.
+5. **Partido acordado por desafío.** Cada entrenador hace los pasos 2 y 3 solo para su equipo y pulsa «Guardar y enviar». Puede editar hasta 1 hora antes. A esa hora el servidor confirma las dos alineaciones (completando la que falte), avisa a familias y seguidores, y recién entonces se puede generar el QR del árbitro e iniciar.
 
 ## 3. El reloj
 

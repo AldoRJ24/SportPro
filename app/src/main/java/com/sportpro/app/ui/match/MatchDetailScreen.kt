@@ -52,6 +52,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sportpro.app.core.data.TimelineEvent
+import com.sportpro.app.core.data.formatDayTime
+import com.sportpro.app.core.data.lineupsPending
 import com.sportpro.app.ui.components.EmptyState
 import com.sportpro.app.ui.components.ErrorBox
 import com.sportpro.app.ui.components.LoadingBox
@@ -126,8 +128,18 @@ fun MatchDetailScreen(matchId: String, onBack: () -> Unit, onSetup: () -> Unit, 
                     onSetup = onSetup,
                     onSummary = onSummary,
                 )
-                // QR del árbitro: solo el DT o el admin del equipo local, antes o durante el partido
-                if (ui.isManager && (match.isScheduled || match.isLive)) {
+                // Partido acordado: aviso de alineaciones pendientes
+                if (match.lineupsPending) {
+                    Text(
+                        stringResource(R.string.lineup_detail_pending, formatDayTime(ui.lineupStatus?.deadline)),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                    )
+                }
+                // QR del árbitro: solo el DT o el admin del equipo local, antes o durante el partido.
+                // En un partido acordado, recién con las alineaciones confirmadas.
+                if (ui.isManager && (match.isScheduled || match.isLive) && !match.lineupsPending) {
                     TextButton(onClick = { showRefereeQr = true }, modifier = Modifier.padding(horizontal = 8.dp)) {
                         Text(stringResource(R.string.referee_button))
                     }
@@ -145,8 +157,10 @@ fun MatchDetailScreen(matchId: String, onBack: () -> Unit, onSetup: () -> Unit, 
                     stringResource(R.string.match_detail_registrar) -> RecordTab(ui, pendingHere.size, onPick = vm::startDraft, onEdit = { editing = it })
                     stringResource(R.string.match_detail_cronologia) -> TimelineTab(ui, pendingHere, onEdit = if (ui.canCorrect) ({ e: TimelineEvent -> editing = e }) else null)
                     else -> Row(Modifier.fillMaxWidth()) {
-                        LineupColumn(match.homeName, ui.playersOf("home"), Modifier.weight(1f))
-                        LineupColumn(match.awayName, ui.playersOf("away"), Modifier.weight(1f))
+                        // Antes de la confirmación, la alineación ajena se ve vacía: se explica por qué
+                        val empty = if (match.lineupsPending) stringResource(R.string.lineup_published_later) else null
+                        LineupColumn(match.homeName, ui.playersOf("home"), Modifier.weight(1f), emptyText = empty)
+                        LineupColumn(match.awayName, ui.playersOf("away"), Modifier.weight(1f), emptyText = empty)
                     }
                 }
             }
@@ -208,7 +222,9 @@ private fun ControlBar(
         Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        if (m.isScheduled && ui.isManager) {
+        // El entrenador visitante de un partido acordado también arma su alineación
+        val canSetup = ui.isManager || ui.lineupStatus?.editableSides?.isNotEmpty() == true
+        if (m.isScheduled && canSetup) {
             OutlinedButton(onClick = onSetup, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.match_detail_convocatoria_y_alineacion)) }
         }
         if (ui.canControl) {

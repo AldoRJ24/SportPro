@@ -6,6 +6,7 @@ import com.sportpro.app.core.data.ExternalDraft
 import com.sportpro.app.core.data.ExternalPlayer
 import com.sportpro.app.core.data.IdRow
 import com.sportpro.app.core.data.LineupPlayer
+import com.sportpro.app.core.data.LineupStatus
 import com.sportpro.app.core.data.MatchRow
 import com.sportpro.app.core.data.MatchScope
 import com.sportpro.app.core.data.OperatorRow
@@ -91,6 +92,19 @@ class MatchRepository(private val client: SupabaseClient) {
     // Desactiva el QR del árbitro (por ejemplo, si se compartió por error).
     suspend fun revokeRefereeLink(matchId: String) {
         client.postgrest.rpc("referee_link_revoke", buildJsonObject { put("p_match", matchId) })
+    }
+
+    // Estado de las alineaciones de un partido acordado. Si ya llegó la hora límite, el servidor
+    // aprovecha esta llamada para cerrarlas y confirmarlas (por si la tarea programada no corrió).
+    suspend fun lineupStatus(matchId: String): LineupStatus =
+        client.postgrest.rpc("lineup_status", buildJsonObject { put("p_match", matchId) }).decodeScalar()
+
+    // Envía la alineación de un lado: el servidor exige los titulares completos y 1 arquero.
+    suspend fun submitLineup(matchId: String, side: String) {
+        client.postgrest.rpc("lineup_submit", buildJsonObject {
+            put("p_match", matchId)
+            put("p_side", side)
+        })
     }
 
     suspend fun getMatch(matchId: String): MatchRow? =
@@ -430,6 +444,7 @@ class MatchRepository(private val client: SupabaseClient) {
         const val MATCH_COLS =
             "id,academy_id,home_team_id,away_team_id,away_external_name,format_players,half_minutes,scheduled_at,venue," +
                 "visibility,status,period,period_started_at,elapsed_before_seconds,clock_running,finished_at,home_score,away_score," +
+                "lineup_flow,lineups_confirmed_at," +
                 "home:teams!home_team_id(id,name,category,academy_id,crest_path)," +
                 "away:teams!away_team_id(id,name,category,academy_id,crest_path)"
     }

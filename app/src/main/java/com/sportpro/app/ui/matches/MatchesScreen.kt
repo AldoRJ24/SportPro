@@ -42,6 +42,7 @@ import com.sportpro.app.core.data.MatchFilter
 import com.sportpro.app.core.data.MatchOrigin
 import com.sportpro.app.core.data.MatchRow
 import com.sportpro.app.core.data.MatchStatusFilter
+import com.sportpro.app.core.data.lineupsPending
 import com.sportpro.app.ui.components.BellAction
 import com.sportpro.app.ui.components.CreateAction
 import com.sportpro.app.ui.components.EmptyState
@@ -68,6 +69,8 @@ fun MatchesScreen(
     onBell: () -> Unit,
     /** null = el usuario no gestiona equipos y no ve el acceso a «Desafíos». */
     onChallenges: (() -> Unit)? = null,
+    /** Abre «Convocatoria y alineación» (para el entrenador de un partido con alineación pendiente). */
+    onOpenSetup: (String) -> Unit = onOpenMatch,
 ) {
     val ui by vm.ui.collectAsStateWithLifecycle()
     val now = rememberNowMs()
@@ -76,9 +79,13 @@ fun MatchesScreen(
     // La lista filtrada solo se recalcula cuando cambian los partidos, los motivos o los filtros
     val shown = remember(ui.all, ui.scopes, ui.filter) { ui.shown }
     val card: @Composable (MatchRow) -> Unit = { m ->
+        // Partido acordado sin alineaciones confirmadas: para sus entrenadores la tarjeta dice
+        // «Alineación pendiente» y lleva directo a armarla
+        val pending = m.lineupsPending && ui.scopes[m.id]?.byStaff == true
         MatchCard(
             m, now,
-            onClick = { onOpenMatch(m.id) },
+            onClick = { if (pending) onOpenSetup(m.id) else onOpenMatch(m.id) },
+            lineupPending = pending,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
             favorite = ui.isFavorite(m.id),
             onToggleFavorite = { vm.toggleFavorite(m.id) },

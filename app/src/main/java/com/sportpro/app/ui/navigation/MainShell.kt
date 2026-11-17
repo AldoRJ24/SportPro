@@ -173,6 +173,7 @@ fun MainShell(session: SessionViewModel) {
                         matchesVm, onOpenMatch = openMatch, onCreate = onCreate, onBell = onBell,
                         // Solo quien gestiona equipos puede desafiar o ser desafiado
                         onChallenges = if (canCreate) ({ nav.navigate(ChallengesRoute) }) else null,
+                        onOpenSetup = { id -> nav.navigate(MatchSetupRoute(id)) },
                     )
                 }
                 composable<ExploreRoute> {

@@ -280,7 +280,7 @@ fun PendingRow(p: PendingEvent) {
 }
 
 @Composable
-fun LineupColumn(title: String, players: List<LineupPlayer>, modifier: Modifier = Modifier) {
+fun LineupColumn(title: String, players: List<LineupPlayer>, modifier: Modifier = Modifier, emptyText: String? = null) {
     Column(modifier.padding(8.dp)) {
         Text(title, style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(bottom = 6.dp))
         val starters = players.filter { it.isStarter }
@@ -293,7 +293,7 @@ fun LineupColumn(title: String, players: List<LineupPlayer>, modifier: Modifier 
             Text(stringResource(R.string.match_parts_suplentes_x, subs.size), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             subs.forEach { PlayerLine(it) }
         }
-        if (players.isEmpty()) Text(stringResource(R.string.match_parts_sin_alineacion_registrada), style = MaterialTheme.typography.bodySmall)
+        if (players.isEmpty()) Text(emptyText ?: stringResource(R.string.match_parts_sin_alineacion_registrada), style = MaterialTheme.typography.bodySmall)
     }
 }
 

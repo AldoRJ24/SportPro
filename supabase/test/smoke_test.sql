@@ -1057,13 +1057,9 @@ reset role;
 select pg_temp.as_user('a0000000-0000-0000-0000-000000000002');
 select pg_temp.expect_fail($$select public.referee_link_get('e0000000-0000-0000-0000-000000000009')$$, 'no se genera QR de árbitro para un partido terminado');
 
--- Desactivar a mano: el DT de Halcones con el partido programado del desafío
-select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
-select set_config('t.ref3', public.referee_link_get(current_setting('t.chm')::uuid), false) is not null;
-select public.referee_link_revoke(current_setting('t.chm')::uuid);
+-- (Desactivar el QR se prueba con el partido acordado, en la sección de la migración 017)
 select pg_temp.as_su();
 set role anon;
-select pg_temp.expect_fail(format($$select public.referee_match(%L)$$, current_setting('t.ref3')), 'un código desactivado por el DT deja de servir');
 select pg_temp.expect_fail($$select public.referee_link_get('e0000000-0000-0000-0000-000000000009')$$, 'anon no genera códigos');
 reset role;
 
@@ -1072,6 +1068,123 @@ select pg_temp.as_user('a0000000-0000-0000-0000-000000000006');
 select pg_temp.expect_fail(format($$select public.change_match_state(%L, 'start')$$, current_setting('t.chm')), 'un seguidor sigue sin poder cambiar el estado');
 select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
 select pg_temp.expect_fail(format($$select public.change_match_state(%L, 'start')$$, current_setting('t.chm')), 'el DT sigue sin poder iniciar sin alineaciones');
+
+-- =====================================================================
+-- ALINEACIONES DE PARTIDOS ACORDADOS (migración 017).
+-- Partido t.chm: Halcones (DT …003, local) vs Tigres (DT …007, visitante), 9 vs 9.
+-- =====================================================================
+select pg_temp.as_su();
+select pg_temp.expect_eq((select lineup_flow from public.matches where id = current_setting('t.chm')::uuid), true, 'el partido aceptado por desafío entra al flujo de alineaciones');
+-- Posición habitual de Halcones y plantel de Tigres (6 jugadores ficticios: no alcanzan para 9)
+update public.team_players set position = case when jersey_number = 1 then 'POR' when jersey_number <= 3 then 'DEF' when jersey_number <= 6 then 'MED' else 'DEL' end
+ where team_id = 'c0000000-0000-0000-0000-000000000001';
+insert into public.players (id, first_name, last_name, birth_date, position)
+select ('d10000' || lpad(i::text, 2, '0') || '-0000-0000-0000-000000000011')::uuid, 'Tigre' || i, 'Prueba' || i, date '2013-03-01', null from generate_series(1,6) i;
+insert into public.team_players (team_id, player_id, jersey_number, position)
+select 'c0000000-0000-0000-0000-000000000011', ('d10000' || lpad(i::text, 2, '0') || '-0000-0000-0000-000000000011')::uuid, i,
+       case when i = 4 then 'POR' when i <= 2 then 'DEF' else 'MED' end from generate_series(1,6) i;
+-- Un Tigre avisa que no asiste: el autocompletado no debe usarlo
+insert into public.match_callups (match_id, team_id, player_id, status)
+values (current_setting('t.chm')::uuid, 'c0000000-0000-0000-0000-000000000011', 'd1000006-0000-0000-0000-000000000011', 'declined'),
+       (current_setting('t.chm')::uuid, 'c0000000-0000-0000-0000-000000000011', 'd1000001-0000-0000-0000-000000000011', 'confirmed');
+
+-- Halcones: convoca a todos; 1-8 confirman, el 9 no asiste
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+insert into public.match_callups (match_id, team_id, player_id)
+select current_setting('t.chm')::uuid, 'c0000000-0000-0000-0000-000000000001', player_id
+  from public.team_players where team_id = 'c0000000-0000-0000-0000-000000000001' and status = 'active'
+   and jersey_number between 1 and 9;
+update public.match_callups set status = case when player_id = 'd0000009-0000-0000-0000-000000000001' then 'declined' else 'confirmed' end
+ where match_id = current_setting('t.chm')::uuid and team_id = 'c0000000-0000-0000-0000-000000000001';
+insert into public.match_lineup_players (match_id, team_side, player_id, is_starter, field_position)
+select current_setting('t.chm')::uuid, 'home', tp.player_id, true, tp.position
+  from public.team_players tp where tp.team_id = 'c0000000-0000-0000-0000-000000000001' and tp.jersey_number between 1 and 8;
+select pg_temp.expect_fail(format($$select public.lineup_submit(%L, 'home')$$, current_setting('t.chm')), 'no se envía una alineación con titulares de menos');
+select pg_temp.expect_fail(format($$select public.lineup_submit(%L, 'away')$$, current_setting('t.chm')), 'un DT no envía la alineación del rival');
+select pg_temp.expect_fail(format($$insert into public.match_lineup_players (match_id, team_side, player_id) values (%L, 'away', 'd1000001-0000-0000-0000-000000000011')$$, current_setting('t.chm')), 'un DT no arma la alineación del rival');
+select pg_temp.expect_fail(format($$update public.matches set scheduled_at = scheduled_at + interval '1 day' where id = %L$$, current_setting('t.chm')), 'la fecha acordada no la cambia un solo entrenador');
+
+-- El hijo de la apoderada (dorsal 20) confirma y completa los 9
+select pg_temp.as_su();
+insert into public.match_callups (match_id, team_id, player_id, status)
+values (current_setting('t.chm')::uuid, 'c0000000-0000-0000-0000-000000000001', current_setting('t.child')::uuid, 'confirmed');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+insert into public.match_lineup_players (match_id, team_side, player_id, is_starter, field_position)
+values (current_setting('t.chm')::uuid, 'home', current_setting('t.child')::uuid, true, 'MED');
+select public.lineup_submit(current_setting('t.chm')::uuid, 'home');
+select pg_temp.expect_eq((select count(*) from public.match_lineup_submissions where match_id = current_setting('t.chm')::uuid and team_side = 'home')::int, 1, 'el DT envía su alineación completa');
+-- Editar después de enviar obliga a reenviar
+update public.match_lineup_players set field_position = 'DEF' where match_id = current_setting('t.chm')::uuid and player_id = current_setting('t.child')::uuid;
+select pg_temp.expect_eq((select count(*) from public.match_lineup_submissions where match_id = current_setting('t.chm')::uuid and team_side = 'home')::int, 0, 'si edita después de enviar, debe volver a enviar');
+select public.lineup_submit(current_setting('t.chm')::uuid, 'home');
+select pg_temp.expect_eq((select (status->'sides'->0->>'submitted_at') is not null from (select public.lineup_status(current_setting('t.chm')::uuid) as status) s), true, 'el estado muestra la alineación enviada');
+
+select pg_temp.as_su();
+select pg_temp.expect_eq((select count(*) from public.notifications where kind = 'match_lineup_submitted' and user_id = 'a0000000-0000-0000-0000-000000000007' and data->>'match_id' = current_setting('t.chm'))::int >= 1, true, 'el entrenador rival sabe que ya enviaron la alineación');
+
+-- Nadie ve la alineación ajena antes de la confirmación
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000007');
+select pg_temp.expect_eq((select count(*) from public.match_lineup_players where match_id = current_setting('t.chm')::uuid and team_side = 'home')::int, 0, 'el DT rival no ve la alineación local antes de tiempo');
+select pg_temp.expect_eq((select count(*) from public.get_match_lineup(current_setting('t.chm')::uuid) where team_side = 'home')::int, 0, 'la función de alineación tampoco la muestra antes de tiempo');
+select pg_temp.expect_eq((select (s->'sides'->0->>'can_edit')::boolean from (select public.lineup_status(current_setting('t.chm')::uuid) s) x), false, 'el DT visitante no puede editar el lado local');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000006');
+select pg_temp.expect_eq((select count(*) from public.my_matches() where match_id = current_setting('t.chm')::uuid)::int, 0, 'un seguidor no ve el partido hasta que se confirman las alineaciones');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+select pg_temp.expect_fail(format($$select public.referee_link_get(%L)$$, current_setting('t.chm')), 'el QR del árbitro espera la confirmación de las alineaciones');
+
+-- Llega la hora límite (como superusuario se adelanta el partido a 30 minutos)
+select pg_temp.as_su();
+update public.matches set scheduled_at = now() + interval '30 minutes' where id = current_setting('t.chm')::uuid;
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+select pg_temp.expect_fail(format($$update public.match_lineup_players set field_position = 'DEL' where match_id = %L and player_id = %L$$, current_setting('t.chm'), current_setting('t.child')), 'pasado el plazo no se edita la alineación');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000007');
+select pg_temp.expect_fail(format($$select public.lineup_submit(%L, 'away')$$, current_setting('t.chm')), 'pasado el plazo no se envía la alineación');
+
+-- La tarea programada cierra y confirma
+select pg_temp.as_su();
+select pg_temp.expect_eq(public._lineups_lock_due(), 1, 'la tarea programada confirma el partido que llegó a su hora');
+select pg_temp.expect_eq(public._lineups_lock_due(), 0, 'una segunda pasada no vuelve a confirmar');
+select pg_temp.expect_eq((select lineups_confirmed_at is not null from public.matches where id = current_setting('t.chm')::uuid), true, 'el partido queda con alineaciones confirmadas');
+select pg_temp.expect_eq((select count(*) from public.match_lineup_players where match_id = current_setting('t.chm')::uuid and team_side = 'home' and auto_filled)::int, 0, 'la alineación enviada no se toca');
+select pg_temp.expect_eq((select count(*) from public.match_lineup_players where match_id = current_setting('t.chm')::uuid and team_side = 'away' and is_starter)::int, 5, 'el lado sin alineación se autocompleta con los disponibles');
+select pg_temp.expect_eq((select count(*) from public.match_lineup_players where match_id = current_setting('t.chm')::uuid and team_side = 'away' and is_starter and field_position = 'POR')::int, 1, 'el autocompletado pone exactamente 1 arquero');
+select pg_temp.expect_eq((select player_id from public.match_lineup_players where match_id = current_setting('t.chm')::uuid and team_side = 'away' and field_position = 'POR'), 'd1000004-0000-0000-0000-000000000011'::uuid, 'al arco va quien juega de arquero habitualmente');
+select pg_temp.expect_eq((select count(*) from public.match_lineup_players where match_id = current_setting('t.chm')::uuid and player_id = 'd1000006-0000-0000-0000-000000000011')::int, 0, 'quien avisó que no asiste no se alinea');
+select pg_temp.expect_eq((select count(*) from public.match_lineup_players where match_id = current_setting('t.chm')::uuid and player_id = 'd0000009-0000-0000-0000-000000000001')::int, 0, 'tampoco en el equipo que sí envió');
+select pg_temp.expect_eq((select count(*) from public.notifications where kind = 'match_lineup_autofilled' and user_id = 'a0000000-0000-0000-0000-000000000007' and body like '%faltan 4 titulares%')::int, 1, 'el DT del lado incompleto recibe el aviso de cuántos faltan');
+select pg_temp.expect_eq((select count(distinct user_id) from public.notifications where kind = 'match_lineups' and data->>'match_id' = current_setting('t.chm')
+                          and user_id in ('a0000000-0000-0000-0000-000000000003','a0000000-0000-0000-0000-000000000007',
+                                          'a0000000-0000-0000-0000-000000000005','a0000000-0000-0000-0000-000000000006'))::int, 4,
+  'avisan a los dos DT, a la apoderada del alineado y al seguidor');
+select pg_temp.expect_eq((select count(*) from public.notifications where kind = 'match_lineups' and data->>'match_id' = current_setting('t.chm') and user_id = 'a0000000-0000-0000-0000-000000000005')::int, 1, 'cada persona recibe un solo aviso');
+
+-- Después de confirmar
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000007');
+select pg_temp.expect_eq((select count(*) from public.get_match_lineup(current_setting('t.chm')::uuid) where team_side = 'home')::int, 9, 'con la confirmación, el rival ve la alineación local');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000006');
+select pg_temp.expect_eq((select by_follow from public.my_matches() where match_id = current_setting('t.chm')::uuid), true, 'el seguidor ve el partido como próximo');
+select pg_temp.expect_eq(public.toggle_match_favorite(current_setting('t.chm')::uuid), true, 'el seguidor puede marcarlo como favorito antes de empezar');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+select pg_temp.expect_fail(format($$delete from public.match_lineup_players where match_id = %L and team_side = 'home'$$, current_setting('t.chm')), 'confirmadas, las alineaciones ya no se cambian');
+select pg_temp.expect_fail(format($$select public.change_match_state(%L, 'start')$$, current_setting('t.chm')), 'no inicia con el visitante incompleto');
+
+-- QR del árbitro con alineaciones confirmadas; desactivarlo lo invalida
+select set_config('t.ref3', public.referee_link_get(current_setting('t.chm')::uuid), false) is not null;
+select pg_temp.expect_eq(current_setting('t.ref3') ~ '^[0-9a-f]{64}$', true, 'con las alineaciones confirmadas se genera el QR del árbitro');
+select public.referee_link_revoke(current_setting('t.chm')::uuid);
+select pg_temp.as_su();
+set role anon;
+select pg_temp.expect_fail(format($$select public.referee_match(%L)$$, current_setting('t.ref3')), 'un código desactivado por el DT deja de servir');
+reset role;
+
+-- Un partido acordado no se inicia sin confirmar (aunque se intente directo como superusuario)
+insert into public.matches (id, home_team_id, away_team_id, format_players, half_minutes, scheduled_at, lineup_flow)
+values ('e0000000-0000-0000-0000-000000000017', 'c0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000011', 7, 25, now() + interval '3 days', true);
+select pg_temp.expect_fail($$update public.matches set status = 'live' where id = 'e0000000-0000-0000-0000-000000000017'$$, 'un partido acordado no inicia sin alineaciones confirmadas');
+select pg_temp.expect_eq(public._lineups_lock('e0000000-0000-0000-0000-000000000017'), false, 'no se confirma antes de la hora límite');
+set role anon;
+select pg_temp.expect_fail($$select public.lineup_status('e0000000-0000-0000-0000-000000000017')$$, 'anon no consulta alineaciones');
+reset role;
 
 select pg_temp.as_su();
 \echo '=== TODAS LAS PRUEBAS PASARON ==='

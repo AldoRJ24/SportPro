@@ -114,7 +114,7 @@ Cada decisión sigue el mismo formato: el problema, lo que se decidió, por qué
 
 **Decisión.** El reloj, las formaciones, los jugadores en cancha y las validaciones de formularios son funciones Kotlin sin dependencias de Android. Viven en `core/data/` y se prueban con JUnit en la PC.
 
-**Por qué.** Los 119 tests corren en segundos y sin celular.
+**Por qué.** Los 128 tests corren en segundos y sin celular.
 
 **Costo.** Hubo que sacar alguna validación del ViewModel hacia el modelo del formulario.
 
@@ -197,6 +197,16 @@ Cada decisión sigue el mismo formato: el problema, lo que se decidió, por qué
 **Por qué.** Es la forma más simple para el árbitro (escanear y empezar) sin abrir las tablas al público: el rol anónimo sigue sin permisos sobre ninguna tabla.
 
 **Costo.** Quien obtenga el QR puede registrar eventos de ese partido. Se mitiga con el vencimiento, el botón para cambiar o desactivar el código y la auditoría. La página consulta el partido cada 4 segundos en lugar de usar Realtime, porque Realtime filtra por permisos de usuario y el árbitro no tiene sesión.
+
+## 19. Alineaciones secretas hasta 1 hora antes, y completas siempre
+
+**Problema.** En un partido entre dos entrenadores, ninguno debería ver la alineación del otro antes de tiempo, y un partido no puede quedar sin jugar porque alguien olvidó armarla.
+
+**Decisión.** Cada entrenador arma y envía solo su lado; las políticas de fila y `get_match_lineup` ocultan el lado ajeno hasta la confirmación. A 1 hora del partido el servidor cierra las dos: si una no está completa, la autocompleta (banca, confirmados, resto del plantel, nunca quien dijo «no asiste», siempre con 1 arquero). Recién ahí avisa a familias y seguidores, el partido aparece en sus listas y se puede generar el QR del árbitro.
+
+**Por qué.** La hora límite es una regla de negocio: la aplica el servidor con una tarea programada (pg_cron) y, como respaldo, al abrir el partido. Si la regla viviera en la app, bastaría con no abrirla para saltársela.
+
+**Costo.** El autocompletado puede alinear a un jugador que no confirmó (lo pidió el usuario: «se pondrá una predeterminada»). Queda marcado como completado por el sistema y su entrenador recibe un aviso. Sin pg_cron, los avisos llegan recién cuando alguien abre el partido.
 
 ## Antecedente
 

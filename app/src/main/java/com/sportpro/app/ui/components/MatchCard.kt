@@ -55,6 +55,8 @@ fun MatchCard(
     /** null = la tarjeta no muestra estrella (por ejemplo en el Calendario). */
     favorite: Boolean? = null,
     onToggleFavorite: (() -> Unit)? = null,
+    /** true = el usuario es entrenador de este partido acordado y aún falta confirmar alineaciones. */
+    lineupPending: Boolean = false,
 ) {
     val a11y = "${match.homeName} ${match.homeScore}, ${match.awayName} ${match.awayScore}, ${match.statusLabel(nowMs)}"
     Card(
@@ -68,6 +70,10 @@ fun MatchCard(
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 StatusBadge(match, nowMs)
+                if (lineupPending) {
+                    Spacer(Modifier.width(6.dp))
+                    Pill(stringResource(R.string.lineup_pending_pill), WarnAmber)
+                }
                 Text(
                     listOfNotNull(match.category, match.venue).joinToString(" · "),
                     modifier = Modifier.weight(1f).padding(start = 8.dp),

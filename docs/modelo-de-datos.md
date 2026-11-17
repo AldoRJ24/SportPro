@@ -1,6 +1,6 @@
 # Modelo de datos
 
-La base de datos es PostgreSQL en Supabase. Tiene **38 tablas** en el esquema `public`, todas con Row Level Security activado. Se crean con las 16 migraciones de `supabase/migrations/`.
+La base de datos es PostgreSQL en Supabase. Tiene **39 tablas** en el esquema `public`, todas con Row Level Security activado. Se crean con las 17 migraciones de `supabase/migrations/`.
 
 Reglas que valen para todas las tablas:
 
@@ -67,11 +67,12 @@ El diagrama muestra solo las relaciones principales. Las tablas completas están
 
 | Tabla | Qué guarda | Notas |
 |---|---|---|
-| `matches` | Partido: equipos, formato, fecha, sede, visibilidad, estado, periodo, datos del reloj y marcador | El estado, el reloj y el marcador solo los cambian funciones y triggers del servidor |
+| `matches` | Partido: equipos, formato, fecha, sede, visibilidad, estado, periodo, datos del reloj y marcador. Si nació de un desafío, `lineup_flow` y la hora en que se confirmaron las alineaciones | El estado, el reloj y el marcador solo los cambian funciones y triggers del servidor. En un partido acordado, la fecha, el formato y los minutos no se cambian |
 | `match_external_players` | Plantel escrito a mano de un rival que no usa la app | Permite registrar eventos del rival con nombre y dorsal |
 | `match_operators` | Quién registra los eventos de un partido | Como máximo un operador activo por partido |
 | `match_callups` | Convocatoria: jugador, estado (pendiente, confirmado, no asiste) y quién respondió | Solo se puede alinear a quien confirmó |
-| `match_lineup_players` | Alineación: titular o suplente y posición en cancha, para ambos lados | El servidor exige exactamente un arquero titular para iniciar |
+| `match_lineup_players` | Alineación: titular o suplente, posición en cancha y si la completó el servidor (`auto_filled`) | El servidor exige exactamente un arquero titular para iniciar. En un partido acordado cada entrenador ve y edita solo su lado hasta la confirmación |
+| `match_lineup_submissions` | Qué lado envió su alineación y cuándo | Editar después de enviar borra el envío: hay que volver a enviar |
 | `event_types` | Catálogo de tipos de evento (gol, penal, tarjetas, cambio, falta, atajada…), con su icono y qué datos exige | Cada academia puede tener tipos propios |
 | `match_events` | Cada evento del partido: tipo, periodo, minuto, añadido, lado, jugador y datos extra | No se borra ni se edita directo. Lleva `client_event_id` para que un reenvío no lo duplique |
 | `match_event_revisions` | Versión anterior de un evento cada vez que se corrige o anula, con quién y por qué | La escribe un trigger |
@@ -135,6 +136,7 @@ La app llama a funciones SQL (RPC) para todo lo que cambia datos sensibles. Las 
 | Partido | `change_match_state`, `set_match_operator`, `correct_match_event`, `void_match_event`, `get_match_timeline`, `get_match_lineup` |
 | Desafíos | `challenge_rival_teams`, `challenge_create`, `challenge_respond`, `challenge_cancel`, `my_challenges` |
 | Árbitro | `referee_link_get`, `referee_link_revoke` (DT); `referee_match`, `referee_record_event`, `referee_change_state`, `referee_void_event` (página, con el código del QR) |
+| Alineaciones | `lineup_status`, `lineup_submit` (y la tarea programada `_lineups_lock_due`) |
 | Lista de partidos | `my_matches` (qué partidos le corresponden al usuario y por qué), `toggle_match_favorite` |
 | Estadísticas | `get_player_stats`, `get_team_stats` |
 | Resumen con IA | `build_ai_payload`, `upsert_ai_summary`, `save_summary_edit`, `approve_summary` |

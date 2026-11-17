@@ -57,6 +57,9 @@ import com.sportpro.app.ui.components.FormationChips
 import com.sportpro.app.ui.components.FormationCounter
 import com.sportpro.app.ui.components.LoadingBox
 import com.sportpro.app.ui.components.Pill
+import com.sportpro.app.ui.components.rememberNowMs
+import com.sportpro.app.core.data.LineupStatus
+import com.sportpro.app.core.data.formatDayTime
 import com.sportpro.app.ui.components.PositionBadge
 import com.sportpro.app.ui.components.PositionChips
 import com.sportpro.app.ui.components.SectionHeader
@@ -75,7 +78,10 @@ fun MatchSetupScreen(matchId: String, onBack: () -> Unit, onGoLive: () -> Unit) 
     val snack = remember { SnackbarHostState() }
     LaunchedEffect(vm) { vm.messages.collect { snack.showSnackbar(it) } }
     val match = ui.match
-    val editable = match?.isScheduled == true
+    // Se recalcula cada minuto: al pasar la hora límite los botones se apagan solos
+    val now = rememberNowMs(60_000)
+    val editable = ui.editable(now)
+    val status = ui.status
 
     SpScaffold(title = stringResource(R.string.match_setup_convocatoria_y_alineacion), onBack = onBack, snackbarHostState = snack) { pad ->
         when {
@@ -91,7 +97,11 @@ fun MatchSetupScreen(matchId: String, onBack: () -> Unit, onGoLive: () -> Unit) 
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                        if (!editable) Text(stringResource(R.string.match_setup_el_partido_ya_inicio_la), color = WarnAmber)
+                        if (status?.flow == true) {
+                            LineupFlowInfo(status, ui.sides.map { it.side })
+                        } else if (!editable) {
+                            Text(stringResource(R.string.match_setup_el_partido_ya_inicio_la), color = WarnAmber)
+                        }
                     }
                 }
                 ui.sides.forEach { side ->
@@ -157,7 +167,9 @@ fun MatchSetupScreen(matchId: String, onBack: () -> Unit, onGoLive: () -> Unit) 
                             )
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 OutlinedButton(onClick = { vm.autoLineup(side) }, enabled = editable) { Text(stringResource(R.string.match_setup_armar_automatico)) }
-                                Button(onClick = { vm.saveLineup(side) }, enabled = !ui.busy && editable) { Text(stringResource(R.string.match_setup_guardar_alineacion)) }
+                                Button(onClick = { vm.saveLineup(side) }, enabled = !ui.busy && editable) {
+                                    Text(stringResource(if (status?.flow == true) R.string.lineup_save_and_send else R.string.match_setup_guardar_alineacion))
+                                }
                             }
                         }
                     }
@@ -228,9 +240,9 @@ fun MatchSetupScreen(matchId: String, onBack: () -> Unit, onGoLive: () -> Unit) 
                     if (editable) item { AddExternalCard(onAdd = vm::addExternal) }
                 }
 
-                // ---------------- Operador ----------------
-                item { SectionHeader(stringResource(R.string.match_setup_3_operador_del_partido)) }
-                item {
+                // ---------------- Operador (solo el DT local) ----------------
+                if (ui.canManageHome) item { SectionHeader(stringResource(R.string.match_setup_3_operador_del_partido)) }
+                if (ui.canManageHome) item {
                     Text(
                         stringResource(R.string.match_setup_quien_registra_los_eventos_desde),
                         style = MaterialTheme.typography.bodySmall,
@@ -238,7 +250,7 @@ fun MatchSetupScreen(matchId: String, onBack: () -> Unit, onGoLive: () -> Unit) 
                         modifier = Modifier.padding(horizontal = 16.dp),
                     )
                 }
-                items(ui.members, key = { "m" + it.userId }) { m ->
+                if (ui.canManageHome) items(ui.members, key = { "m" + it.userId }) { m ->
                     Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                         RadioButton(selected = ui.operatorId == m.userId, onClick = { vm.setOperator(m.userId) }, enabled = !ui.busy)
                         Avatar(m.profile?.fullName ?: "?", m.profile?.avatarPath, size = 32.dp)
@@ -313,5 +325,36 @@ private fun AddExternalCard(onAdd: (ExternalDraft, () -> Unit) -> Unit) {
         Text(stringResource(R.string.match_setup_agregar_jugador_al_plantel_rival), style = MaterialTheme.typography.labelLarge)
         ExternalRowEditor(row = row, onChange = { row = it }, onRemove = null)
         Button(onClick = { onAdd(row) { row = ExternalDraft() } }) { Text(stringResource(R.string.match_setup_agregar)) }
+    }
+}
+
+/**
+ * Partido acordado por desafío: hasta cuándo se puede editar y el estado de cada lado.
+ * La alineación del rival no se muestra (es secreta hasta la confirmación); solo si ya la envió.
+ */
+@Composable
+private fun LineupFlowInfo(status: LineupStatus, mySides: List<String>) {
+    val small = MaterialTheme.typography.bodySmall
+    Column(Modifier.padding(top = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        if (status.confirmed) {
+            Pill(stringResource(R.string.lineup_confirmed_pill), SuccessGreen)
+            Text(stringResource(R.string.lineup_confirmed_help), style = small, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        } else {
+            Text(stringResource(R.string.lineup_deadline, formatDayTime(status.deadline)), style = small, color = WarnAmber)
+            Text(stringResource(R.string.lineup_flow_help), style = small, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        status.sides.forEach { s ->
+            val mine = s.side in mySides
+            val label = stringResource(if (mine) R.string.lineup_mine else R.string.lineup_rival)
+            val state = when {
+                s.autoFilled -> stringResource(R.string.lineup_state_autofilled)
+                s.submitted -> stringResource(R.string.lineup_state_sent)
+                else -> stringResource(R.string.lineup_state_not_sent)
+            }
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(label, style = MaterialTheme.typography.labelLarge)
+                Pill(state, if (s.submitted || s.autoFilled) SuccessGreen else WarnAmber)
+            }
+        }
     }
 }

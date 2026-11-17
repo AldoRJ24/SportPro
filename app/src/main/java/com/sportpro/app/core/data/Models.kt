@@ -51,6 +51,9 @@ data class MatchRow(
     @SerialName("away_score") val awayScore: Int = 0,
     val home: TeamRef? = null,
     val away: TeamRef? = null,
+    /** Partido acordado por desafío: cada DT envía su alineación (migración 017). */
+    @SerialName("lineup_flow") val lineupFlow: Boolean = false,
+    @SerialName("lineups_confirmed_at") val lineupsConfirmedAt: String? = null,
 ) {
     val homeName: String get() = home?.name ?: AppText.get(R.string.match_home_fallback)
     val awayName: String get() = away?.name ?: awayExternalName ?: AppText.get(R.string.match_away_fallback)
