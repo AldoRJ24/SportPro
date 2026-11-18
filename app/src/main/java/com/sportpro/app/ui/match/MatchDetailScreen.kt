@@ -134,10 +134,7 @@ fun MatchDetailScreen(matchId: String, onBack: () -> Unit, onSetup: () -> Unit, 
                 when (tabs.getOrNull(tab)) {
                     "Registrar" -> RecordTab(ui, pendingHere.size, onPick = vm::startDraft, onEdit = { editing = it })
                     "Cronología" -> TimelineTab(ui, pendingHere, onEdit = if (ui.canCorrect) ({ e: TimelineEvent -> editing = e }) else null)
-                    else -> Row(Modifier.fillMaxWidth()) {
-                        LineupColumn(match.homeName, ui.playersOf("home"), Modifier.weight(1f))
-                        LineupColumn(match.awayName, ui.playersOf("away"), Modifier.weight(1f))
-                    }
+                    else -> LiveLineupTab(ui)
                 }
             }
         }
