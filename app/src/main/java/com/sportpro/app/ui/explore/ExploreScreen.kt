@@ -48,7 +48,7 @@ import com.sportpro.app.ui.components.PrototypeBanner
 import com.sportpro.app.ui.components.SectionHeader
 import com.sportpro.app.ui.components.SpScaffold
 import com.sportpro.app.ui.navigation.LocalAppContainer
-import com.sportpro.app.ui.theme.Mint400
+import com.sportpro.app.ui.theme.Crimson400
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -197,7 +197,7 @@ private fun FollowRowCard(
                     Text(title, style = MaterialTheme.typography.titleSmall)
                     if (verified) {
                         Spacer(Modifier.width(6.dp))
-                        Pill("✓", Mint400)
+                        Pill("✓", Crimson400)
                     }
                 }
                 if (subtitle.isNotBlank()) Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)

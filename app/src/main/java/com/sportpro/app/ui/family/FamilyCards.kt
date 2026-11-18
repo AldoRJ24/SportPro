@@ -29,7 +29,7 @@ import androidx.compose.ui.unit.sp
 import com.sportpro.app.core.data.GuardianRequest
 import com.sportpro.app.core.data.formatDayTime
 import com.sportpro.app.ui.components.Crest
-import com.sportpro.app.ui.theme.Mint400
+import com.sportpro.app.ui.theme.Crimson400
 
 fun shareText(context: Context, subject: String, text: String) {
     val send = Intent(Intent.ACTION_SEND).apply {
@@ -66,7 +66,7 @@ fun FamilyCodeCard(code: String?, modifier: Modifier = Modifier) {
                     Text(code ?: "…", fontSize = 26.sp, fontWeight = FontWeight.Black, letterSpacing = 2.sp)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         TextButton(onClick = { code?.let { clipboard.setText(AnnotatedString(it)) } }, enabled = code != null) {
-                            Text("Copiar código", color = Mint400)
+                            Text("Copiar código", color = Crimson400)
                         }
                         TextButton(
                             onClick = {
@@ -76,7 +76,7 @@ fun FamilyCodeCard(code: String?, modifier: Modifier = Modifier) {
                                 }
                             },
                             enabled = code != null,
-                        ) { Text("Compartir", color = Mint400) }
+                        ) { Text("Compartir", color = Crimson400) }
                     }
                 }
             }

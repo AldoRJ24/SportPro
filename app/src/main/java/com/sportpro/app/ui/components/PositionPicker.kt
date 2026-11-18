@@ -12,7 +12,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.sportpro.app.core.data.Formation
 import com.sportpro.app.core.data.Position
-import com.sportpro.app.ui.theme.Mint400
+import com.sportpro.app.ui.theme.Crimson400
 import com.sportpro.app.ui.theme.WarnAmber
 
 fun positionColor(p: Position?): Color = when (p) {
@@ -51,7 +51,7 @@ fun FormationCounter(formation: Formation, positions: List<Position?>, modifier:
         Position.entries.forEach { p ->
             val have = positions.count { it == p }
             val need = formation.required(p)
-            Pill("${p.short} $have/$need", if (have == need) Mint400 else WarnAmber)
+            Pill("${p.short} $have/$need", if (have == need) Crimson400 else WarnAmber)
         }
     }
 }

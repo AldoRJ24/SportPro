@@ -31,7 +31,7 @@ import com.sportpro.app.core.data.clock
 import com.sportpro.app.core.data.formatDayTime
 import com.sportpro.app.core.data.statusLabel
 import com.sportpro.app.ui.theme.LiveRed
-import com.sportpro.app.ui.theme.Mint400
+import com.sportpro.app.ui.theme.Crimson400
 import com.sportpro.app.ui.theme.ScoreStyle
 import com.sportpro.app.ui.theme.WarnAmber
 
@@ -111,7 +111,7 @@ fun StatusBadge(match: MatchRow, nowMs: Long) {
     when (match.status) {
         "live" -> LivePill("EN VIVO · ${match.clock(nowMs).label}")
         "halftime" -> Pill("ENTRETIEMPO", WarnAmber)
-        "finished" -> Pill("FINALIZADO", Mint400)
+        "finished" -> Pill("FINALIZADO", Crimson400)
         "cancelled" -> Pill("CANCELADO", MaterialTheme.colorScheme.onSurfaceVariant)
         else -> Pill(formatDayTime(match.scheduledAt).uppercase(), MaterialTheme.colorScheme.secondary)
     }

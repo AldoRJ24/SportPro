@@ -47,7 +47,7 @@ import com.sportpro.app.ui.components.dateHint
 import com.sportpro.app.ui.components.parseDateDigits
 import com.sportpro.app.ui.components.scanQr
 import com.sportpro.app.ui.theme.ErrorRed
-import com.sportpro.app.ui.theme.Mint400
+import com.sportpro.app.ui.theme.Crimson400
 import com.sportpro.app.ui.theme.WarnAmber
 
 @Composable
@@ -62,7 +62,7 @@ private fun AuthFrame(content: @Composable ColumnScope.() -> Unit) {
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Spacer(Modifier.height(16.dp))
-        Text("SportPro", fontSize = 40.sp, fontWeight = FontWeight.Black, color = Mint400)
+        Text("SportPro", fontSize = 40.sp, fontWeight = FontWeight.Black, color = Crimson400)
         Text(
             "Gestión de academias y partidos en vivo",
             style = MaterialTheme.typography.bodyMedium,
@@ -77,7 +77,7 @@ private fun AuthFrame(content: @Composable ColumnScope.() -> Unit) {
 private fun Messages(ui: AuthUiState) {
     if (ui.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
     ui.error?.let { Text(it, color = ErrorRed, style = MaterialTheme.typography.bodyMedium) }
-    ui.info?.let { Text(it, color = Mint400, style = MaterialTheme.typography.bodyMedium) }
+    ui.info?.let { Text(it, color = Crimson400, style = MaterialTheme.typography.bodyMedium) }
 }
 
 @Composable
@@ -127,7 +127,7 @@ private fun TypeCard(title: String, subtitle: String, selected: Boolean, onClick
         onClick = onClick,
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
-        border = if (selected) BorderStroke(2.dp, Mint400) else null,
+        border = if (selected) BorderStroke(2.dp, Crimson400) else null,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
     ) {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -158,7 +158,7 @@ fun RegisterScreen(vm: AuthViewModel, onBackToLogin: () -> Unit) {
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Pill("INVITACIÓN ${invite.code}", Mint400)
+                    Pill("INVITACIÓN ${invite.code}", Crimson400)
                     Text(
                         if (kind == "adm") "Te estás registrando como administrador de academias"
                         else "Te estás registrando como entrenador (DT) de ${invite.check?.academyName ?: "la academia"}",

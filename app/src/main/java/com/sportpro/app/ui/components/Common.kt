@@ -47,7 +47,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sportpro.app.ui.theme.LiveRed
-import com.sportpro.app.ui.theme.Mint400
+import com.sportpro.app.ui.theme.Crimson400
 import com.sportpro.app.ui.theme.WarnAmber
 import kotlin.math.abs
 
@@ -222,7 +222,7 @@ fun OnlineDot(online: Boolean, pending: Int, modifier: Modifier = Modifier) {
     Row(modifier, verticalAlignment = Alignment.CenterVertically) {
         Box(
             Modifier.size(8.dp).clip(CircleShape)
-                .background(if (online) Mint400 else WarnAmber),
+                .background(if (online) Crimson400 else WarnAmber),
         )
         Spacer(Modifier.size(6.dp))
         Text(

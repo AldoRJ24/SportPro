@@ -47,7 +47,7 @@ import com.sportpro.app.ui.family.FamilyCodeCard
 import com.sportpro.app.ui.family.GuardianRequestCard
 import com.sportpro.app.ui.navigation.LocalAppContainer
 import com.sportpro.app.ui.session.SessionViewModel
-import com.sportpro.app.ui.theme.Mint400
+import com.sportpro.app.ui.theme.Crimson400
 import com.sportpro.app.ui.theme.WarnAmber
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -84,7 +84,7 @@ fun ProfileScreen(
                     Spacer(Modifier.width(14.dp))
                     Column(Modifier.weight(1f)) {
                         Text(ctx?.displayName ?: "Cargando…", style = MaterialTheme.typography.titleLarge)
-                        if (ctx?.isPlatformAdmin == true) Pill("Superadmin", Mint400)
+                        if (ctx?.isPlatformAdmin == true) Pill("Superadmin", Crimson400)
                     }
                     OutlinedButton(onClick = onEditProfile) { Text("Editar perfil") }
                 }

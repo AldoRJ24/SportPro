@@ -48,7 +48,7 @@ import com.sportpro.app.ui.components.Pill
 import com.sportpro.app.ui.navigation.LocalAppContainer
 import com.sportpro.app.ui.session.SessionViewModel
 import com.sportpro.app.ui.theme.ErrorRed
-import com.sportpro.app.ui.theme.Mint400
+import com.sportpro.app.ui.theme.Crimson400
 import com.sportpro.app.ui.theme.WarnAmber
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -106,7 +106,7 @@ fun GuardianLinkScreen(session: SessionViewModel) {
         Modifier.fillMaxSize().safeDrawingPadding().imePadding().verticalScroll(rememberScrollState()).padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        Text("SPORTPRO", color = Mint400, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+        Text("SPORTPRO", color = Crimson400, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
         Text("Vincula a tu apoderado", style = MaterialTheme.typography.headlineSmall)
         Text(
             "Hola, ${ctx?.displayName ?: ""}. Como eres menor de edad, para activar tu cuenta necesitamos la autorización de tu apoderado.",

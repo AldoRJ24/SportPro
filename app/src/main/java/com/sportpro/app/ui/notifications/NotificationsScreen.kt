@@ -41,7 +41,7 @@ import com.sportpro.app.ui.navigation.LocalAppContainer
 import com.sportpro.app.ui.profile.CallupCard
 import com.sportpro.app.ui.profile.FamilyViewModel
 import com.sportpro.app.ui.session.SessionViewModel
-import com.sportpro.app.ui.theme.Mint400
+import com.sportpro.app.ui.theme.Crimson400
 
 /** Campana: «Notificaciones» (vinculaciones, invitaciones, convocatorias: reales) y «Avisos» del DT (prototipo). */
 @Composable
@@ -109,7 +109,7 @@ fun NotificationsScreen(session: SessionViewModel, onBack: () -> Unit, onOpenMat
 private fun NotificationLine(n: NotificationRow) {
     Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.Top) {
         if (n.isUnread) {
-            Spacer(Modifier.padding(top = 6.dp).size(8.dp).clip(CircleShape).background(Mint400))
+            Spacer(Modifier.padding(top = 6.dp).size(8.dp).clip(CircleShape).background(Crimson400))
         } else {
             Spacer(Modifier.size(8.dp))
         }

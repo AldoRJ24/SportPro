@@ -5,32 +5,32 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 
 private val SportProColors = darkColorScheme(
-    primary = Mint400,
-    onPrimary = Mint900,
-    primaryContainer = Petrol700,
-    onPrimaryContainer = Mint300,
-    secondary = Teal300,
-    onSecondary = Petrol950,
-    secondaryContainer = Petrol700,
+    primary = Crimson400,
+    onPrimary = Crimson950,
+    primaryContainer = Crimson800,
+    onPrimaryContainer = Crimson100,
+    secondary = Coral300,
+    onSecondary = Carbon950,
+    secondaryContainer = Carbon700,
     onSecondaryContainer = TextHigh,
     tertiary = WarnAmber,
-    background = Petrol900,
+    background = Carbon900,
     onBackground = TextHigh,
-    surface = Petrol900,
+    surface = Carbon900,
     onSurface = TextHigh,
-    surfaceVariant = Petrol800,
+    surfaceVariant = Carbon800,
     onSurfaceVariant = TextMid,
-    surfaceContainer = Petrol850,
-    surfaceContainerHigh = Petrol800,
-    surfaceContainerHighest = Petrol700,
-    surfaceContainerLow = Petrol850,
-    surfaceContainerLowest = Petrol950,
-    outline = Petrol600,
-    outlineVariant = Petrol700,
+    surfaceContainer = Carbon850,
+    surfaceContainerHigh = Carbon800,
+    surfaceContainerHighest = Carbon700,
+    surfaceContainerLow = Carbon850,
+    surfaceContainerLowest = Carbon950,
+    outline = Carbon600,
+    outlineVariant = Carbon700,
     error = ErrorRed,
 )
 
-/** Dark, high-contrast theme (usable outdoors during matches). */
+/** Tema oscuro deportivo en rojos, de alto contraste (usable al aire libre durante los partidos). */
 @Composable
 fun SportProTheme(content: @Composable () -> Unit) {
     MaterialTheme(colorScheme = SportProColors, typography = Typography, content = content)
