@@ -17,8 +17,11 @@
 -- Cómo ejecutarlo: Supabase Dashboard → SQL Editor → pegar TODO → Run.
 -- Si las cuentas de prueba ya existen, no hace nada (no duplica).
 -- No tiene fotos ni documentos: esos se suben desde la app (no se pueden crear por SQL).
+--
+-- Atomicidad: toda la carga ocurre dentro de UN solo bloque «do» (al final). Si algo falla,
+-- Postgres deshace el bloque completo y no queda nada a medias. No se usa begin/commit porque
+-- el SQL Editor confirma cada instrucción por separado.
 -- =====================================================================
-begin;
 
 -- ---------------------------------------------------------------------
 -- Funciones auxiliares TEMPORALES (pg_temp: desaparecen al cerrar la sesión)
@@ -50,12 +53,13 @@ begin
   return v_id;
 end $$;
 
--- Jugadores del seed por equipo y dorsal: H15 / T15 (Sub-15) y H12 / T12 (Sub-12)
-create temp table seed_pl (team text, jersey int, id uuid, primary key (team, jersey)) on commit drop;
-
-create or replace function pg_temp.pl(p_team text, p_jersey int) returns uuid language sql stable as $$
-  select id from seed_pl where team = p_team and jersey = p_jersey
-$$;
+-- Jugadores del seed por equipo y dorsal: H15 / T15 (Sub-15) y H12 / T12 (Sub-12).
+-- La tabla temporal seed_pl se crea DENTRO del bloque de carga (ver más abajo), por eso
+-- estas funciones son plpgsql: buscan la tabla al ejecutarse, no al crearse.
+create or replace function pg_temp.pl(p_team text, p_jersey int) returns uuid language plpgsql as $$
+begin
+  return (select id from seed_pl where team = p_team and jersey = p_jersey);
+end $$;
 
 -- Alta de un jugador ficticio en el plantel (perfil sin cuenta, como lo crea el staff)
 create or replace function pg_temp.add_player(p_key text, p_team uuid, p_jersey int, p_first text, p_last text,
@@ -176,6 +180,9 @@ begin
     raise notice 'Los datos de prueba ya estaban cargados: no se hizo nada.';
     return;
   end if;
+  -- Tabla de trabajo (temporal: solo existe durante esta carga)
+  drop table if exists pg_temp.seed_pl;
+  create temp table seed_pl (team text, jersey int, id uuid, primary key (team, jersey));
 
   -- =================== 1. Cuentas, academias e invitaciones ===================
   u_super := pg_temp.new_user('superadmin@sportpro.test', '{"full_name":"Carlos Superadmin","birth_date":"1985-03-12"}');
@@ -617,7 +624,6 @@ begin
   update public.notifications set read_at = now()
    where kind = 'match_live' and (data->>'match_id')::uuid in (m1, m2, m3);
 
+  drop table seed_pl;
   raise notice 'Datos de prueba cargados. Contraseña de todas las cuentas: 12345678 (ver docs/datos-de-prueba.md).';
 end $seed$;
-
-commit;
