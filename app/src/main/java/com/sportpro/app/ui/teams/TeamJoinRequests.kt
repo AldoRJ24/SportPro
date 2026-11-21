@@ -17,7 +17,10 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
@@ -89,19 +92,39 @@ class TeamRequestsViewModel(private val container: AppContainer) : ViewModel() {
     }
 }
 
-/** Bloque del perfil del DT: «Solicitudes para unirse» con Aceptar / Rechazar. No ocupa espacio si no hay. */
+/**
+ * «Solicitudes para unirse» con Aceptar / Rechazar (perfil del DT y plantel de cada equipo).
+ * Con [teamId] muestra solo las de ese equipo. No ocupa espacio si no hay.
+ *
+ * Para que el DT no se quede sin verlas, la lista se vuelve a pedir:
+ *  - al llegar una notificación (tiempo real);
+ *  - cada vez que la pantalla vuelve a mostrarse;
+ *  - cada 10 segundos mientras está a la vista (por si el aviso en tiempo real no llega, por
+ *    ejemplo con mala señal): el DT puede estar mostrando el QR mientras el jugador lo escanea.
+ */
 @Composable
-fun TeamJoinRequestsBlock(onChanged: () -> Unit, modifier: Modifier = Modifier) {
+fun TeamJoinRequestsBlock(onChanged: () -> Unit, modifier: Modifier = Modifier, teamId: String? = null) {
     val container = LocalAppContainer.current
-    val vm: TeamRequestsViewModel = viewModel { TeamRequestsViewModel(container) }
+    val vm: TeamRequestsViewModel = viewModel(key = "team-requests-${teamId ?: "all"}") { TeamRequestsViewModel(container) }
     val ui by vm.ui.collectAsStateWithLifecycle()
-    if (ui.requests.isEmpty() && ui.message == null) return
+    LifecycleResumeEffect(vm) {
+        vm.load()
+        onPauseOrDispose { }
+    }
+    LaunchedEffect(vm) {
+        while (true) {
+            delay(10_000)
+            vm.load()
+        }
+    }
+    val requests = ui.requests.filter { teamId == null || it.teamId == teamId }
+    if (requests.isEmpty() && ui.message == null) return
     Column(modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        SectionHeader(stringResource(R.string.team_join_requests_solicitudes_para_unirse_x, ui.requests.size))
+        SectionHeader(stringResource(R.string.team_join_requests_solicitudes_para_unirse_x, requests.size))
         ui.message?.let {
             Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(horizontal = 16.dp))
         }
-        ui.requests.forEach { r ->
+        requests.forEach { r ->
             Card(
                 Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),

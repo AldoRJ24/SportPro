@@ -4,6 +4,7 @@ import com.sportpro.app.R
 import com.sportpro.app.core.AppText
 import io.github.jan.supabase.exceptions.RestException
 import io.github.jan.supabase.postgrest.exception.PostgrestRestException
+import io.ktor.client.plugins.HttpRequestTimeoutException
 
 /** true si el servidor respondió (validación o permiso). false significa un problema de red. */
 fun Throwable.isServerAnswer(): Boolean = this is RestException
@@ -19,6 +20,8 @@ fun Throwable.friendlyMessage(): String {
     }
     val lower = raw.lowercase()
     return when {
+        // El servidor no alcanzó a responder a tiempo: no es lo mismo que no tener internet
+        this is HttpRequestTimeoutException -> AppText.get(R.string.error_timeout)
         this !is RestException -> AppText.get(R.string.error_no_connection)
         "invalid login credentials" in lower || "invalid_credentials" in lower -> AppText.get(R.string.error_bad_credentials)
         "email not confirmed" in lower -> AppText.get(R.string.error_email_not_confirmed)

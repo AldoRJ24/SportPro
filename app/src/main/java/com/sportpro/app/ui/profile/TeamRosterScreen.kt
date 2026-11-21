@@ -50,6 +50,8 @@ import com.sportpro.app.ui.components.SectionHeader
 import com.sportpro.app.ui.components.SpScaffold
 import com.sportpro.app.ui.navigation.LocalAppContainer
 import com.sportpro.app.ui.teams.TeamInviteCard
+import com.sportpro.app.ui.teams.TeamJoinRequestsBlock
+import com.sportpro.app.ui.theme.WarnAmber
 import kotlinx.coroutines.launch
 
 /**
@@ -71,6 +73,8 @@ fun TeamRosterScreen(teamId: String, name: String, onBack: () -> Unit) {
     // Cambiar este número vuelve a cargar todo (reintentar, o refrescar tras una acción)
     var attempt by remember { mutableIntStateOf(0) }
     var joinCode by remember { mutableStateOf<String?>(null) }
+    // Apoderados de los menores (id del jugador → nombres; null = aún sin apoderado aprobado)
+    var guardians by remember { mutableStateOf<Map<String, String?>>(emptyMap()) }
     var editingJersey by remember { mutableStateOf<TeamPlayerRow?>(null) }
     var removing by remember { mutableStateOf<TeamPlayerRow?>(null) }
 
@@ -81,6 +85,8 @@ fun TeamRosterScreen(teamId: String, name: String, onBack: () -> Unit) {
         former = runCatching { container.club.formerTeamPlayers(teamId) }.getOrDefault(former)
         // Código para invitar jugadores (solo el DT/admin del equipo lo obtiene)
         joinCode = runCatching { container.club.teamJoinCode(teamId) }.getOrNull()
+        // Solo el staff del equipo los recibe (privacidad de menores); si falla, no se muestran
+        guardians = runCatching { container.club.teamGuardians(teamId) }.getOrDefault(guardians)
     }
 
     /** Ejecuta una acción del servidor; si sale bien muestra [doneRes] y recarga el plantel. */
@@ -118,6 +124,9 @@ fun TeamRosterScreen(teamId: String, name: String, onBack: () -> Unit) {
                         modifier = Modifier.padding(16.dp),
                     )
                 }
+                // Solicitudes de quienes usaron el código de ESTE equipo: el DT las ve justo debajo
+                // del QR que está mostrando. Al aceptar, el jugador aparece en el plantel.
+                item { TeamJoinRequestsBlock(onChanged = { attempt++ }, teamId = teamId) }
                 if (list.isEmpty()) {
                     item {
                         EmptyState(
@@ -152,6 +161,16 @@ fun TeamRosterScreen(teamId: String, name: String, onBack: () -> Unit) {
                                 Text(tp.player?.fullName ?: stringResource(R.string.roster_player_fallback), modifier = Modifier.weight(1f))
                                 PositionBadge(Position.of(tp.position))
                                 Spacer(Modifier.width(4.dp))
+                            }
+                            // Jugador menor: quién es su apoderado (o aviso si todavía no tiene)
+                            if (tp.playerId in guardians) {
+                                val names = guardians[tp.playerId]
+                                Text(
+                                    if (names != null) stringResource(R.string.roster_guardian, names)
+                                    else stringResource(R.string.roster_no_guardian),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = if (names != null) MaterialTheme.colorScheme.onSurfaceVariant else WarnAmber,
+                                )
                             }
                             PositionChips(
                                 selected = Position.of(tp.position),

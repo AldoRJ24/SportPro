@@ -1156,4 +1156,12 @@
     <string name="live_legend">Se actualiza en vivo. La estrella azul es el MVP: quien más goles metió (si hay empate, nadie la lleva). Verde: entró; rojo: salió.</string>
     <string name="recorder_assist_title">¿Quién dio la asistencia? (gol de %1$s)</string>
     <string name="recorder_assist_none">Sin asistencia</string>
+
+    <!-- Equipos favoritos, apoderados en el plantel y espera del resumen IA (migración 019) -->
+    <string name="explore_favorite_teams">Mis equipos favoritos</string>
+    <string name="explore_favorite_team">Marcar equipo como favorito</string>
+    <string name="explore_unfavorite_team">Quitar equipo de favoritos</string>
+    <string name="roster_guardian">Apoderado: %1$s</string>
+    <string name="roster_no_guardian">Sin apoderado aprobado todavía</string>
+    <string name="error_timeout">El servidor tardó demasiado en responder. Inténtalo otra vez en un momento.</string>
 </resources>

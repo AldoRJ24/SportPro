@@ -11,6 +11,8 @@ import com.sportpro.app.core.data.PlayerRef
 import com.sportpro.app.core.data.PlayerStats
 import com.sportpro.app.core.data.Profile
 import com.sportpro.app.core.data.TeamCodeCheck
+import com.sportpro.app.core.data.TeamFavoriteRow
+import com.sportpro.app.core.data.TeamGuardianRow
 import com.sportpro.app.core.data.TeamJoinRequest
 import com.sportpro.app.core.data.TeamPlayerRow
 import com.sportpro.app.core.data.TeamRef
@@ -152,6 +154,21 @@ class ClubRepository(private val client: SupabaseClient) {
     suspend fun unfollow(followId: String) {
         client.from("follows").delete { filter { eq("id", followId) } }
     }
+
+    // ---- Equipos favoritos (migración 019): aparte de «Seguir», sin avisos ----
+    // La política de fila devuelve solo los del usuario.
+    suspend fun favoriteTeamIds(): Set<String> =
+        client.from("team_favorites").select(Columns.raw("team_id")).decodeRows<TeamFavoriteRow>().map { it.teamId }.toSet()
+
+    // Marca o desmarca; devuelve true si quedó marcado.
+    suspend fun toggleTeamFavorite(teamId: String): Boolean =
+        client.postgrest.rpc("toggle_team_favorite", buildJsonObject { put("p_team", teamId) }).decodeScalar()
+
+    // ---- Apoderados de los menores de un equipo (solo el staff los recibe; migración 019) ----
+    // id del jugador → nombres de sus apoderados (null = todavía no tiene uno aprobado).
+    suspend fun teamGuardians(teamId: String): Map<String, String?> =
+        client.postgrest.rpc("team_guardians", buildJsonObject { put("p_team", teamId) })
+            .decodeRows<TeamGuardianRow>().associate { it.playerId to it.guardianNames }
 
     // ---- Convocatorias (US-04) de mis hijos o mías ----
     suspend fun callupsForPlayers(playerIds: List<String>): List<Callup> {

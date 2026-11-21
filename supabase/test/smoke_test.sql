@@ -1281,5 +1281,34 @@ select pg_temp.expect_fail($$select public.lineup_save('e0000000-0000-0000-0000-
 select pg_temp.expect_fail($$select public.coach_formation_save(7, 'x', '2-3-1', '[]'::jsonb)$$, 'anon no guarda formaciones');
 reset role;
 
+-- =====================================================================
+-- EQUIPOS FAVORITOS Y APODERADOS EN EL PLANTEL (migración 019)
+-- =====================================================================
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000006');
+select pg_temp.expect_eq(public.toggle_team_favorite('c0000000-0000-0000-0000-000000000001'), true, 'el seguidor marca un equipo como favorito (019)');
+select pg_temp.expect_eq((select count(*) from public.team_favorites)::int, 1, 've su equipo favorito');
+select pg_temp.expect_fail($$select public.toggle_team_favorite(gen_random_uuid())$$, 'no se marca un equipo inexistente');
+select pg_temp.expect_fail($$insert into public.team_favorites (user_id, team_id) values (auth.uid(), 'c0000000-0000-0000-0000-000000000002')$$, 'los favoritos solo se escriben por función');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000007');
+select pg_temp.expect_eq((select count(*) from public.team_favorites)::int, 0, 'nadie ve los favoritos ajenos');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000006');
+select pg_temp.expect_eq(public.toggle_team_favorite('c0000000-0000-0000-0000-000000000001'), false, 'tocar otra vez lo quita de favoritos');
+
+-- Apoderados: el DT de Halcones ve quién es el apoderado de cada menor; nadie más
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+select pg_temp.expect_eq((select guardian_names from public.team_guardians('c0000000-0000-0000-0000-000000000001') where player_id = current_setting('t.child')::uuid),
+                         'Paola Apoderada', 'el DT ve al apoderado del menor');
+select pg_temp.expect_eq((select count(*) from public.team_guardians('c0000000-0000-0000-0000-000000000001') where guardian_names is null)::int > 0, true,
+                         'los menores sin apoderado aprobado aparecen sin nombre');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000006');
+select pg_temp.expect_eq((select count(*) from public.team_guardians('c0000000-0000-0000-0000-000000000001'))::int, 0, 'un seguidor no ve a los apoderados');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000007');
+select pg_temp.expect_eq((select count(*) from public.team_guardians('c0000000-0000-0000-0000-000000000001'))::int, 0, 'otro DT tampoco');
+select pg_temp.as_su();
+set role anon;
+select pg_temp.expect_fail($$select public.toggle_team_favorite('c0000000-0000-0000-0000-000000000001')$$, 'anon no marca favoritos');
+select pg_temp.expect_fail($$select * from public.team_guardians('c0000000-0000-0000-0000-000000000001')$$, 'anon no ve apoderados');
+reset role;
+
 select pg_temp.as_su();
 \echo '=== TODAS LAS PRUEBAS PASARON ==='

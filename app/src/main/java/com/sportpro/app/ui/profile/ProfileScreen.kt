@@ -22,12 +22,14 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.res.stringResource
@@ -79,6 +81,15 @@ fun ProfileScreen(
     val ui by vm.ui.collectAsStateWithLifecycle()
     val snack = remember { SnackbarHostState() }
     LaunchedEffect(ctx) { vm.load(ctx) }
+    // Al volver al perfil se recargan equipos, convocatorias y solicitudes: si el DT aceptó la
+    // solicitud mientras tanto, el equipo nuevo aparece aunque no haya llegado el aviso en tiempo real.
+    // (Atado a la pantalla y no a ctx: refreshContext cambia ctx y no debe volver a dispararlo.)
+    val currentCtx by rememberUpdatedState(ctx)
+    LifecycleResumeEffect(vm) {
+        vm.load(currentCtx)
+        session.refreshContext()
+        onPauseOrDispose { }
+    }
     LaunchedEffect(ui.message) {
         ui.message?.let { snack.showSnackbar(it); vm.consumeMessage() }
     }

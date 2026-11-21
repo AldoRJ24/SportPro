@@ -31,7 +31,11 @@ import io.github.jan.supabase.realtime.PostgresAction
 import io.github.jan.supabase.realtime.channel
 import io.github.jan.supabase.realtime.postgresChangeFlow
 import io.github.jan.supabase.realtime.realtime
+import io.ktor.client.plugins.timeout
+import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
@@ -408,10 +412,13 @@ class MatchRepository(private val client: SupabaseClient) {
      * jugadores y guarda el borrador. La clave de Gemini vive solo en el servidor.
      */
     suspend fun generateSummary(matchId: String): String {
-        val response = client.functions.invoke(
-            function = "generate-match-summary",
-            body = buildJsonObject { put("match_id", matchId) },
-        )
+        val response = client.functions.invoke(function = "generate-match-summary") {
+            contentType(ContentType.Application.Json)
+            setBody(buildJsonObject { put("match_id", matchId) }.toString())
+            // La IA suele tardar más que los 10 s que el cliente espera por defecto; si se corta
+            // antes, la app lo confundía con «sin conexión». Solo esta llamada espera hasta 90 s.
+            timeout { requestTimeoutMillis = SUMMARY_TIMEOUT_MS }
+        }
         return response.bodyAsText()
     }
 
@@ -490,6 +497,9 @@ class MatchRepository(private val client: SupabaseClient) {
     }
 
     companion object {
+        /** Espera máxima del resumen con IA (la Edge Function llama a Gemini, que puede demorar). */
+        const val SUMMARY_TIMEOUT_MS = 90_000L
+
         const val MATCH_COLS =
             "id,academy_id,home_team_id,away_team_id,away_external_name,format_players,half_minutes,scheduled_at,venue," +
                 "visibility,status,period,period_started_at,elapsed_before_seconds,clock_running,finished_at,home_score,away_score," +

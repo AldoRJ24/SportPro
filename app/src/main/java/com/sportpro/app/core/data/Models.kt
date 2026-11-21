@@ -237,6 +237,17 @@ data class FollowRow(
     @SerialName("team_id") val teamId: String? = null,
 )
 
+/** Equipo marcado con estrella por el usuario (migración 019). */
+@Serializable
+data class TeamFavoriteRow(@SerialName("team_id") val teamId: String)
+
+/** Apoderados de un jugador menor del plantel (null = aún sin apoderado aprobado). */
+@Serializable
+data class TeamGuardianRow(
+    @SerialName("player_id") val playerId: String,
+    @SerialName("guardian_names") val guardianNames: String? = null,
+)
+
 @Serializable
 data class MemberRow(
     @SerialName("user_id") val userId: String,

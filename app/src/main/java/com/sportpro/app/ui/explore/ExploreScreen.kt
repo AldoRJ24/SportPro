@@ -14,10 +14,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -51,6 +53,7 @@ import com.sportpro.app.ui.components.SectionHeader
 import com.sportpro.app.ui.components.SpScaffold
 import com.sportpro.app.ui.navigation.LocalAppContainer
 import com.sportpro.app.ui.theme.BrandBlue
+import com.sportpro.app.ui.theme.FavoriteGold
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -63,6 +66,8 @@ data class ExploreUi(
     val academies: List<AcademyRef> = emptyList(),
     val teams: List<TeamRef> = emptyList(),
     val follows: List<FollowRow> = emptyList(),
+    /** Equipos marcados con estrella (aparte de «Seguir»; migración 019). */
+    val favorites: Set<String> = emptySet(),
     val message: String? = null,
 )
 
@@ -79,7 +84,9 @@ class ExploreViewModel(private val container: AppContainer) : ViewModel() {
                 val academies = container.club.visibleAcademies()
                 val teams = container.club.visibleTeams()
                 val follows = container.club.myFollows()
-                _ui.update { ExploreUi(loading = false, academies = academies, teams = teams, follows = follows) }
+                // Si los favoritos fallan, Explorar se muestra igual (solo sin estrellas marcadas)
+                val favorites = runCatching { container.club.favoriteTeamIds() }.getOrDefault(emptySet())
+                _ui.update { ExploreUi(loading = false, academies = academies, teams = teams, follows = follows, favorites = favorites) }
             } catch (e: Exception) {
                 _ui.update { it.copy(loading = false, error = e.friendlyMessage()) }
             }
@@ -95,6 +102,24 @@ class ExploreViewModel(private val container: AppContainer) : ViewModel() {
                 onChanged()
             } catch (e: Exception) {
                 _ui.update { it.copy(message = e.friendlyMessage()) }
+            }
+        }
+    }
+
+    /**
+     * Estrella de un equipo. Cambia en pantalla al instante y luego confirma con el servidor;
+     * si falla, vuelve a como estaba y muestra el motivo.
+     */
+    fun toggleFavorite(team: TeamRef) {
+        val before = _ui.value.favorites
+        val wanted = team.id !in before
+        _ui.update { it.copy(favorites = if (wanted) before + team.id else before - team.id) }
+        viewModelScope.launch {
+            try {
+                val now = container.club.toggleTeamFavorite(team.id)
+                _ui.update { it.copy(favorites = if (now) it.favorites + team.id else it.favorites - team.id) }
+            } catch (e: Exception) {
+                _ui.update { it.copy(favorites = before, message = e.friendlyMessage()) }
             }
         }
     }
@@ -146,6 +171,14 @@ fun ExploreScreen(onBell: () -> Unit, onFollowChanged: () -> Unit, onTryouts: ()
                     // Avisos de pruebas: pantalla propia con filtros por categoría, posición, fecha y distrito
                     item { TryoutsEntryCard(onClick = onTryouts) }
                     ui.message?.let { item { Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(horizontal = 16.dp)) } }
+                    // Mis equipos favoritos, arriba y a mano (solo sin búsqueda, para no repetirlos)
+                    val favoriteTeams = ui.teams.filter { it.id in ui.favorites }
+                    if (q.isEmpty() && favoriteTeams.isNotEmpty()) {
+                        item { SectionHeader(stringResource(R.string.explore_favorite_teams)) }
+                        items(favoriteTeams, key = { "f" + it.id }) { t ->
+                            TeamRowCard(t, ui, vm, onFollowChanged)
+                        }
+                    }
                     item { SectionHeader(stringResource(R.string.explore_academias)) }
                     if (academies.isEmpty()) item { EmptyState(stringResource(R.string.explore_sin_resultados), stringResource(R.string.explore_prueba_con_otro_nombre)) }
                     items(academies, key = { "a" + it.id }) { a ->
@@ -161,15 +194,7 @@ fun ExploreScreen(onBell: () -> Unit, onFollowChanged: () -> Unit, onTryouts: ()
                     }
                     item { SectionHeader(stringResource(R.string.explore_equipos)) }
                     items(teams, key = { "t" + it.id }) { t ->
-                        val following = ui.follows.any { it.teamId == t.id }
-                        FollowRowCard(
-                            title = t.name,
-                            subtitle = listOfNotNull(t.category, ui.academies.firstOrNull { it.id == t.academyId }?.name).joinToString(" · "),
-                            verified = false,
-                            following = following,
-                            onToggle = { vm.toggleTeam(t, onFollowChanged) },
-                            crestPath = t.crestPath,
-                        )
+                        TeamRowCard(t, ui, vm, onFollowChanged)
                     }
                 }
             }
@@ -177,7 +202,25 @@ fun ExploreScreen(onBell: () -> Unit, onFollowChanged: () -> Unit, onTryouts: ()
     }
 }
 
-/** Fila de una academia o equipo: escudo, nombre, datos y el botón «Seguir» / «Siguiendo». */
+/** Fila de un equipo: datos, estrella de favorito y «Seguir». */
+@Composable
+private fun TeamRowCard(t: TeamRef, ui: ExploreUi, vm: ExploreViewModel, onFollowChanged: () -> Unit) {
+    FollowRowCard(
+        title = t.name,
+        subtitle = listOfNotNull(t.category, ui.academies.firstOrNull { it.id == t.academyId }?.name).joinToString(" · "),
+        verified = false,
+        following = ui.follows.any { it.teamId == t.id },
+        onToggle = { vm.toggleTeam(t, onFollowChanged) },
+        crestPath = t.crestPath,
+        favorite = t.id in ui.favorites,
+        onFavorite = { vm.toggleFavorite(t) },
+    )
+}
+
+/**
+ * Fila de una academia o equipo: escudo, nombre, datos y el botón «Seguir» / «Siguiendo».
+ * Los equipos además llevan la estrella de favorito ([favorite] distinto de null).
+ */
 @Composable
 private fun FollowRowCard(
     title: String,
@@ -186,6 +229,8 @@ private fun FollowRowCard(
     following: Boolean,
     onToggle: () -> Unit,
     crestPath: String? = null,
+    favorite: Boolean? = null,
+    onFavorite: () -> Unit = {},
 ) {
     Card(
         Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 5.dp),
@@ -203,6 +248,16 @@ private fun FollowRowCard(
                     }
                 }
                 if (subtitle.isNotBlank()) Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            if (favorite != null) {
+                IconButton(onClick = onFavorite) {
+                    // Misma estrella que los partidos favoritos: dorada si está marcado, gris si no
+                    Icon(
+                        Icons.Filled.Star,
+                        contentDescription = stringResource(if (favorite) R.string.explore_unfavorite_team else R.string.explore_favorite_team),
+                        tint = if (favorite) FavoriteGold else MaterialTheme.colorScheme.outline.copy(alpha = 0.55f),
+                    )
+                }
             }
             if (following) OutlinedButton(onClick = onToggle) { Text(stringResource(R.string.explore_siguiendo)) }
             else Button(onClick = onToggle) { Text(stringResource(R.string.explore_seguir)) }
