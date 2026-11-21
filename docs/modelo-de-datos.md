@@ -71,8 +71,10 @@ El diagrama muestra solo las relaciones principales. Las tablas completas están
 | `match_external_players` | Plantel escrito a mano de un rival que no usa la app | Permite registrar eventos del rival con nombre y dorsal |
 | `match_operators` | Quién registra los eventos de un partido | Como máximo un operador activo por partido |
 | `match_callups` | Convocatoria: jugador, estado (pendiente, confirmado, no asiste) y quién respondió | Solo se puede alinear a quien confirmó |
-| `match_lineup_players` | Alineación: titular o suplente, posición en cancha y si la completó el servidor (`auto_filled`) | El servidor exige exactamente un arquero titular para iniciar. En un partido acordado cada entrenador ve y edita solo su lado hasta la confirmación |
+| `match_lineup_players` | Alineación: titular o suplente, posición, lugar en la cancha (`slot_x`, `slot_y`, migración 018) y si la completó el servidor (`auto_filled`) | El servidor exige exactamente un arquero titular para iniciar. En un partido acordado cada entrenador ve y edita solo su lado hasta la confirmación |
 | `match_lineup_submissions` | Qué lado envió su alineación y cuándo | Editar después de enviar borra el envío: hay que volver a enviar |
+| `match_lineup_formations` | Nombre de la formación de cada lado («4-4-2», «4-2-3-1»…) | Se ve igual que la alineación: el lado ajeno de un partido acordado, recién al confirmarse. Solo se escribe con `lineup_save` |
+| `coach_formations` | Formaciones propias de un entrenador: casillas con posición y lugar | Cada entrenador ve solo las suyas. No se borran: se archivan. Solo se escriben por función |
 | `event_types` | Catálogo de tipos de evento (gol, penal, tarjetas, cambio, falta, atajada…), con su icono y qué datos exige | Cada academia puede tener tipos propios |
 | `match_events` | Cada evento del partido: tipo, periodo, minuto, añadido, lado, jugador y datos extra | No se borra ni se edita directo. Lleva `client_event_id` para que un reenvío no lo duplique |
 | `match_event_revisions` | Versión anterior de un evento cada vez que se corrige o anula, con quién y por qué | La escribe un trigger |
@@ -133,7 +135,7 @@ La app llama a funciones SQL (RPC) para todo lo que cambia datos sensibles. Las 
 
 | Tema | Funciones |
 |---|---|
-| Partido | `change_match_state`, `set_match_operator`, `correct_match_event`, `void_match_event`, `get_match_timeline`, `get_match_lineup` |
+| Partido | `change_match_state`, `set_match_operator`, `correct_match_event`, `void_match_event`, `get_match_timeline`, `get_match_lineup`, `get_match_lineup_pitch`, `lineup_save`, `get_roster_photos`, `coach_formation_save`, `coach_formation_archive` |
 | Desafíos | `challenge_rival_teams`, `challenge_create`, `challenge_respond`, `challenge_cancel`, `my_challenges` |
 | Árbitro | `referee_link_get`, `referee_link_revoke` (DT); `referee_match`, `referee_record_event`, `referee_change_state`, `referee_void_event` (página, con el código del QR) |
 | Alineaciones | `lineup_status`, `lineup_submit` (y la tarea programada `_lineups_lock_due`) |

@@ -1,7 +1,12 @@
 package com.sportpro.app.core.data.repo
 
 import com.sportpro.app.core.data.Callup
+import com.sportpro.app.core.data.CoachFormationRow
 import com.sportpro.app.core.data.EventType
+import com.sportpro.app.core.data.LineupEntry
+import com.sportpro.app.core.data.PitchSlot
+import com.sportpro.app.core.data.RosterPhotoRow
+import com.sportpro.app.core.data.SideFormationRow
 import com.sportpro.app.core.data.ExternalDraft
 import com.sportpro.app.core.data.ExternalPlayer
 import com.sportpro.app.core.data.IdRow
@@ -117,8 +122,55 @@ class MatchRepository(private val client: SupabaseClient) {
         client.postgrest.rpc("get_match_timeline", buildJsonObject { put("p_match", matchId) }).decodeRows()
 
     // Alineación de ambos lados (titular/suplente, dorsal y posición), incluido el rival externo.
+    // Usa la versión de la migración 018, que trae además el lugar en la cancha y la foto
+    // (la foto de un menor solo llega a su apoderado, a él mismo o al staff de su equipo).
     suspend fun lineup(matchId: String): List<LineupPlayer> =
-        client.postgrest.rpc("get_match_lineup", buildJsonObject { put("p_match", matchId) }).decodeRows()
+        client.postgrest.rpc("get_match_lineup_pitch", buildJsonObject { put("p_match", matchId) }).decodeRows()
+
+    // Nombre de la formación de cada lado («4-4-2»...). El lado ajeno de un partido acordado
+    // no llega hasta que se confirman las alineaciones (lo filtra la política de fila).
+    suspend fun lineupFormations(matchId: String): List<SideFormationRow> =
+        client.from("match_lineup_formations").select(Columns.raw("team_side,formation")) {
+            filter { eq("match_id", matchId) }
+        }.decodeRows()
+
+    // Fotos del plantel para el editor de alineación (solo staff o admin del equipo): id del jugador → ruta.
+    suspend fun rosterPhotos(teamId: String): Map<String, String> =
+        client.postgrest.rpc("get_roster_photos", buildJsonObject { put("p_team", teamId) })
+            .decodeRows<RosterPhotoRow>().associate { it.playerId to it.photoPath }
+
+    // ---------------- Formaciones propias del entrenador (migración 018) ----------------
+    // Solo las suyas (lo garantiza la política de fila) y sin las archivadas.
+    suspend fun coachFormations(format: Int): List<CoachFormationRow> =
+        client.from("coach_formations").select(Columns.raw("id,name,format_players,base_formation,slots")) {
+            filter {
+                eq("format_players", format)
+                exact("archived_at", null)
+            }
+            order("created_at", Order.ASCENDING)
+        }.decodeRows()
+
+    // Guarda la disposición actual como formación propia. El servidor valida casillas y nombre.
+    suspend fun saveCoachFormation(format: Int, name: String, base: String, slots: List<PitchSlot>): String =
+        client.postgrest.rpc("coach_formation_save", buildJsonObject {
+            put("p_format", format)
+            put("p_name", name)
+            put("p_base", base)
+            put("p_slots", buildJsonArray {
+                slots.forEach { s ->
+                    add(buildJsonObject {
+                        put("pos", s.pos.code)
+                        put("x", s.x)
+                        put("y", s.y)
+                    })
+                }
+            })
+        }).decodeScalar()
+
+    // Archiva (no borra) una formación propia.
+    suspend fun archiveCoachFormation(id: String) {
+        client.postgrest.rpc("coach_formation_archive", buildJsonObject { put("p_id", id) })
+    }
 
     // Catálogo configurable de tipos de evento (gol, tarjeta, cambio...): solo activos y en orden.
     suspend fun eventTypes(): List<EventType> =
@@ -312,34 +364,31 @@ class MatchRepository(private val client: SupabaseClient) {
         client.from("match_callups").update(buildJsonObject { put("status", status) }) { filter { eq("id", callupId) } }
     }
 
-    /** Una fila de la alineación: jugador, dorsal, titular o suplente, y posición en cancha (POR/DEF/MED/DEL). */
-    data class LineupEntry(val playerId: String, val jersey: Int?, val starter: Boolean, val position: String?)
-
     /**
-     * Guarda la alineación de un lado: borra la anterior e inserta la nueva (titulares + suplentes).
-     * El servidor solo acepta jugadores CONFIRMADOS en la convocatoria y del equipo correcto; al
-     * iniciar el partido exige los titulares completos con exactamente 1 arquero.
+     * Guarda la alineación de un lado con lineup_save (migración 018): reemplaza la anterior en
+     * UNA sola operación del servidor, así nunca queda a medio guardar. Cada titular lleva su
+     * posición y su lugar en la cancha; los suplentes, sin lugar. El servidor solo acepta
+     * jugadores CONFIRMADOS y del equipo correcto, y respeta el plazo de los partidos acordados.
      */
-    suspend fun saveLineup(matchId: String, side: String, entries: List<LineupEntry>) {
-        client.from("match_lineup_players").delete {
-            filter {
-                eq("match_id", matchId)
-                eq("team_side", side)
-            }
-        }
+    suspend fun saveLineup(matchId: String, side: String, formation: String?, entries: List<LineupEntry>) {
         val rows: JsonArray = buildJsonArray {
             entries.forEach { e ->
                 add(buildJsonObject {
-                    put("match_id", matchId)
-                    put("team_side", side)
                     put("player_id", e.playerId)
                     put("is_starter", e.starter)
                     put("field_position", e.position)
-                    if (e.jersey != null) put("jersey_number", e.jersey)
+                    put("jersey_number", e.jersey)
+                    put("slot_x", e.x)
+                    put("slot_y", e.y)
                 })
             }
         }
-        if (rows.isNotEmpty()) client.from("match_lineup_players").insert(rows)
+        client.postgrest.rpc("lineup_save", buildJsonObject {
+            put("p_match", matchId)
+            put("p_side", side)
+            put("p_formation", formation)
+            put("p_entries", rows)
+        })
     }
 
     // Designa al OPERADOR (quien registra en vivo). El servidor deja un solo operador activo a la vez

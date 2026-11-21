@@ -76,6 +76,7 @@ select pg_temp.expect_none(
                          'fee_plans', 'fee_players', 'fee_charges', 'fee_payments', 'player_documents',
                          'tryouts', 'tryout_applications', 'team_join_requests', 'post_likes', 'post_comments',
                          'match_summaries', 'match_summary_versions', 'match_event_revisions', 'match_operators', 'match_favorites', 'match_challenges', 'match_referee_links', 'match_lineup_submissions',
+                         'match_lineup_formations', 'coach_formations',
                          'guardian_player_links')),
   'las tablas sensibles solo se escriben por funciones');
 

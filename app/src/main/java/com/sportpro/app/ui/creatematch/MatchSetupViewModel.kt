@@ -8,16 +8,19 @@ import com.sportpro.app.core.AppContainer
 import com.sportpro.app.core.data.Callup
 import com.sportpro.app.core.data.ExternalDraft
 import com.sportpro.app.core.data.ExternalPlayer
-import com.sportpro.app.core.data.Formation
-import com.sportpro.app.core.data.Formations
 import com.sportpro.app.core.data.LineupFlow
+import com.sportpro.app.core.data.LineupPlayer
 import com.sportpro.app.core.data.LineupStatus
 import com.sportpro.app.core.data.MatchRow
 import com.sportpro.app.core.data.MemberRow
+import com.sportpro.app.core.data.PitchFormation
+import com.sportpro.app.core.data.PitchFormations
+import com.sportpro.app.core.data.Placeable
 import com.sportpro.app.core.data.Position
+import com.sportpro.app.core.data.SlotAssignment
 import com.sportpro.app.core.data.TeamPlayerRow
 import com.sportpro.app.core.data.friendlyMessage
-import com.sportpro.app.core.data.repo.MatchRepository
+import com.sportpro.app.ui.components.TokenInfo
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,24 +33,34 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-enum class LineupRole { STARTER, SUB, OUT }
-
-// Preparación de un lado (local o visitante registrado): plantel, rol de cada jugador,
-// posiciones para este partido y formación elegida.
+// Preparación de un lado (local o visitante registrado): plantel y alineación guardada.
+// La alineación se arma en el editor de la cancha (LineupEditorScreen, migración 018);
+// aquí solo se muestra una vista previa de lo guardado.
 data class SideSetup(
     val side: String,
     val teamId: String,
     val teamName: String,
     val roster: List<TeamPlayerRow> = emptyList(),
-    val roles: Map<String, LineupRole> = emptyMap(),
-    /** Posición en ESTE partido (por defecto, la posición habitual del jugador en el equipo). */
-    val positions: Map<String, Position?> = emptyMap(),
-    val formation: Formation = Formations.default(7),
+    /** Alineación guardada de este lado y nombre de su formación. */
+    val saved: List<LineupPlayer> = emptyList(),
+    val formationLabel: String? = null,
 ) {
-    val starterIds: List<String> get() = roles.filterValues { it == LineupRole.STARTER }.keys.toList()
-    fun positionOf(playerId: String): Position? =
-        positions[playerId] ?: Position.of(roster.firstOrNull { it.playerId == playerId }?.position)
-    val starterPositions: List<Position?> get() = starterIds.map { positionOf(it) }
+    val starters: List<LineupPlayer> get() = saved.filter { it.isStarter }
+    val subs: Int get() = saved.count { !it.isStarter }
+
+    /** Formación y casillas para la vista previa (se acomodan igual que en el editor). */
+    fun preview(format: Int): Pair<PitchFormation, List<SlotAssignment>> {
+        val formation = PitchFormations.resolve(format, formationLabel, starters.map { Position.of(it.fieldPosition) })
+        val placeable = starters.mapNotNull { p ->
+            p.playerId?.let { Placeable(it, Position.of(p.fieldPosition), p.slotX, p.slotY, p.jerseyNumber) }
+        }
+        return formation to PitchFormations.place(formation, placeable).first
+    }
+
+    /** Datos de la ficha de un jugador de la vista previa. */
+    fun token(playerId: String): TokenInfo? = saved.firstOrNull { it.playerId == playerId }?.let {
+        TokenInfo(it.playerName ?: "?", it.photoPath, it.jerseyNumber)
+    }
 }
 
 data class MatchSetupUi(
@@ -86,10 +99,11 @@ data class MatchSetupUi(
  * 1. Convocatoria (US-04): el DT llama jugadores; apoderados o jugadores confirman, o el DT
  *    confirma en persona.
  * 2. Posición habitual de cada jugador del plantel (editable).
- * 3. Formación + alineación (US-09): solo jugadores CONFIRMADOS y 1 arquero obligatorio.
+ * 3. Alineación (US-09): vista previa de la cancha y botón al editor (solo CONFIRMADOS, 1 arquero).
  * 4. Rival externo: completar o editar su plantel.
  * 5. Operador (D-16): quién registrará los eventos en vivo.
- * La convocatoria se actualiza en tiempo real cuando alguien responde.
+ * La convocatoria se actualiza en tiempo real cuando alguien responde. La pantalla vuelve a
+ * cargar todo cada vez que aparece (por ejemplo, al volver del editor de la cancha).
  */
 @OptIn(FlowPreview::class)
 class MatchSetupViewModel(private val container: AppContainer, private val matchId: String) : ViewModel() {
@@ -99,7 +113,7 @@ class MatchSetupViewModel(private val container: AppContainer, private val match
     val messages: SharedFlow<String> = _messages.asSharedFlow()
 
     init {
-        load()
+        // La primera carga la dispara la pantalla al aparecer (LifecycleResumeEffect)
         viewModelScope.launch {
             container.matches.observeCallups(matchId).debounce(300).catch { }.collect { reloadCallups() }
         }
@@ -122,18 +136,13 @@ class MatchSetupViewModel(private val container: AppContainer, private val match
                     match.awayTeamId?.let { add(Triple("away", it, match.awayName)) }
                 }
                 val shown = LineupFlow.visibleSides(candidates.map { it.first }, status)
+                val labels = runCatching { container.matches.lineupFormations(matchId) }.getOrDefault(emptyList())
                 val sides = candidates.filter { it.first in shown }.map { (side, teamId, name) ->
-                    SideSetup(side, teamId, name, container.club.teamPlayers(teamId))
-                }.map { s ->
-                    // Si ya había una alineación guardada, se reconstruyen roles y posiciones y se detecta la formación.
-                    val existing = lineup.filter { it.teamSide == s.side && it.playerId != null }
-                    val roles = existing.associate { it.playerId!! to if (it.isStarter) LineupRole.STARTER else LineupRole.SUB }
-                    val positions = existing.associate { it.playerId!! to Position.of(it.fieldPosition) }
-                    val base = s.copy(roles = roles, positions = positions)
-                    val detected = Formations.detect(match.formatPlayers, base.starterPositions)
-                    val formation = Formations.forFormat(match.formatPlayers).firstOrNull { it == detected }
-                        ?: Formations.default(match.formatPlayers)
-                    base.copy(formation = formation)
+                    SideSetup(
+                        side, teamId, name, container.club.teamPlayers(teamId),
+                        saved = lineup.filter { it.teamSide == side && it.playerId != null },
+                        formationLabel = labels.firstOrNull { it.teamSide == side }?.formation,
+                    )
                 }
                 val callups = container.matches.callups(matchId)
                 val external = if (match.awayTeamId == null) container.matches.externalPlayers(matchId) else emptyList()
@@ -205,84 +214,6 @@ class MatchSetupViewModel(private val container: AppContainer, private val match
         container.club.setTeamPlayerPosition(tp.id, position.code)
         updateSide(side.side) { s ->
             s.copy(roster = s.roster.map { if (it.id == tp.id) it.copy(position = position.code) else it })
-        }
-    }
-
-    // ---------- Alineación y formación ----------
-    fun setRole(side: SideSetup, playerId: String, role: LineupRole) = updateSide(side.side) { s ->
-        s.copy(roles = s.roles + (playerId to role))
-    }
-
-    fun setMatchPosition(side: SideSetup, playerId: String, position: Position) = updateSide(side.side) { s ->
-        s.copy(positions = s.positions + (playerId to position))
-    }
-
-    fun setFormation(side: SideSetup, formation: Formation) = updateSide(side.side) { it.copy(formation = formation) }
-
-     /**
-      * «Alineación automática» para la formación elegida, solo con jugadores CONFIRMADOS:
-      * 1. Por cada línea (arquero, defensas, medios, delanteros) toma, por dorsal, a los jugadores
-      *    cuya posición habitual coincide.
-      * 2. Los cupos que quedan se llenan con los restantes, asignándoles la posición que falta.
-      * 3. El resto de confirmados queda como suplente. El DT puede ajustar todo a mano después.
-      */
-    fun autoLineup(side: SideSetup) = _ui.update { s ->
-        val current = s.sides.first { it.side == side.side }
-        val confirmed = current.roster.filter { s.callupOf(it.playerId)?.status == "confirmed" }
-            .sortedBy { it.jerseyNumber ?: 99 }
-        val pool = confirmed.toMutableList()
-        val positions = mutableMapOf<String, Position?>()
-        val starters = mutableListOf<String>()
-        Position.entries.forEach { p ->
-            repeat(current.formation.required(p)) {
-                val pick = pool.firstOrNull { Position.of(it.position) == p }
-                if (pick != null) {
-                    pool.remove(pick); starters += pick.playerId; positions[pick.playerId] = p
-                }
-            }
-        }
-        // Paso 2: completar los cupos vacíos con los que quedan (se les asigna la posición que falta).
-        Position.entries.forEach { p ->
-            val missing = current.formation.required(p) - positions.values.count { it == p }
-            repeat(missing.coerceAtLeast(0)) {
-                val pick = pool.firstOrNull()
-                if (pick != null) {
-                    pool.remove(pick); starters += pick.playerId; positions[pick.playerId] = p
-                }
-            }
-        }
-        pool.forEach { positions[it.playerId] = Position.of(it.position) }
-        val roles = confirmed.associate { it.playerId to if (it.playerId in starters) LineupRole.STARTER else LineupRole.SUB }
-        s.copy(sides = s.sides.map {
-            if (it.side == side.side) it.copy(roles = roles, positions = it.positions + positions) else it
-        })
-    }
-
-    // Guardar: primero se valida la formación en el celular (mensaje claro) y luego el servidor valida de nuevo.
-    fun saveLineup(side: SideSetup) {
-        val current = _ui.value.sides.first { it.side == side.side }
-        val problems = Formations.problems(current.formation, current.starterPositions)
-        if (problems.isNotEmpty()) {
-            _messages.tryEmit(AppText.get(R.string.match_setup_formacion_x_incompleta_x, current.formation.name, problems.joinToString(", ")))
-            return
-        }
-        act {
-            val jersey = current.roster.associate { it.playerId to it.jerseyNumber }
-            val entries = current.roles.filterValues { it != LineupRole.OUT }.map { (pid, role) ->
-                MatchRepository.LineupEntry(pid, jersey[pid], role == LineupRole.STARTER, current.positionOf(pid)?.code)
-            }
-            container.matches.saveLineup(matchId, current.side, entries)
-            // Partido acordado: además de guardar, se ENVÍA (el servidor valida titulares y arquero)
-            if (_ui.value.status?.flow == true) {
-                container.matches.submitLineup(matchId, current.side)
-                _ui.update { it.copy(status = container.matches.lineupStatus(matchId)) }
-                _messages.tryEmit(AppText.get(R.string.lineup_sent, current.teamName))
-                return@act
-            }
-            _messages.tryEmit(
-                AppText.get(R.string.match_setup_alineacion_de_x_guardada_x, current.teamName, current.formation.name) +
-                    AppText.get(R.string.match_setup_x_titulares_x_suplentes, entries.count { it.starter }, entries.count { !it.starter }),
-            )
         }
     }
 

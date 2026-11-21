@@ -1186,5 +1186,94 @@ set role anon;
 select pg_temp.expect_fail($$select public.lineup_status('e0000000-0000-0000-0000-000000000017')$$, 'anon no consulta alineaciones');
 reset role;
 
+-- =====================================================================
+-- ALINEACIÓN EN LA CANCHA (migración 018).
+-- Partido e…018 sin flujo de desafío: Halcones (DT …003) vs Leones (sin DT, misma academia), fútbol 7.
+-- =====================================================================
+select pg_temp.as_su();
+insert into public.matches (id, home_team_id, away_team_id, format_players, half_minutes, scheduled_at)
+values ('e0000000-0000-0000-0000-000000000018', 'c0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000002', 7, 25, now() + interval '2 days');
+-- Confirman los dorsales 1 a 8 de Halcones (el 9 no está convocado)
+insert into public.match_callups (match_id, team_id, player_id, status)
+select 'e0000000-0000-0000-0000-000000000018', 'c0000000-0000-0000-0000-000000000001', player_id, 'confirmed'
+  from public.team_players where team_id = 'c0000000-0000-0000-0000-000000000001' and status = 'active' and jersey_number between 1 and 8;
+-- Alineación válida: 7 titulares con su lugar en la cancha y 1 suplente sin lugar
+select set_config('t.l18', (
+  select jsonb_agg(jsonb_build_object(
+           'player_id', tp.player_id, 'is_starter', tp.jersey_number <= 7, 'jersey_number', tp.jersey_number,
+           'field_position', case when tp.jersey_number = 1 then 'POR' when tp.jersey_number <= 3 then 'DEF' when tp.jersey_number <= 6 then 'MED' else 'DEL' end,
+           'slot_x', case when tp.jersey_number <= 7 then 0.5 end,
+           'slot_y', case when tp.jersey_number <= 7 then tp.jersey_number / 10.0 end))::text
+    from public.team_players tp where tp.team_id = 'c0000000-0000-0000-0000-000000000001' and tp.jersey_number between 1 and 8), false) is not null;
+-- Variantes inválidas de la misma alineación
+select set_config('t.l18_subxy', (select jsonb_agg(case when (x->>'is_starter')::boolean then x else x || '{"slot_x":0.5,"slot_y":0.5}' end)::text
+  from jsonb_array_elements(current_setting('t.l18')::jsonb) x), false) is not null;
+select set_config('t.l18_out', (select jsonb_agg(case when x->>'field_position' = 'DEL' then x || '{"slot_y":1.5}' else x end)::text
+  from jsonb_array_elements(current_setting('t.l18')::jsonb) x), false) is not null;
+select set_config('t.l18_nine', (select (current_setting('t.l18')::jsonb || jsonb_build_array(jsonb_build_object(
+  'player_id', tp.player_id, 'is_starter', false, 'jersey_number', 9)))::text
+  from public.team_players tp where tp.team_id = 'c0000000-0000-0000-0000-000000000001' and tp.jersey_number = 9), false) is not null;
+
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+select public.lineup_save('e0000000-0000-0000-0000-000000000018', 'home', '2-3-1', current_setting('t.l18')::jsonb);
+select pg_temp.expect_eq((select count(*) from public.get_match_lineup_pitch('e0000000-0000-0000-0000-000000000018') where team_side = 'home')::int, 8, 'el DT guarda su alineación en una sola operación (018)');
+select pg_temp.expect_eq((select count(*) from public.get_match_lineup_pitch('e0000000-0000-0000-0000-000000000018') where team_side = 'home' and is_starter and slot_x = 0.5)::int, 7, 'cada titular guarda su lugar en la cancha');
+select pg_temp.expect_eq((select count(*) from public.get_match_lineup_pitch('e0000000-0000-0000-0000-000000000018') where team_side = 'home' and not is_starter and slot_x is null)::int, 1, 'el suplente no tiene lugar en la cancha');
+select pg_temp.expect_eq((select formation from public.match_lineup_formations where match_id = 'e0000000-0000-0000-0000-000000000018' and team_side = 'home'), '2-3-1', 'se guarda el nombre de la formación');
+select pg_temp.expect_fail($$select public.lineup_save('e0000000-0000-0000-0000-000000000018', 'home', '4-4-2', current_setting('t.l18')::jsonb)$$, 'una formación de fútbol 11 no sirve para fútbol 7');
+select pg_temp.expect_fail($$select public.lineup_save('e0000000-0000-0000-0000-000000000018', 'home', '2-3-1', current_setting('t.l18_subxy')::jsonb)$$, 'un suplente no ocupa lugar en la cancha');
+select pg_temp.expect_fail($$select public.lineup_save('e0000000-0000-0000-0000-000000000018', 'home', '2-3-1', current_setting('t.l18_out')::jsonb)$$, 'un lugar fuera de la cancha se rechaza');
+select pg_temp.expect_fail($$select public.lineup_save('e0000000-0000-0000-0000-000000000018', 'home', '2-3-1', current_setting('t.l18_nine')::jsonb)$$, 'tampoco se alinea por función a un no confirmado');
+select pg_temp.expect_eq((select count(*) from public.match_lineup_players where match_id = 'e0000000-0000-0000-0000-000000000018' and team_side = 'home')::int, 8, 'si el guardado falla, la alineación anterior queda intacta');
+select pg_temp.as_su();
+select pg_temp.expect_eq((select count(*) from public.audit_log where action = 'match_lineup_saved' and entity_id = 'e0000000-0000-0000-0000-000000000018')::int, 1, 'guardar la alineación queda en audit_log');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+-- Partido acordado ya confirmado: tampoco por la función nueva
+select pg_temp.expect_fail(format($$select public.lineup_save(%L, 'home', '3-3-2', '[]'::jsonb)$$, current_setting('t.chm')), 'confirmadas, la función tampoco cambia la alineación');
+-- Otro entrenador no arma la alineación ajena
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000007');
+select pg_temp.expect_fail($$select public.lineup_save('e0000000-0000-0000-0000-000000000018', 'home', '2-3-1', current_setting('t.l18')::jsonb)$$, 'un DT ajeno no guarda la alineación de otro equipo');
+select pg_temp.expect_eq((select count(*) from public.match_lineup_formations where match_id = 'e0000000-0000-0000-0000-000000000018')::int, 0, 'quien no ve el partido tampoco ve su formación');
+
+-- Formaciones propias del entrenador
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+select set_config('t.cf', public.coach_formation_save(7, 'Lateral adelantado', '2-3-1',
+  '[{"pos":"POR","x":0.5,"y":0.06},{"pos":"DEF","x":0.3,"y":0.25},{"pos":"DEF","x":0.8,"y":0.45},
+    {"pos":"MED","x":0.2,"y":0.55},{"pos":"MED","x":0.5,"y":0.5},{"pos":"MED","x":0.8,"y":0.6},{"pos":"DEL","x":0.5,"y":0.85}]'::jsonb)::text, false) is not null;
+select pg_temp.expect_eq((select count(*) from public.coach_formations where owner_id = auth.uid() and archived_at is null)::int, 1, 'el DT guarda una formación propia');
+select pg_temp.expect_fail($$select public.coach_formation_save(7, 'lateral ADELANTADO', '2-3-1', (select slots from public.coach_formations limit 1))$$, 'no se repite el nombre de una formación propia');
+select pg_temp.expect_fail($$select public.coach_formation_save(7, 'Dos arqueros', '2-3-1', '[{"pos":"POR","x":0.5,"y":0.1},{"pos":"POR","x":0.2,"y":0.2},{"pos":"DEF","x":0.3,"y":0.3},{"pos":"DEF","x":0.6,"y":0.3},{"pos":"MED","x":0.5,"y":0.5},{"pos":"MED","x":0.2,"y":0.5},{"pos":"DEL","x":0.5,"y":0.8}]'::jsonb)$$, 'una formación propia lleva exactamente 1 arquero');
+select pg_temp.expect_fail($$select public.coach_formation_save(7, 'Corta', '2-3-1', '[{"pos":"POR","x":0.5,"y":0.1}]'::jsonb)$$, 'una formación propia tiene tantos lugares como jugadores');
+select pg_temp.expect_fail($$insert into public.coach_formations (owner_id, format_players, name, base_formation, slots) values (auth.uid(), 7, 'x', '2-3-1', '[]')$$, 'las formaciones propias solo se escriben por función');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000007');
+select pg_temp.expect_eq((select count(*) from public.coach_formations)::int, 0, 'otro entrenador no ve las formaciones ajenas');
+select pg_temp.expect_fail(format($$select public.coach_formation_archive(%L)$$, current_setting('t.cf')), 'otro entrenador no archiva formaciones ajenas');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000006');
+select pg_temp.expect_fail($$select public.coach_formation_save(7, 'Hincha', '2-3-1', '[]'::jsonb)$$, 'quien no es entrenador no guarda formaciones');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+select public.coach_formation_archive(current_setting('t.cf')::uuid, 'Ya no la uso');
+select pg_temp.expect_eq((select archived_at is not null from public.coach_formations where id = current_setting('t.cf')::uuid), true, 'archivar no borra: queda guardada con fecha');
+
+-- Foto en la alineación: un jugador menor con cuenta y foto (se fuerza como superusuario)
+select pg_temp.as_su();
+insert into auth.users (id, email, raw_user_meta_data) values
+ ('a0000000-0000-0000-0000-000000000008', 'teen@t.pe', '{"full_name":"Tomas Adolescente","birth_date":"2012-06-01"}');
+alter table public.profiles disable trigger trg_profiles_avatar_check;
+update public.profiles set avatar_path = 'a0000000-0000-0000-0000-000000000008/foto.jpg' where id = 'a0000000-0000-0000-0000-000000000008';
+alter table public.profiles enable trigger trg_profiles_avatar_check;
+update public.players set user_id = 'a0000000-0000-0000-0000-000000000008' where id = 'd0000002-0000-0000-0000-000000000001';
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000006');
+select pg_temp.expect_eq((select count(*) from public.get_match_lineup_pitch(current_setting('t.chm')::uuid) where player_id = 'd0000002-0000-0000-0000-000000000001' and photo_path is null)::int, 1, 'un seguidor no recibe la foto de un menor');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000003');
+select pg_temp.expect_eq((select photo_path from public.get_match_lineup_pitch(current_setting('t.chm')::uuid) where player_id = 'd0000002-0000-0000-0000-000000000001'), 'a0000000-0000-0000-0000-000000000008/foto.jpg', 'su entrenador sí ve la foto');
+select pg_temp.expect_eq((select count(*) from public.get_roster_photos('c0000000-0000-0000-0000-000000000001'))::int, 1, 'el editor del DT recibe las fotos de su plantel');
+select pg_temp.as_user('a0000000-0000-0000-0000-000000000006');
+select pg_temp.expect_eq((select count(*) from public.get_roster_photos('c0000000-0000-0000-0000-000000000001'))::int, 0, 'un seguidor no recibe las fotos del plantel');
+select pg_temp.as_su();
+set role anon;
+select pg_temp.expect_fail($$select public.lineup_save('e0000000-0000-0000-0000-000000000018', 'home', '2-3-1', '[]'::jsonb)$$, 'anon no guarda alineaciones');
+select pg_temp.expect_fail($$select public.coach_formation_save(7, 'x', '2-3-1', '[]'::jsonb)$$, 'anon no guarda formaciones');
+reset role;
+
 select pg_temp.as_su();
 \echo '=== TODAS LAS PRUEBAS PASARON ==='

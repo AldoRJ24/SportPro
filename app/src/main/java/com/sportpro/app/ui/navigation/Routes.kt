@@ -15,6 +15,8 @@ import kotlinx.serialization.Serializable
 @Serializable data class MatchDetailRoute(val matchId: String)
 @Serializable data object CreateMatchRoute
 @Serializable data class MatchSetupRoute(val matchId: String)
+// Editor de alineación en la cancha (migración 018); side = "home" o "away"
+@Serializable data class LineupEditorRoute(val matchId: String, val side: String)
 @Serializable data object NotificationsRoute
 @Serializable data class SummaryRoute(val matchId: String)
 @Serializable data class PlayerStatsRoute(val playerId: String, val name: String)

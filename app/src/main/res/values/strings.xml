@@ -646,15 +646,12 @@
     <string name="match_setup_no_asiste">No asiste</string>
     <string name="match_setup_pendiente">Pendiente</string>
     <string name="match_setup_2_formacion_y_alineacion_x">2 · Formación y alineación · %1$s</string>
-    <string name="match_setup_formacion_arquero_defensas_medios_delant">Formación (arquero + defensas + medios + delanteros)</string>
     <string name="match_setup_solo_pueden_alinearse_jugadores_que">Solo pueden alinearse jugadores que confirmaron asistencia (US-09). Siempre debe haber 1 arquero.</string>
     <string name="match_setup_armar_automatico">Armar automático</string>
     <string name="match_setup_guardar_alineacion">Guardar alineación</string>
     <string name="match_setup_aun_no_hay_convocados_confirmados">Aún no hay convocados confirmados.</string>
     <string name="match_setup_titular">Titular</string>
     <string name="match_setup_suplente">Suplente</string>
-    <string name="match_setup_no_juega">No juega</string>
-    <string name="match_setup_posicion_en_este_partido">Posición en este partido</string>
     <string name="match_setup_plantel_del_rival_externo_x">Plantel del rival externo · %1$s</string>
     <string name="match_setup_plantel_completo">Plantel completo</string>
     <string name="match_setup_3_operador_del_partido">3 · Operador del partido</string>
@@ -679,9 +676,6 @@
         <item quantity="one">Confirmado %d jugador.</item>
         <item quantity="other">Confirmados %d jugadores.</item>
     </plurals>
-    <string name="match_setup_formacion_x_incompleta_x">Formación %1$s incompleta: %2$s</string>
-    <string name="match_setup_alineacion_de_x_guardada_x">"Alineación de %1$s guardada · %2$s · "</string>
-    <string name="match_setup_x_titulares_x_suplentes">%1$s titulares, %2$s suplentes.</string>
     <string name="match_setup_escribe_el_nombre_del_jugador">Escribe el nombre del jugador.</string>
     <string name="match_setup_escribe_el_dorsal">Escribe el dorsal.</string>
     <string name="match_setup_el_dorsal_x_ya_existe">El dorsal %1$s ya existe en el plantel rival.</string>
@@ -1104,4 +1098,53 @@
     <string name="auth_who_guardian">apoderado</string>
     <string name="auth_who_coach">entrenador</string>
     <string name="auth_who_player">jugador</string>
+
+    <!-- ui/lineup/LineupEditorScreen.kt (alineación en la cancha, migración 018) -->
+    <string name="lineup_editor_title">Alineación · %1$s</string>
+    <string name="lineup_editor_external">El rival es externo: su plantel se arma en «Convocatoria y alineación».</string>
+    <string name="lineup_editor_not_yours">Solo el entrenador de este equipo arma su alineación.</string>
+    <plurals name="lineup_editor_missing">
+        <item quantity="one">Falta %d titular: toca la casilla vacía o usa «Armar automático».</item>
+        <item quantity="other">Faltan %d titulares: toca las casillas vacías o usa «Armar automático».</item>
+    </plurals>
+    <string name="lineup_editor_saved">Alineación de %1$s guardada (%2$s · suplentes: %3$d).</string>
+    <string name="lineup_editor_starters">Titulares %1$d/%2$d</string>
+    <string name="lineup_editor_unsaved">Sin guardar</string>
+    <string name="lineup_editor_read_only">Solo lectura: el partido ya inició o venció el plazo para editar.</string>
+    <string name="lineup_editor_hint">Toca una casilla para elegir al jugador. Mantén presionado y arrastra para moverla.</string>
+    <string name="lineup_editor_reset">Restablecer lugares</string>
+    <string name="lineup_editor_save_custom">Guardar como mi formación</string>
+    <string name="lineup_editor_bench">Suplentes (%1$d)</string>
+    <string name="lineup_editor_bench_empty">Sin suplentes.</string>
+    <string name="lineup_editor_bench_hint">Toca un suplente para marcarlo como «No juega».</string>
+    <string name="lineup_editor_out">No juegan (%1$d)</string>
+    <string name="lineup_editor_out_hint">Toca a un jugador para devolverlo a la banca.</string>
+    <string name="lineup_editor_pick_title">¿Quién juega de %1$s?</string>
+    <string name="lineup_editor_pick_clear">Dejar la casilla vacía</string>
+    <string name="lineup_editor_pick_bench">Suplentes</string>
+    <string name="lineup_editor_pick_out">No juegan</string>
+    <string name="lineup_editor_pick_swap">En la cancha (cambian de lugar)</string>
+    <string name="lineup_editor_pick_usual">Su posición</string>
+    <string name="lineup_editor_custom_help">Guarda cómo acomodaste a los jugadores. Solo tú podrás elegir esta formación.</string>
+    <string name="lineup_editor_custom_name">Nombre (por ejemplo, «Lateral ofensivo»)</string>
+    <string name="lineup_editor_custom_save_button">Guardar</string>
+    <string name="lineup_editor_custom_name_required">Escribe un nombre para tu formación.</string>
+    <string name="lineup_editor_custom_saved">Formación «%1$s» guardada. Solo tú la ves.</string>
+    <string name="lineup_editor_custom_archive">Archivar</string>
+    <string name="lineup_editor_custom_archive_title">¿Archivar «%1$s»?</string>
+    <string name="lineup_editor_custom_archive_body">Ya no aparecerá en tu lista. No se borra: queda guardada en el historial.</string>
+    <string name="lineup_editor_custom_archived">Formación «%1$s» archivada.</string>
+    <string name="lineup_editor_leave_title">¿Salir sin guardar?</string>
+    <string name="lineup_editor_leave_body">Los cambios de la alineación se perderán.</string>
+    <string name="lineup_editor_leave">Salir</string>
+    <string name="lineup_editor_stay">Seguir editando</string>
+
+    <!-- ui/creatematch/MatchSetupScreen.kt (vista previa de la alineación) -->
+    <string name="lineup_preview_empty">Todavía no armaste la alineación.</string>
+    <plurals name="lineup_preview_subs">
+        <item quantity="one">%d suplente</item>
+        <item quantity="other">%d suplentes</item>
+    </plurals>
+    <string name="lineup_preview_open">Armar alineación en la cancha</string>
+    <string name="lineup_preview_view">Ver alineación</string>
 </resources>

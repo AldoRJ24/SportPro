@@ -48,6 +48,7 @@ import com.sportpro.app.ui.calendar.CalendarScreen
 import com.sportpro.app.ui.challenges.ChallengesScreen
 import com.sportpro.app.ui.creatematch.CreateMatchScreen
 import com.sportpro.app.ui.creatematch.MatchSetupScreen
+import com.sportpro.app.ui.lineup.LineupEditorScreen
 import com.sportpro.app.ui.docs.PlayerDocsScreen
 import com.sportpro.app.ui.docs.TeamDocsScreen
 import com.sportpro.app.ui.explore.ExploreScreen
@@ -295,10 +296,15 @@ fun MainShell(session: SessionViewModel) {
                     MatchSetupScreen(
                         matchId = r.matchId,
                         onBack = { nav.popBackStack() },
+                        onOpenEditor = { side -> nav.navigate(LineupEditorRoute(r.matchId, side)) },
                         onGoLive = {
                             nav.navigate(MatchDetailRoute(r.matchId)) { popUpTo<MatchSetupRoute> { inclusive = true } }
                         },
                     )
+                }
+                composable<LineupEditorRoute> { entry ->
+                    val r = entry.toRoute<LineupEditorRoute>()
+                    LineupEditorScreen(r.matchId, r.side, onBack = { nav.popBackStack() })
                 }
                 composable<NotificationsRoute> {
                     NotificationsScreen(

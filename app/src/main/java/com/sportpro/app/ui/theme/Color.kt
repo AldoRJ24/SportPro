@@ -33,3 +33,9 @@ val LiveRed = Color(0xFFE11D2E)          // partido en vivo
 val FavoriteGold = Color(0xFFE8A200)     // estrella de favorito
 val CardYellow = Color(0xFFFFD60A)       // tarjeta amarilla
 val CardRed = Color(0xFFFF453A)          // tarjeta roja
+
+// ---- Cancha (alineación) ----
+// El verde solo se usa para dibujar el césped; dos tonos para las franjas cortadas.
+val PitchGreen = Color(0xFF2E7D4F)
+val PitchGreenStripe = Color(0xFF2A7349)
+val PitchLine = Color(0x99FFFFFF)        // líneas blancas semitransparentes

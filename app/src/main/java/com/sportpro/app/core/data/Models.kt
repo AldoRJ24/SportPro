@@ -103,6 +103,10 @@ data class LineupPlayer(
     @SerialName("jersey_number") val jerseyNumber: Int? = null,
     @SerialName("is_starter") val isStarter: Boolean = true,
     @SerialName("field_position") val fieldPosition: String? = null,
+    // Lugar en la cancha y foto (solo los trae get_match_lineup_pitch, migración 018)
+    @SerialName("slot_x") val slotX: Float? = null,
+    @SerialName("slot_y") val slotY: Float? = null,
+    @SerialName("photo_path") val photoPath: String? = null,
 ) {
     val key: String get() = playerId ?: externalPlayerId ?: ""
     val label: String get() = listOfNotNull(jerseyNumber?.toString(), playerName).joinToString(" · ")

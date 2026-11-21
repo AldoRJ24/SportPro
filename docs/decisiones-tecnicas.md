@@ -208,6 +208,16 @@ Cada decisión sigue el mismo formato: el problema, lo que se decidió, por qué
 
 **Costo.** El autocompletado puede alinear a un jugador que no confirmó (lo pidió el usuario: «se pondrá una predeterminada»). Queda marcado como completado por el sistema y su entrenador recibe un aviso. Sin pg_cron, los avisos llegan recién cuando alguien abre el partido.
 
+## 20. Alineación en la cancha: lugares relativos a la mitad propia
+
+**Problema.** El entrenador quiere elegir una formación, ver a sus jugadores acomodados en la cancha y mover a alguno (por ejemplo, adelantar a un lateral). El público debe ver lo mismo en el partido en vivo, con el local arriba y el visitante abajo.
+
+**Decisión.** Cada titular guarda su lugar (`slot_x`, `slot_y`) en coordenadas de 0 a 1 dentro de su propia mitad, como si su equipo atacara hacia arriba. La app gira la mitad del local al dibujarla. La posición (arquero, defensa, medio, delantero) sigue siendo la de la casilla aunque se arrastre, así las reglas del servidor (1 arquero, arquero automático en atajadas) no cambian. Guardar la alineación pasa a ser una sola función (`lineup_save`) que reemplaza todo en una transacción. Las formaciones propias del entrenador se guardan aparte y solo las ve él.
+
+**Por qué.** Un mismo sistema de coordenadas sirve para los dos lados y para cualquier tamaño de pantalla. Antes la app borraba e insertaba en dos pedidos: si el segundo fallaba, la alineación quedaba vacía. La foto del jugador solo sale si es mayor de edad o si quien mira es su apoderado, él mismo o su staff (`_player_photo`).
+
+**Costo.** Se creó `get_match_lineup_pitch` en lugar de cambiar `get_match_lineup`: cambiar el tipo de resultado obligaba a borrarla, y las migraciones 002 y 017 ya no podrían volver a ejecutarse. Las alineaciones viejas y las autocompletadas no tienen lugares: la app las acomoda según la formación.
+
 ## Antecedente
 
 `DISEÑO_TECNICO_W7.md`, en la raíz, es el diseño preliminar de la semana 7. Dos cosas cambiaron respecto a ese documento: la IA ya no recibe nombres de jugadores, sino seudónimos, y la llamada a la IA la hace el servidor en lugar de la app.

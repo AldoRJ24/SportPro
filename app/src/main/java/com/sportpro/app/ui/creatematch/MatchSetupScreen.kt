@@ -2,7 +2,6 @@ package com.sportpro.app.ui.creatematch
 import androidx.compose.ui.res.stringResource
 import com.sportpro.app.R
 
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
@@ -46,16 +44,19 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.pluralStringResource
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.sportpro.app.core.data.ExternalDraft
 import com.sportpro.app.core.data.ExternalPlayer
-import com.sportpro.app.core.data.Formations
 import com.sportpro.app.core.data.Position
 import com.sportpro.app.core.data.TeamPlayerRow
 import com.sportpro.app.ui.components.Avatar
 import com.sportpro.app.ui.components.ErrorBox
-import com.sportpro.app.ui.components.FormationChips
-import com.sportpro.app.ui.components.FormationCounter
+import com.sportpro.app.ui.components.HalfPitchBoard
 import com.sportpro.app.ui.components.LoadingBox
+import com.sportpro.app.ui.components.tokenSizeFor
 import com.sportpro.app.ui.components.Pill
 import com.sportpro.app.ui.components.rememberNowMs
 import com.sportpro.app.core.data.LineupStatus
@@ -71,10 +72,15 @@ import com.sportpro.app.ui.theme.SuccessGreen
 import com.sportpro.app.ui.theme.WarnAmber
 
 @Composable
-fun MatchSetupScreen(matchId: String, onBack: () -> Unit, onGoLive: () -> Unit) {
+fun MatchSetupScreen(matchId: String, onBack: () -> Unit, onOpenEditor: (String) -> Unit, onGoLive: () -> Unit) {
     val container = LocalAppContainer.current
     val vm: MatchSetupViewModel = viewModel(key = "setup-$matchId") { MatchSetupViewModel(container, matchId) }
     val ui by vm.ui.collectAsStateWithLifecycle()
+    // Cada vez que la pantalla aparece (también al volver del editor de la cancha) se recarga
+    LifecycleResumeEffect(vm) {
+        vm.load()
+        onPauseOrDispose { }
+    }
     val snack = remember { SnackbarHostState() }
     LaunchedEffect(vm) { vm.messages.collect { snack.showSnackbar(it) } }
     val match = ui.match
@@ -148,73 +154,17 @@ fun MatchSetupScreen(matchId: String, onBack: () -> Unit, onGoLive: () -> Unit) 
                         }
                     }
 
-                    // ---------------- Formación y alineación ----------------
+                    // ---------------- Alineación en la cancha (migración 018) ----------------
                     item { SectionHeader(stringResource(R.string.match_setup_2_formacion_y_alineacion_x, side.teamName)) }
                     item {
-                        Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Text(stringResource(R.string.match_setup_formacion_arquero_defensas_medios_delant), style = MaterialTheme.typography.labelLarge)
-                            FormationChips(
-                                options = Formations.forFormat(match.formatPlayers),
-                                selected = side.formation,
-                                onSelect = { vm.setFormation(side, it) },
-                                modifier = Modifier.horizontalScroll(rememberScrollState()),
-                            )
-                            FormationCounter(side.formation, side.starterPositions, Modifier.horizontalScroll(rememberScrollState()))
-                            Text(
-                                stringResource(R.string.match_setup_solo_pueden_alinearse_jugadores_que),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                OutlinedButton(onClick = { vm.autoLineup(side) }, enabled = editable) { Text(stringResource(R.string.match_setup_armar_automatico)) }
-                                Button(onClick = { vm.saveLineup(side) }, enabled = !ui.busy && editable) {
-                                    Text(stringResource(if (status?.flow == true) R.string.lineup_save_and_send else R.string.match_setup_guardar_alineacion))
-                                }
-                            }
-                        }
-                    }
-                    val confirmed = side.roster.filter { ui.callupOf(it.playerId)?.status == "confirmed" }
-                    if (confirmed.isEmpty()) {
-                        item {
-                            Text(
-                                stringResource(R.string.match_setup_aun_no_hay_convocados_confirmados),
-                                style = MaterialTheme.typography.bodySmall,
-                                modifier = Modifier.padding(16.dp),
-                            )
-                        }
-                    }
-                    items(confirmed, key = { "l" + side.side + it.playerId }) { tp ->
-                        val role = side.roles[tp.playerId] ?: LineupRole.OUT
-                        Card(
-                            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                        ) {
-                            Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(
-                                        "${tp.jerseyNumber ?: "-"}  ${tp.player?.fullName ?: ""}",
-                                        modifier = Modifier.weight(1f),
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                        style = MaterialTheme.typography.titleSmall,
-                                    )
-                                    PositionBadge(Position.of(tp.position))
-                                }
-                                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                    FilterChip(selected = role == LineupRole.STARTER, onClick = { vm.setRole(side, tp.playerId, LineupRole.STARTER) }, label = { Text(stringResource(R.string.match_setup_titular)) }, enabled = editable)
-                                    FilterChip(selected = role == LineupRole.SUB, onClick = { vm.setRole(side, tp.playerId, LineupRole.SUB) }, label = { Text(stringResource(R.string.match_setup_suplente)) }, enabled = editable)
-                                    FilterChip(selected = role == LineupRole.OUT, onClick = { vm.setRole(side, tp.playerId, LineupRole.OUT) }, label = { Text(stringResource(R.string.match_setup_no_juega)) }, enabled = editable)
-                                }
-                                if (role == LineupRole.STARTER) {
-                                    Text(stringResource(R.string.match_setup_posicion_en_este_partido), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                    PositionChips(
-                                        selected = side.positionOf(tp.playerId),
-                                        onSelect = { vm.setMatchPosition(side, tp.playerId, it) },
-                                        enabled = editable,
-                                    )
-                                }
-                            }
-                        }
+                        val confirmedCount = side.roster.count { ui.callupOf(it.playerId)?.status == "confirmed" }
+                        LineupPreview(
+                            side = side,
+                            format = match.formatPlayers,
+                            confirmedCount = confirmedCount,
+                            editable = editable,
+                            onOpen = { onOpenEditor(side.side) },
+                        )
                     }
                 }
 
@@ -325,6 +275,56 @@ private fun AddExternalCard(onAdd: (ExternalDraft, () -> Unit) -> Unit) {
         Text(stringResource(R.string.match_setup_agregar_jugador_al_plantel_rival), style = MaterialTheme.typography.labelLarge)
         ExternalRowEditor(row = row, onChange = { row = it }, onRemove = null)
         Button(onClick = { onAdd(row) { row = ExternalDraft() } }) { Text(stringResource(R.string.match_setup_agregar)) }
+    }
+}
+
+/**
+ * Vista previa de la alineación guardada de un lado: formación, titulares y suplentes, la
+ * mitad de la cancha de ese equipo (solo lectura) y el botón para abrir el editor.
+ */
+@Composable
+private fun LineupPreview(side: SideSetup, format: Int, confirmedCount: Int, editable: Boolean, onOpen: () -> Unit) {
+    val (formation, slots) = side.preview(format)
+    val starters = side.starters.size
+    Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        if (starters == 0) {
+            Text(
+                stringResource(
+                    if (confirmedCount == 0) R.string.match_setup_aun_no_hay_convocados_confirmados
+                    else R.string.lineup_preview_empty,
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        } else {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(formation.label, style = MaterialTheme.typography.titleMedium)
+                Pill(
+                    stringResource(R.string.lineup_editor_starters, starters, format),
+                    if (starters == format) SuccessGreen else WarnAmber,
+                )
+                Text(
+                    pluralStringResource(R.plurals.lineup_preview_subs, side.subs, side.subs),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            HalfPitchBoard(
+                slots = slots,
+                top = side.side == "home",
+                player = side::token,
+                tokenSize = tokenSizeFor(format) - 6.dp,
+                modifier = Modifier.clip(RoundedCornerShape(12.dp)),
+            )
+        }
+        Text(
+            stringResource(R.string.match_setup_solo_pueden_alinearse_jugadores_que),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Button(onClick = onOpen, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(if (editable) R.string.lineup_preview_open else R.string.lineup_preview_view))
+        }
     }
 }
 
