@@ -848,10 +848,7 @@
     <string name="match_parts_sin_jugador_asignado">Sin jugador asignado</string>
     <string name="match_parts_registro_tardio">Registro tardío</string>
     <string name="match_parts_pendiente">PENDIENTE</string>
-    <string name="match_parts_titulares_x">Titulares (%1$s)</string>
-    <string name="match_parts_suplentes_x">Suplentes (%1$s)</string>
     <string name="match_parts_sin_alineacion_registrada">Sin alineación registrada</string>
-    <string name="match_parts_jugador">Jugador</string>
 
     <!-- ui/match/RecorderSheet.kt -->
     <string name="recorder_tiempo_anadido">Tiempo añadido</string>
@@ -1147,4 +1144,16 @@
     </plurals>
     <string name="lineup_preview_open">Armar alineación en la cancha</string>
     <string name="lineup_preview_view">Ver alineación</string>
+
+    <!-- ui/match/LivePitch.kt y RecorderSheet.kt (alineación en vivo y asistencias, Bloque B) -->
+    <string name="live_mvp">MVP: %1$s</string>
+    <string name="live_mvp_short">MVP del partido</string>
+    <plurals name="live_goals">
+        <item quantity="one">%d gol</item>
+        <item quantity="other">%d goles</item>
+    </plurals>
+    <string name="live_bench">Suplentes · %1$s</string>
+    <string name="live_legend">Se actualiza en vivo. La estrella azul es el MVP: quien más goles metió (si hay empate, nadie la lleva). Verde: entró; rojo: salió.</string>
+    <string name="recorder_assist_title">¿Quién dio la asistencia? (gol de %1$s)</string>
+    <string name="recorder_assist_none">Sin asistencia</string>
 </resources>

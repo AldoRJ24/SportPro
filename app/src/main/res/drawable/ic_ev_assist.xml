@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Botín visto de costado (asistencia). Mismo estilo que los demás íconos de eventos: blanco y teñible. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="24" android:viewportHeight="24">
+    <path android:fillColor="#FFFFFFFF" android:pathData="M4,6.5H9.5L10.5,10.5C14,11 18,11.8 20.2,13.2C21.6,14.1 21.8,16 20.6,16.8H3.4C2.9,16.8 2.6,16.4 2.7,15.9L4,6.5Z"/>
+    <path android:fillColor="#FFFFFFFF" android:pathData="M5,17.6h2v2H5zM9.5,17.6h2v2h-2zM14,17.6h2v2h-2zM18,17.6h2v2h-2z"/>
+</vector>

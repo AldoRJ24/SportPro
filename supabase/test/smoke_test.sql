@@ -1033,7 +1033,13 @@ select pg_temp.expect_fail(format($$select public.referee_record_event(%L, gen_r
 select pg_temp.expect_fail(format($$select public.referee_void_event(%L, %L, 'x')$$, current_setting('t.ref2'), current_setting('t.rev')), 'anular exige motivo');
 select public.referee_void_event(current_setting('t.ref2'), current_setting('t.rev')::uuid, 'Gol mal anotado');
 select pg_temp.expect_eq((public.referee_match(current_setting('t.ref2'))->'match'->>'home_score'), '0', 'al anular, el marcador se recalcula');
+-- Asistencia desde la página del árbitro (Bloque B): un compañero sí, un jugador del otro equipo no
+select set_config('t.rast', public.referee_record_event(current_setting('t.ref2'), gen_random_uuid(),
+  current_setting('t.goal')::uuid, 1, 9, 0, 'home', 'd0000001-0000-0000-0000-000000000002', null,
+  '{"own_goal":false,"assist_player_id":"d0000002-0000-0000-0000-000000000002"}'::jsonb)::text, false) is not null;
+select pg_temp.expect_fail(format($$select public.referee_record_event(%L, gen_random_uuid(), current_setting('t.goal')::uuid, 1, 10, 0, 'home', 'd0000001-0000-0000-0000-000000000002', null, '{"assist_player_id":"d0000001-0000-0000-0000-000000000001"}'::jsonb)$$, current_setting('t.ref2')), 'la asistencia de un jugador del otro equipo se rechaza');
 reset role;
+select pg_temp.expect_eq((select payload->>'assist_player_id' from public.match_events where id = current_setting('t.rast')::uuid), 'd0000002-0000-0000-0000-000000000002', 'el gol del árbitro guarda la asistencia de un compañero');
 select pg_temp.expect_eq((select count(*) from public.match_events where id = current_setting('t.rev')::uuid and status = 'voided')::int, 1, 'el evento anulado no se borra');
 select pg_temp.expect_eq((select reason from public.match_event_revisions where event_id = current_setting('t.rev')::uuid), 'Árbitro: Gol mal anotado', 'la anulación guarda la versión anterior con el motivo');
 select pg_temp.expect_eq((select count(*) from public.audit_log where action = 'referee_event' and entity_id = current_setting('t.rev')::uuid)::int, 1, 'el registro del árbitro queda en auditoría');

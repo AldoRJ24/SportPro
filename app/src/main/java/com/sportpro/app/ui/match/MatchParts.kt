@@ -279,33 +279,7 @@ fun PendingRow(p: PendingEvent) {
     }
 }
 
-@Composable
-fun LineupColumn(title: String, players: List<LineupPlayer>, modifier: Modifier = Modifier, emptyText: String? = null) {
-    Column(modifier.padding(8.dp)) {
-        Text(title, style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(bottom = 6.dp))
-        val starters = players.filter { it.isStarter }
-            .sortedWith(compareBy({ Position.of(it.fieldPosition)?.ordinal ?: 9 }, { it.jerseyNumber ?: 99 }))
-        val subs = players.filterNot { it.isStarter }
-        Text(stringResource(R.string.match_parts_titulares_x, starters.size), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        starters.forEach { PlayerLine(it) }
-        if (subs.isNotEmpty()) {
-            Spacer(Modifier.height(6.dp))
-            Text(stringResource(R.string.match_parts_suplentes_x, subs.size), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            subs.forEach { PlayerLine(it) }
-        }
-        if (players.isEmpty()) Text(emptyText ?: stringResource(R.string.match_parts_sin_alineacion_registrada), style = MaterialTheme.typography.bodySmall)
-    }
-}
-
-@Composable
-private fun PlayerLine(p: LineupPlayer) {
-    Row(Modifier.padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(p.jerseyNumber?.toString() ?: "-", style = MaterialTheme.typography.titleSmall, modifier = Modifier.width(28.dp))
-        PositionBadge(Position.of(p.fieldPosition))
-        Spacer(Modifier.width(6.dp))
-        Text(p.playerName ?: stringResource(R.string.match_parts_jugador), style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-    }
-}
+// La alineación del partido se dibuja en la cancha: ver LivePitch.kt (LiveLineupTab).
 
 /** Botón grande de evento con dibujo propio (§10: «dibujos interactivos», zona táctil de 48dp o más). */
 @Composable

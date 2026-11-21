@@ -5,6 +5,7 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -130,7 +131,7 @@ private fun DrawScope.drawGoalArea(
  * Ficha de un jugador: su foto en un círculo (o sus iniciales si no hay foto o si es un menor
  * que el usuario no puede ver) y, debajo, el dorsal y el nombre corto.
  * [onPitch] cambia los colores del texto para que se lean sobre el césped.
- * [badges] se dibuja encima de la foto (lo usará el partido en vivo para goles y tarjetas).
+ * [badges] se dibuja encima de la foto (el partido en vivo pone ahí goles, tarjetas, cambios y MVP).
  */
 @Composable
 fun PlayerToken(
@@ -140,7 +141,7 @@ fun PlayerToken(
     modifier: Modifier = Modifier,
     dimmed: Boolean = false,
     highlighted: Boolean = false,
-    badges: (@Composable () -> Unit)? = null,
+    badges: (@Composable BoxScope.() -> Unit)? = null,
 ) {
     Column(
         modifier.width(size + 34.dp).alpha(if (dimmed) 0.45f else 1f),
@@ -148,7 +149,7 @@ fun PlayerToken(
     ) {
         Box(Modifier.size(size)) {
             Avatar(info.name, info.photoPath, size = size, ring = if (highlighted) BrandBlue else Color.White)
-            badges?.invoke()
+            badges?.invoke(this)
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
             info.jersey?.let {
@@ -270,7 +271,10 @@ fun tokenSizeFor(format: Int): Dp = when {
     else -> 50.dp
 }
 
-/** Fila de «bolitas» fuera de la cancha (suplentes): foto chica, dorsal y nombre. */
+/**
+ * Fila de «bolitas» fuera de la cancha (suplentes): foto chica, dorsal y nombre.
+ * En el partido en vivo, [badges] muestra lo que hizo cada uno (por ejemplo, el ícono de cambio).
+ */
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 fun BenchRow(
@@ -279,19 +283,64 @@ fun BenchRow(
     modifier: Modifier = Modifier,
     dimmed: Boolean = false,
     onTap: ((String) -> Unit)? = null,
+    badges: (@Composable BoxScope.(String) -> Unit)? = null,
 ) {
     androidx.compose.foundation.layout.FlowRow(
         modifier,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         val currentOnTap by rememberUpdatedState(onTap)
         ids.forEach { id ->
             val info = player(id) ?: return@forEach
+            val content: (@Composable BoxScope.() -> Unit)? = if (badges != null) { { badges(id) } } else null
             PlayerToken(
-                info, 36.dp, onPitch = false, dimmed = dimmed,
+                info, 36.dp, onPitch = false, dimmed = dimmed, badges = content,
                 modifier = if (onTap != null) Modifier.pointerInput(id) { detectTapGestures { currentOnTap?.invoke(id) } } else Modifier,
             )
+        }
+    }
+}
+
+/**
+ * CANCHA COMPLETA con los dos equipos (partido en vivo y alineaciones publicadas):
+ * el local en la mitad de arriba (arco arriba) y el visitante en la de abajo.
+ * Solo se dibujan las casillas ocupadas. [dimmed] atenúa a un jugador (por ejemplo, expulsado)
+ * y [badges] dibuja sus íconos (goles, asistencias, tarjetas, cambios, MVP).
+ * Deja espacio abajo para el nombre del arquero visitante, que queda pegado al borde.
+ */
+@Composable
+fun FullPitchBoard(
+    home: List<SlotAssignment>,
+    away: List<SlotAssignment>,
+    player: (String) -> TokenInfo?,
+    tokenSize: Dp,
+    modifier: Modifier = Modifier,
+    dimmed: (String) -> Boolean = { false },
+    badges: (@Composable BoxScope.(String) -> Unit)? = null,
+) {
+    BoxWithConstraints(modifier.fillMaxWidth().aspectRatio(0.62f)) {
+        val density = LocalDensity.current
+        val wPx = with(density) { maxWidth.toPx() }
+        val hPx = with(density) { maxHeight.toPx() }
+        val tokenWPx = with(density) { (tokenSize + 34.dp).toPx() }
+        val tokenHPx = with(density) { tokenSize.toPx() }
+        PitchSurface(Modifier.matchParentSize(), half = null)
+        listOf(true to home, false to away).forEach { (top, slots) ->
+            slots.forEachIndexed { i, s ->
+                val id = s.playerId ?: return@forEachIndexed
+                val info = player(id) ?: return@forEachIndexed
+                key(top, i) {
+                    val (sx, sy) = PitchFormations.toScreen(s.slot.x, s.slot.y, top)
+                    val content: (@Composable BoxScope.() -> Unit)? = if (badges != null) { { badges(id) } } else null
+                    PlayerToken(
+                        info, tokenSize, onPitch = true, dimmed = dimmed(id), badges = content,
+                        modifier = Modifier.offset {
+                            IntOffset((sx * wPx - tokenWPx / 2).roundToInt(), (sy * hPx - tokenHPx / 2).roundToInt())
+                        },
+                    )
+                }
+            }
         }
     }
 }

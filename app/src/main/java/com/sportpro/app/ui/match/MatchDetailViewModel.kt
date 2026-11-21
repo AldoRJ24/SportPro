@@ -10,6 +10,7 @@ import com.sportpro.app.core.data.LineupPlayer
 import com.sportpro.app.core.data.LineupStatus
 import com.sportpro.app.core.data.MatchRow
 import com.sportpro.app.core.data.Position
+import com.sportpro.app.core.data.SideFormationRow
 import com.sportpro.app.core.data.onFieldPlayers
 import com.sportpro.app.core.data.TimelineEvent
 import com.sportpro.app.core.data.clock
@@ -34,8 +35,9 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import java.util.UUID
 
-// Pasos del registro rápido: equipo → (resultado del penal) → jugador; en cambios: sale → entra.
-enum class DraftStep { SIDE, PENALTY_RESULT, PLAYER, SUB_OUT, SUB_IN }
+// Pasos del registro rápido: equipo → (resultado del penal) → jugador; en cambios: sale → entra;
+// en un gol (que no es en contra): goleador → asistencia (opcional).
+enum class DraftStep { SIDE, PENALTY_RESULT, PLAYER, SUB_OUT, SUB_IN, ASSIST }
 
 /**
  * Evento que se está registrando. Flujo de 3 toques: ícono → equipo → jugador → se guarda al
@@ -50,6 +52,10 @@ data class EventDraft(
     val penaltyResult: String? = null,
     val ownGoal: Boolean = false,
     val playerOut: LineupPlayer? = null,
+    /** Goleador elegido, mientras se pregunta por la asistencia. */
+    val scorer: LineupPlayer? = null,
+    /** Quién dio el pase del gol (null = sin asistencia). */
+    val assist: LineupPlayer? = null,
 )
 
 // Mensaje para el snackbar; si trae ids, permite «Deshacer» el registro recién hecho.
@@ -66,9 +72,13 @@ data class MatchDetailUi(
     val isOperator: Boolean = false,
     /** Estado de las alineaciones de un partido acordado (migración 017). */
     val lineupStatus: LineupStatus? = null,
+    /** Nombre de la formación de cada lado (migración 018), para dibujar la cancha. */
+    val formations: List<SideFormationRow> = emptyList(),
     val busy: Boolean = false,
     val draft: EventDraft? = null,
 ) {
+    fun formationOf(side: String): String? = formations.firstOrNull { it.teamSide == side }?.formation
+
     private val live: Boolean get() = match?.isLive == true
     /** Botones iniciar / entretiempo / finalizar: DT u operador, con el partido programado o en juego. */
     val canControl: Boolean get() = (isManager || isOperator) && (live || match?.isScheduled == true)
@@ -190,10 +200,13 @@ class MatchDetailViewModel(private val container: AppContainer, private val matc
                 val confirmedNow = status?.confirmed == true && match.lineupsConfirmedAt == null
                 val fresh = if (confirmedNow) container.matches.getMatch(matchId) ?: match else match
                 val freshLineup = if (confirmedNow) container.matches.lineup(matchId) else lineup
+                // Si falla, la cancha usa la formación que se deduce de las posiciones
+                val formations = runCatching { container.matches.lineupFormations(matchId) }.getOrDefault(emptyList())
                 _ui.update {
                     it.copy(
                         loading = false, match = fresh, timeline = timeline, lineup = freshLineup,
                         eventTypes = types, isManager = manager, isOperator = operator, lineupStatus = status,
+                        formations = formations,
                     )
                 }
             } catch (e: Exception) {
@@ -302,10 +315,28 @@ class MatchDetailViewModel(private val container: AppContainer, private val matc
         s.copy(draft = d.copy(playerOut = p, step = DraftStep.SUB_IN))
     }
 
-    /** Tocar un jugador (o null = «Sin identificar», D-17) guarda el evento al instante. */
+    /**
+     * Tocar un jugador (o null = «Sin identificar», D-17) guarda el evento al instante.
+     * Excepción: en un gol a favor con goleador identificado se pregunta antes por la
+     * asistencia, siempre que haya algún compañero en cancha que pueda haberla dado.
+     */
     fun choosePlayer(p: LineupPlayer?) {
-        val d = _ui.value.draft ?: return
+        val s = _ui.value
+        val d = s.draft ?: return
+        val side = d.side
+        val askAssist = d.type.code == "goal" && !d.ownGoal && p != null && side != null &&
+            s.fieldPlayers(side).any { it.key != p.key }
+        if (askAssist) {
+            _ui.update { it.copy(draft = d.copy(scorer = p, step = DraftStep.ASSIST)) }
+            return
+        }
         submit(d, p)
+    }
+
+    /** Paso de asistencia: un compañero (o null = «Sin asistencia») y se guarda el gol. */
+    fun chooseAssist(a: LineupPlayer?) {
+        val d = _ui.value.draft ?: return
+        submit(d.copy(assist = a), d.scorer)
     }
 
     private fun submit(d: EventDraft, player: LineupPlayer?) {
@@ -323,7 +354,8 @@ class MatchDetailViewModel(private val container: AppContainer, private val matc
 
     /**
      * Arma la fila del evento y la envía por la cola sin conexión:
-     * - payload según el tipo: gol → own_goal; penal → result; cambio → player_out_id / player_in_id;
+     * - payload según el tipo: gol → own_goal (+ assist_player_id si hubo asistencia);
+     *   penal → result; cambio → player_out_id / player_in_id;
      * - el «actor» de un cambio es quien sale; en el resto, el jugador elegido;
      * - jugador del club → player_id; jugador del rival externo → external_player_id;
      * - el borrador se cierra ANTES de enviar: la pantalla no espera a la red.
@@ -336,7 +368,11 @@ class MatchDetailViewModel(private val container: AppContainer, private val matc
         val clientId = UUID.randomUUID().toString()
         val payload: JsonObject = buildJsonObject {
             when (d.type.code) {
-                "goal" -> put("own_goal", d.ownGoal)
+                "goal" -> {
+                    put("own_goal", d.ownGoal)
+                    // El servidor exige que el asistente sea del mismo equipo que el goleador
+                    d.assist?.let { put("assist_player_id", it.key) }
+                }
                 "penalty" -> put("result", d.penaltyResult ?: "converted")
                 "substitution" -> {
                     put("player_out_id", d.playerOut?.key ?: "")
@@ -360,7 +396,10 @@ class MatchDetailViewModel(private val container: AppContainer, private val matc
             put("payload", payload)
         }
         val minuteLabel = if (d.extra > 0) "${d.minute}+${d.extra}'" else "${d.minute}'"
-        val label = listOf(d.type.name, s.sideName(side), actor?.playerName ?: AppText.get(R.string.match_detail_sin_identificar), minuteLabel).joinToString(" · ")
+        val label = listOfNotNull(
+            d.type.name, s.sideName(side), actor?.playerName ?: AppText.get(R.string.match_detail_sin_identificar),
+            d.assist?.playerName?.let { AppText.get(R.string.match_parts_asist_x, it) }, minuteLabel,
+        ).joinToString(" · ")
         _ui.update { it.copy(draft = null) }
         viewModelScope.launch {
             val result = container.queue.submit(

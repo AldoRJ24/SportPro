@@ -156,12 +156,8 @@ fun MatchDetailScreen(matchId: String, onBack: () -> Unit, onSetup: () -> Unit, 
                 when (tabs.getOrNull(tab)) {
                     stringResource(R.string.match_detail_registrar) -> RecordTab(ui, pendingHere.size, onPick = vm::startDraft, onEdit = { editing = it })
                     stringResource(R.string.match_detail_cronologia) -> TimelineTab(ui, pendingHere, onEdit = if (ui.canCorrect) ({ e: TimelineEvent -> editing = e }) else null)
-                    else -> Row(Modifier.fillMaxWidth()) {
-                        // Antes de la confirmación, la alineación ajena se ve vacía: se explica por qué
-                        val empty = if (match.lineupsPending) stringResource(R.string.lineup_published_later) else null
-                        LineupColumn(match.homeName, ui.playersOf("home"), Modifier.weight(1f), emptyText = empty)
-                        LineupColumn(match.awayName, ui.playersOf("away"), Modifier.weight(1f), emptyText = empty)
-                    }
+                    // Cancha completa: local arriba, visitante abajo, con íconos en tiempo real
+                    else -> LiveLineupTab(ui)
                 }
             }
         }
@@ -179,6 +175,7 @@ fun MatchDetailScreen(matchId: String, onBack: () -> Unit, onSetup: () -> Unit, 
             onOwnGoal = vm::toggleOwnGoal,
             onSubOut = vm::chooseSubOut,
             onPlayer = vm::choosePlayer,
+            onAssist = vm::chooseAssist,
         )
     }
 

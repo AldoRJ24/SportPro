@@ -290,6 +290,10 @@
     const parts = [];
     if (p.own_goal === true) parts.push('en contra');
     if (p.result) parts.push({ converted: 'convertido', missed: 'fallado', saved: 'atajado' }[p.result] || p.result);
+    if (p.assist_player_id) {
+      const a = playerByKey(p.assist_player_id);
+      parts.push(`asist. ${a ? a.name : '?'}`);
+    }
     if (e.code === 'substitution') {
       const out = playerByKey(p.player_out_id);
       const inn = playerByKey(p.player_in_id);
@@ -416,6 +420,11 @@
   }
 
   function afterPlayer() {
+    // Gol a favor con goleador identificado: se pregunta (opcional) quién dio la asistencia
+    if (draft.type.code === 'goal' && !draft.payload.own_goal && draft.player) {
+      const mates = fieldPlayers(draft.side).filter((p) => p.key !== draft.player.key);
+      if (mates.length) return stepAssist(mates);
+    }
     if (draft.type.code === 'penalty') {
       return setOptions('¿Cómo terminó el penal?', [
         opt('Convertido', () => { draft.payload.result = 'converted'; submit(); }, 'center'),
@@ -424,6 +433,16 @@
       ]);
     }
     submit();
+  }
+
+  /**
+   * Asistencia: compañeros en cancha del goleador o «Sin asistencia». El servidor vuelve a
+   * comprobar que el asistente sea del mismo equipo (si no, rechaza el evento).
+   */
+  function stepAssist(mates) {
+    const nodes = mates.map((p) => playerOpt(p, () => { draft.payload.assist_player_id = p.key; submit(); }));
+    nodes.push(opt('Sin asistencia', () => { delete draft.payload.assist_player_id; submit(); }, 'muted'));
+    setOptions(`¿Quién dio la asistencia? (gol de ${draft.player.name})`, nodes);
   }
 
   function stepSubOut(players) {
@@ -445,7 +464,9 @@
     closeSheet();
     const p = d.player;
     const isExternal = p && p.external;
-    const label = [d.type.name, sideName(d.side), p ? p.name : null, minuteLabel(d.minute, d.extra)].filter(Boolean).join(' · ');
+    const assist = d.payload.assist_player_id ? playerByKey(d.payload.assist_player_id) : null;
+    const label = [d.type.name, sideName(d.side), p ? p.name : null, assist ? `asist. ${assist.name}` : null,
+      minuteLabel(d.minute, d.extra)].filter(Boolean).join(' · ');
     const body = {
       p_token: token,
       p_client_event_id: uuid(),

@@ -56,6 +56,7 @@ fun RecorderSheet(
     onOwnGoal: () -> Unit,
     onSubOut: (LineupPlayer) -> Unit,
     onPlayer: (LineupPlayer?) -> Unit,
+    onAssist: (LineupPlayer?) -> Unit,
 ) {
     val sheet = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheet) {
@@ -105,6 +106,22 @@ fun RecorderSheet(
                     Text(stringResource(R.string.recorder_resultado_del_penal), style = MaterialTheme.typography.titleMedium)
                     listOf("converted" to stringResource(R.string.recorder_convertido_gol), "missed" to stringResource(R.string.recorder_fallado), "saved" to stringResource(R.string.recorder_atajado)).forEach { (code, label) ->
                         FilledTonalButton(onClick = { onPenalty(code) }, modifier = Modifier.fillMaxWidth().height(60.dp)) { Text(label) }
+                    }
+                }
+
+                // Asistencia (opcional): los compañeros en cancha del goleador, o «Sin asistencia»
+                DraftStep.ASSIST -> {
+                    val side = draft.side ?: "home"
+                    val mates = ui.fieldPlayers(side).filter { it.key != draft.scorer?.key }
+                    Text(
+                        stringResource(R.string.recorder_assist_title, draft.scorer?.playerName ?: "?"),
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        mates.forEach { p -> PlayerChip(p, onClick = { onAssist(p) }) }
+                    }
+                    Button(onClick = { onAssist(null) }, modifier = Modifier.fillMaxWidth().height(56.dp)) {
+                        Text(stringResource(R.string.recorder_assist_none))
                     }
                 }
 

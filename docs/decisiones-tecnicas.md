@@ -218,6 +218,16 @@ Cada decisión sigue el mismo formato: el problema, lo que se decidió, por qué
 
 **Costo.** Se creó `get_match_lineup_pitch` en lugar de cambiar `get_match_lineup`: cambiar el tipo de resultado obligaba a borrarla, y las migraciones 002 y 017 ya no podrían volver a ejecutarse. Las alineaciones viejas y las autocompletadas no tienen lugares: la app las acomoda según la formación.
 
+## 21. Alineación en vivo, MVP y asistencias: calculados, no guardados
+
+**Problema.** Quien mira el partido quiere ver la alineación en la cancha con los goles, asistencias, tarjetas y cambios de cada jugador, y saber quién es el MVP, todo al instante.
+
+**Decisión.** La pestaña «Alineación» dibuja la cancha completa (local arriba, visitante abajo). Quién ocupa cada casilla, los íconos de cada jugador y el MVP se calculan en el celular a partir de los eventos vigentes (`LiveLineup`): el que entra ocupa la casilla del que sale y un expulsado queda atenuado en su lugar. El MVP es quien más goles metió (goles en contra no cuentan, el penal convertido sí), de cualquiera de los dos equipos; si hay empate o nadie anotó, no hay estrella (lo decidió el usuario). Al registrar un gol, la app y la página del árbitro preguntan, de forma opcional, quién dio la asistencia.
+
+**Por qué.** Igual que el marcador, lo calculado no se guarda: si un evento se corrige o se anula, la cancha y el MVP cambian solos y no pueden quedar desincronizados. Como la cronología llega por Realtime, los íconos se actualizan en vivo sin trabajo extra. El servidor ya validaba que el asistente sea del mismo equipo que el goleador, así que no hizo falta otra migración.
+
+**Costo.** Cada celular recalcula al llegar un evento (son pocas decenas, no se nota). El MVP es un criterio simple (goles), no una calificación del rendimiento.
+
 ## Antecedente
 
 `DISEÑO_TECNICO_W7.md`, en la raíz, es el diseño preliminar de la semana 7. Dos cosas cambiaron respecto a ese documento: la IA ya no recibe nombres de jugadores, sino seudónimos, y la llamada a la IA la hace el servidor en lugar de la app.
