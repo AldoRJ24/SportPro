@@ -434,7 +434,40 @@ data class PostComment(
     @SerialName("created_at") val createdAt: String? = null,
     @SerialName("is_mine") val isMine: Boolean = false,
     @SerialName("can_delete") val canDelete: Boolean = false,
+    /** Puedo reportarlo (no es mío). Migración 022. */
+    @SerialName("can_report") val canReport: Boolean = false,
+    /** Ya lo reporté: no se puede reportar dos veces. */
+    @SerialName("reported_by_me") val reportedByMe: Boolean = false,
 )
+
+/**
+ * Resultado de comentar (migración 022). Si [blocked] es true, el filtro lo detectó como
+ * ofensivo: no se publicó y sumó un strike. Con 3 strikes en 7 días llega [bannedUntil].
+ */
+@Serializable
+data class CommentResult(
+    val id: String? = null,
+    val blocked: Boolean = false,
+    val strikes: Int? = null,
+    @SerialName("banned_until") val bannedUntil: String? = null,
+)
+
+/** Resultado de reportar: cuántos reportes lleva y si con este se eliminó. */
+@Serializable
+data class ReportResult(val reports: Int = 0, val removed: Boolean = false)
+
+/** Mi situación para comentar: strikes de la última semana y suspensión vigente. */
+@Serializable
+data class CommentStatus(
+    val strikes: Int = 0,
+    @SerialName("banned_until") val bannedUntil: String? = null,
+)
+
+/** Motivos para reportar un comentario (códigos del servidor). */
+enum class ReportReason(val code: String) {
+    OFFENSIVE("offensive"), HARASSMENT("harassment"), HATE("hate"),
+    SPAM("spam"), INAPPROPRIATE("inappropriate"), OTHER("other"),
+}
 
 @Serializable
 data class LikeResult(val liked: Boolean = false, val likes: Int = 0)

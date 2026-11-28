@@ -226,6 +226,15 @@ private fun statusPill(row: ChallengeRow) {
     Pill(stringResource(text), color)
 }
 
+/** «Local ✓ aceptó» en verde o «Visitante · pendiente» en ámbar. */
+@Composable
+private fun SideState(side: String, accepted: Boolean) {
+    Pill(
+        stringResource(if (accepted) R.string.challenges_side_ok else R.string.challenges_side_waiting, side),
+        if (accepted) SuccessGreen else WarnAmber,
+    )
+}
+
 /**
  * Tarjeta de un desafío: quién desafía a quién (con academia y entrenador), los ajustes del
  * partido y las acciones que corresponden a quien la mira.
@@ -245,7 +254,7 @@ private fun ChallengeCard(
     Card(
         Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurface),
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Row { statusPill(row) }
@@ -273,6 +282,16 @@ private fun ChallengeCard(
                 ).joinToString(" · "),
                 style = MaterialTheme.typography.bodyMedium,
             )
+            // Propuesta del administrador: quién la hizo y en qué va cada entrenador
+            if (row.proposedByAdmin) {
+                Text(stringResource(R.string.challenges_proposed_by, row.proposedByName ?: unknown), style = small, color = soft)
+            }
+            if (row.isPending) {
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(top = 2.dp)) {
+                    SideState(stringResource(R.string.challenges_side_home), row.homeAccepted)
+                    SideState(stringResource(R.string.challenges_side_away), row.awayAccepted)
+                }
+            }
             row.decisionReason?.takeIf { it.isNotBlank() }?.let {
                 Text(stringResource(R.string.challenges_reason, it), style = small, color = soft)
             }

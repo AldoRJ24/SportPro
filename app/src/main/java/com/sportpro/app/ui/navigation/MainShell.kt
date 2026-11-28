@@ -1,29 +1,31 @@
 package com.sportpro.app.ui.navigation
 
 import com.sportpro.app.core.AppText
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Icon
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination
@@ -75,24 +77,48 @@ import com.sportpro.app.ui.tryouts.TryoutsScreen
 import com.sportpro.app.ui.tryouts.publishableAcademies
 import com.sportpro.app.ui.session.SessionViewModel
 import com.sportpro.app.ui.summary.SummaryScreen
+import com.sportpro.app.ui.subscription.SubscriptionScreen
+import com.sportpro.app.ui.components.GoldNames
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import com.sportpro.app.ui.theme.LocalBottomBarInset
+import com.sportpro.app.ui.theme.LocalShellHaze
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
 
+/** Pestaña del menú inferior. Los iconos se eligen dentro de la composición (necesitan pintarse). */
 private data class Tab(
     val route: Any,
     val isCurrent: (NavDestination) -> Boolean,
     val label: String,
-    val icon: ImageVector?,
-    val iconRes: Int?,
 )
 
+/**
+ * Cuatro pestañas (el Calendario ahora se abre desde Perfil). Con «+» en el centro quedan dos a
+ * cada lado, así el botón del DT queda en el medio exacto de la barra.
+ */
 private val tabs = listOf(
-    Tab(HomeRoute, { it.hasRoute<HomeRoute>() }, AppText.get(R.string.main_shell_inicio), Icons.Filled.Home, null),
-    Tab(MatchesRoute, { it.hasRoute<MatchesRoute>() }, AppText.get(R.string.main_shell_partidos), null, R.drawable.ic_ev_ball),
-    Tab(ExploreRoute, { it.hasRoute<ExploreRoute>() }, AppText.get(R.string.main_shell_explorar), Icons.Filled.Search, null),
-    Tab(CalendarRoute, { it.hasRoute<CalendarRoute>() }, AppText.get(R.string.main_shell_calendario), Icons.Filled.DateRange, null),
-    Tab(ProfileRoute, { it.hasRoute<ProfileRoute>() }, AppText.get(R.string.main_shell_perfil), Icons.Filled.Person, null), // D-29: perfil abajo a la derecha
+    Tab(HomeRoute, { it.hasRoute<HomeRoute>() }, AppText.get(R.string.main_shell_inicio)),
+    Tab(MatchesRoute, { it.hasRoute<MatchesRoute>() }, AppText.get(R.string.main_shell_partidos)),
+    Tab(ExploreRoute, { it.hasRoute<ExploreRoute>() }, AppText.get(R.string.main_shell_explorar)),
+    Tab(ProfileRoute, { it.hasRoute<ProfileRoute>() }, AppText.get(R.string.main_shell_perfil)), // D-29: perfil abajo a la derecha
 )
 
-/** Estructura principal inspirada en Instagram (D-21): menú inferior con iconos, «+» arriba a la izquierda y campana arriba a la derecha en las pestañas. */
+/** Icono relleno (pestaña elegida) y de contorno (sin elegir), como los símbolos de iOS. */
+@Composable
+private fun tabIcons(route: Any): Pair<Painter, Painter> = when (route) {
+    HomeRoute -> rememberVectorPainter(Icons.Filled.Home) to rememberVectorPainter(Icons.Outlined.Home)
+    ExploreRoute -> rememberVectorPainter(Icons.Filled.Search) to rememberVectorPainter(Icons.Outlined.Search)
+    ProfileRoute -> rememberVectorPainter(Icons.Filled.Person) to rememberVectorPainter(Icons.Outlined.Person)
+    else -> painterResource(R.drawable.ic_ev_ball).let { it to it }
+}
+
+/**
+ * Estructura principal: menú inferior de vidrio (estilo iOS) con el «+» del DT al centro (estilo
+ * TikTok) y campana arriba a la derecha en las pestañas. El contenido ocupa toda la pantalla y
+ * pasa por debajo de la barra: por eso se ve desenfocado a través de ella.
+ */
 @Composable
 fun MainShell(session: SessionViewModel) {
     val container = LocalAppContainer.current
@@ -128,6 +154,20 @@ fun MainShell(session: SessionViewModel) {
         if (newest != null && newest.isUnread && newest.kind == "team_join_answer") session.refreshContext()
     }
 
+    // Nombres dorados (plan Gold) para toda la app, y planes de las academias que administro.
+    // Si una academia mía todavía no tiene plan (las nuevas), se abre «Planes» para elegirlo.
+    var plansAsked by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(ctx?.userId) {
+        if (ctx == null) return@LaunchedEffect
+        runCatching { container.subscriptions.goldNames() }.onSuccess { GoldNames.set(it.map { g -> g.id }.toSet()) }
+        if (!plansAsked && ctx?.adminAcademies.orEmpty().isNotEmpty()) {
+            plansAsked = true
+            runCatching { container.subscriptions.mine() }.getOrNull()
+                ?.firstOrNull { it.plan == null }
+                ?.let { a -> nav.navigate(SubscriptionRoute(a.academyId, a.academyName, required = true)) }
+        }
+    }
+
     pendingInvite?.let { code ->
         RedeemInviteDialog(
             code = code,
@@ -139,35 +179,22 @@ fun MainShell(session: SessionViewModel) {
         )
     }
 
-    CompositionLocalProvider(LocalUnreadCount provides familyUi.unread) {
-    Scaffold(
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        bottomBar = {
-            if (showBar) {
-                NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest) {
-                    tabs.forEach { t ->
-                        val selected = destination?.hierarchy?.any { t.isCurrent(it) } == true
-                        NavigationBarItem(
-                            selected = selected,
-                            onClick = { nav.navigateToTab(t.route) },
-                            icon = {
-                                if (t.icon != null) Icon(t.icon, contentDescription = t.label)
-                                else Icon(painterResource(t.iconRes!!), contentDescription = t.label)
-                            },
-                            label = { Text(t.label) },
-                            colors = NavigationBarItemDefaults.colors(
-                                indicatorColor = MaterialTheme.colorScheme.primaryContainer,
-                            ),
-                        )
-                    }
-                }
-            }
-        },
-    ) { inner ->
-        Box(Modifier.fillMaxSize().padding(inner)) {
+    // Vidrio de la barra inferior: el contenido de la pantalla es la fuente que se desenfoca
+    val shellHaze = rememberHazeState()
+    // Alto reservado al final de las listas de las pestañas: barra + borde de gestos del sistema
+    val barInset = if (showBar) TabBarHeight + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() else 0.dp
+    val createLabel = stringResource(R.string.tab_actions_crear_partido)
+
+    CompositionLocalProvider(
+        LocalUnreadCount provides familyUi.unread,
+        LocalShellHaze provides shellHaze,
+        LocalBottomBarInset provides barInset,
+    ) {
+    Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        Box(Modifier.fillMaxSize().hazeSource(shellHaze)) {
             NavHost(nav, startDestination = HomeRoute) {
                 composable<HomeRoute> {
-                    HomeScreen(ctx, onOpenMatch = openMatch, onCreate = onCreate, onBell = onBell)
+                    HomeScreen(ctx, onOpenMatch = openMatch, onBell = onBell)
                 }
                 composable<MatchesRoute> {
                     MatchesScreen(
@@ -203,7 +230,8 @@ fun MainShell(session: SessionViewModel) {
                         onCreated = { id -> nav.navigate(TryoutDetailRoute(id)) { popUpTo<CreateTryoutRoute> { inclusive = true } } },
                     )
                 }
-                composable<CalendarRoute> { CalendarScreen(matchesVm, onOpenMatch = openMatch, onBell = onBell) }
+                // El Calendario ya no es una pestaña: se abre desde Perfil y tiene flecha de volver
+                composable<CalendarRoute> { CalendarScreen(matchesVm, onOpenMatch = openMatch, onBack = { nav.popBackStack() }) }
                 composable<ProfileRoute> {
                     ProfileScreen(
                         session = session,
@@ -221,6 +249,9 @@ fun MainShell(session: SessionViewModel) {
                         onMyFees = { nav.navigate(FeeStatementRoute()) },
                         onPlayerDocs = { id, name -> nav.navigate(PlayerDocsRoute(id, name)) },
                         onTeamDocs = { id, name -> nav.navigate(TeamDocsRoute(id, name)) },
+                        onCalendar = { nav.navigate(CalendarRoute) },
+                        onPlans = { id, name -> nav.navigate(SubscriptionRoute(id, name)) },
+                        onNotificationSettings = { nav.navigate(NotificationSettingsRoute) },
                     )
                 }
                 // ---- Documentos: plantel del equipo → documentos de un jugador ----
@@ -364,10 +395,34 @@ fun MainShell(session: SessionViewModel) {
                 }
                 composable<EditProfileRoute> { EditProfileScreen(session, onBack = { nav.popBackStack() }) }
                 composable<JoinTeamRoute> { JoinTeamScreen(session, onBack = { nav.popBackStack() }) }
+                composable<SubscriptionRoute> { entry ->
+                    val r = entry.toRoute<SubscriptionRoute>()
+                    SubscriptionScreen(r.academyId, r.name, r.required, onBack = { nav.popBackStack() })
+                }
                 composable<AddChildRoute> {
                     AddChildScreen(onBack = { nav.popBackStack() }, onCreated = { session.refreshContext() })
                 }
             }
+        }
+        // Barra inferior flotante, encima del contenido
+        if (showBar) {
+            GlassTabBar(
+                items = tabs.map { t ->
+                    val (on, off) = tabIcons(t.route)
+                    TabBarItem(
+                        label = t.label,
+                        selected = destination?.hierarchy?.any { t.isCurrent(it) } == true,
+                        iconSelected = on,
+                        iconIdle = off,
+                        onClick = { nav.navigateToTab(t.route) },
+                    )
+                },
+                haze = shellHaze,
+                // Solo quien dirige equipos (DT o admin de plataforma) ve el «+»
+                onCreate = onCreate,
+                createLabel = createLabel,
+                modifier = Modifier.align(Alignment.BottomCenter),
+            )
         }
     }
     }

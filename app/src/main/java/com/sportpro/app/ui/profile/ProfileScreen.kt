@@ -47,12 +47,28 @@ import com.sportpro.app.ui.components.EmptyState
 import com.sportpro.app.ui.components.Pill
 import com.sportpro.app.ui.components.SectionHeader
 import com.sportpro.app.ui.components.SpScaffold
+import com.sportpro.app.ui.components.TeamName
 import com.sportpro.app.ui.components.roleLabel
 import com.sportpro.app.ui.family.FamilyCodeCard
 import com.sportpro.app.ui.family.GuardianRequestCard
 import com.sportpro.app.ui.navigation.LocalAppContainer
 import com.sportpro.app.ui.session.SessionViewModel
-import com.sportpro.app.ui.theme.BrandBlue
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.DateRange
+import androidx.compose.material.icons.rounded.Notifications
+import androidx.compose.material3.ButtonDefaults
+import com.sportpro.app.ui.components.GroupedRow
+import com.sportpro.app.ui.components.GroupedSection
+import com.sportpro.app.ui.components.SegmentedControl
+import com.sportpro.app.ui.theme.LiveRed
+import androidx.compose.material.icons.rounded.Star
+import androidx.compose.runtime.produceState
+import androidx.compose.ui.graphics.Color
+import com.sportpro.app.core.data.AcademySubscription
+import com.sportpro.app.core.data.Plan
+import com.sportpro.app.ui.components.GoldMid
+import com.sportpro.app.ui.theme.ThemeMode
+import com.sportpro.app.ui.theme.ThemeSettings
 import com.sportpro.app.ui.theme.WarnAmber
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -73,6 +89,9 @@ fun ProfileScreen(
     onMyFees: () -> Unit = {},
     onPlayerDocs: (String, String) -> Unit = { _, _ -> },
     onTeamDocs: (String, String) -> Unit = { _, _ -> },
+    onCalendar: () -> Unit = {},
+    onNotificationSettings: () -> Unit = {},
+    onPlans: (academyId: String, name: String) -> Unit = { _, _ -> },
 ) {
     val container = LocalAppContainer.current
     val ctx by session.context.collectAsStateWithLifecycle()
@@ -90,21 +109,28 @@ fun ProfileScreen(
         session.refreshContext()
         onPauseOrDispose { }
     }
+    // Plan de cada academia que administro (para la tarjeta «Plan de …»)
+    val plans by produceState(emptyList<AcademySubscription>(), ctx?.userId) {
+        value = if (ctx?.adminAcademies.orEmpty().isEmpty()) emptyList()
+        else runCatching { container.subscriptions.mine() }.getOrDefault(emptyList())
+    }
     LaunchedEffect(ui.message) {
         ui.message?.let { snack.showSnackbar(it); vm.consumeMessage() }
     }
 
     SpScaffold(title = stringResource(R.string.profile_perfil), isTab = true, actions = { BellAction(onBell) }, snackbarHostState = snack) { pad ->
-        LazyColumn(Modifier.padding(pad), contentPadding = PaddingValues(bottom = 32.dp)) {
+        // contentPadding (y no padding): la lista pasa por debajo de las barras de vidrio
+        LazyColumn(contentPadding = PaddingValues(top = pad.calculateTopPadding(), bottom = pad.calculateBottomPadding() + 32.dp)) {
             item {
-                Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                // Cabecera: foto, nombre y «Editar perfil» como enlace azul (estilo tarjeta de contacto de iOS)
+                Row(Modifier.padding(start = 20.dp, end = 12.dp, top = 8.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                     Avatar(ctx?.displayName ?: "?", ctx?.profile?.avatarPath, size = 72.dp)
-                    Spacer(Modifier.width(14.dp))
-                    Column(Modifier.weight(1f)) {
+                    Spacer(Modifier.width(16.dp))
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(ctx?.displayName ?: stringResource(R.string.profile_cargando), style = MaterialTheme.typography.titleLarge)
-                        if (ctx?.isPlatformAdmin == true) Pill(stringResource(R.string.profile_superadmin), BrandBlue)
+                        if (ctx?.isPlatformAdmin == true) Pill(stringResource(R.string.profile_superadmin), MaterialTheme.colorScheme.primary)
+                        TextButton(onClick = onEditProfile, contentPadding = PaddingValues(0.dp)) { Text(stringResource(R.string.profile_editar_perfil)) }
                     }
-                    OutlinedButton(onClick = onEditProfile) { Text(stringResource(R.string.profile_editar_perfil)) }
                 }
             }
             ctxError?.let { err ->
@@ -156,6 +182,30 @@ fun ProfileScreen(
             ctx?.adminAcademies.orEmpty().forEach { m ->
                 val academyName = m.academy?.name ?: AppText.get(R.string.profile_mi_academia)
                 item { SectionHeader(stringResource(R.string.profile_administracion_x, academyName)) }
+                // Plan de la academia (pago simulado): Básico, Black o Gold
+                item {
+                    val sub = plans.firstOrNull { it.academyId == m.academyId }
+                    val plan = sub?.planOrNull
+                    GroupedSection(Modifier.padding(bottom = 6.dp)) {
+                        GroupedRow(
+                            icon = Icons.Rounded.Star,
+                            iconTint = when (plan) {
+                                Plan.GOLD -> GoldMid
+                                Plan.BLACK -> Color.Black
+                                else -> MaterialTheme.colorScheme.primary
+                            },
+                            title = stringResource(R.string.subs_profile_card, academyName),
+                            subtitle = if (plan == null) stringResource(R.string.subs_profile_none)
+                            else stringResource(
+                                R.string.subs_profile_plan,
+                                plan.name.lowercase().replaceFirstChar { it.uppercase() }.replace("Basic", "Básico"),
+                                stringResource(if (sub.billing == "annual") R.string.subs_annual_word else R.string.subs_monthly_word),
+                            ),
+                            onClick = { onPlans(m.academyId, academyName) },
+                            divider = false,
+                        )
+                    }
+                }
                 item {
                     ActionCard(
                         title = stringResource(R.string.profile_invitar_entrenador_dt),
@@ -265,13 +315,13 @@ fun ProfileScreen(
                 items(managed, key = { "mt" + it.id }) { t ->
                     Card(
                         Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 5.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurface),
                     ) {
                         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                             TeamCrest(t.name, t.crestPath, 40.dp)
                             Spacer(Modifier.width(12.dp))
                             Column(Modifier.weight(1f)) {
-                                Text(t.name, style = MaterialTheme.typography.titleSmall)
+                                TeamName(t.name, id = t.id, style = MaterialTheme.typography.titleSmall)
                                 Text(
                                     stringResource(R.string.profile_x_formato_x_x_por, t.category ?: "", t.defaultFormatPlayers, t.halfMinutes),
                                     style = MaterialTheme.typography.bodySmall,
@@ -297,10 +347,63 @@ fun ProfileScreen(
                 }
             }
 
+            // ---- Ajustes: calendario, notificaciones y apariencia ----
+            item { SectionHeader(stringResource(R.string.settings_title)) }
             item {
-                OutlinedButton(onClick = { session.signOut() }, modifier = Modifier.padding(16.dp)) { Text(stringResource(R.string.profile_cerrar_sesion)) }
+                GroupedSection {
+                    GroupedRow(
+                        icon = Icons.Rounded.DateRange,
+                        iconTint = MaterialTheme.colorScheme.primary,
+                        title = stringResource(R.string.calendar_calendario),
+                        subtitle = stringResource(R.string.settings_calendar_sub),
+                        onClick = onCalendar,
+                    )
+                    GroupedRow(
+                        icon = Icons.Rounded.Notifications,
+                        iconTint = LiveRed,
+                        title = stringResource(R.string.notif_title),
+                        subtitle = stringResource(R.string.settings_notifications_sub),
+                        onClick = onNotificationSettings,
+                        divider = false,
+                    )
+                }
+            }
+            item { AppearanceSetting() }
+            item {
+                // Cerrar sesión: texto rojo centrado en su propia tarjeta, como en iOS
+                GroupedSection(Modifier.padding(top = 24.dp)) {
+                    TextButton(
+                        onClick = { session.signOut() },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                    ) { Text(stringResource(R.string.profile_cerrar_sesion)) }
+                }
             }
         }
+    }
+}
+
+/**
+ * Apariencia: Claro (predeterminado), Oscuro o Sistema. El cambio se ve al instante y se guarda
+ * en este celular.
+ */
+@Composable
+private fun AppearanceSetting() {
+    val mode by ThemeSettings.mode.collectAsStateWithLifecycle()
+    val modes = listOf(ThemeMode.LIGHT, ThemeMode.DARK, ThemeMode.SYSTEM)
+    Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(stringResource(R.string.settings_appearance), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(start = 4.dp))
+        SegmentedControl(
+            options = listOf(stringResource(R.string.theme_light), stringResource(R.string.theme_dark), stringResource(R.string.theme_system)),
+            selected = modes.indexOf(mode),
+            onSelect = { ThemeSettings.set(modes[it]) },
+        )
+        Text(
+            stringResource(R.string.settings_appearance_sub),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(start = 4.dp),
+        )
     }
 }
 
@@ -308,7 +411,7 @@ fun ProfileScreen(
 fun CallupCard(c: Callup, onOpenMatch: (String) -> Unit, onRespond: (Boolean) -> Unit) {
     Card(
         Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 5.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurface),
     ) {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -335,7 +438,7 @@ fun CallupCard(c: Callup, onOpenMatch: (String) -> Unit, onRespond: (Boolean) ->
 private fun PlayerCard(player: PlayerRef, teamsText: String, onStats: () -> Unit, onDocs: (() -> Unit)? = null) {
     Card(
         Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 5.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurface),
     ) {
         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             Crest(player.fullName, 44.dp)
@@ -360,7 +463,7 @@ private fun PlayerCard(player: PlayerRef, teamsText: String, onStats: () -> Unit
 private fun ActionCard(title: String, subtitle: String, action: String, onClick: () -> Unit) {
     Card(
         Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 5.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurface),
     ) {
         Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {

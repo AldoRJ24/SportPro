@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -22,8 +24,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowLeft
+import androidx.compose.material.icons.rounded.Clear
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Button
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -50,14 +57,31 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.platform.LocalLayoutDirection
 import com.sportpro.app.ui.theme.LiveRed
+import com.sportpro.app.ui.theme.LocalBottomBarInset
 import com.sportpro.app.ui.theme.SuccessGreen
 import com.sportpro.app.ui.theme.WarnAmber
+import com.sportpro.app.ui.theme.glassHairline
+import com.sportpro.app.ui.theme.glassStyle
+import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
 import kotlin.math.abs
 
 /**
  * Estructura común de todas las pantallas: barra superior con título, botón «volver» y acciones.
- * [isTab] = true cuando la pantalla es una pestaña del menú inferior (el margen de abajo lo maneja la barra).
+ * [isTab] = true cuando la pantalla es una pestaña del menú inferior.
+ *
+ * Diseño estilo iOS:
+ *  - La barra superior es de «vidrio»: lo que se desliza por debajo se ve desenfocado.
+ *    Para que eso pase, la lista de la pantalla debe usar `contentPadding = pad` (no
+ *    `Modifier.padding(pad)`): así empieza debajo de la barra pero puede pasar por detrás.
+ *  - En las pestañas el título va grande y a la izquierda; en las pantallas internas va
+ *    centrado y más chico, con la flecha «‹» de volver en azul.
+ *  - En las pestañas [pad] ya incluye el alto de la barra inferior flotante.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,30 +97,106 @@ fun SpScaffold(
     bottomBar: @Composable () -> Unit = {},
     content: @Composable (PaddingValues) -> Unit,
 ) {
+    // Cada pantalla tiene su propio «vidrio»: su contenido es la fuente y la barra lo desenfoca
+    val haze = rememberHazeState()
+    val glass = glassStyle()
+    val hairline = glassHairline()
+    // En las pestañas, la barra inferior flota encima del contenido: se reserva su alto
+    val bottomInset = if (isTab) LocalBottomBarInset.current else 0.dp
+    val barModifier = Modifier
+        .hazeEffect(haze, glass)
+        // Filo inferior de 1 px: separa la barra del contenido sin un divisor pesado
+        .drawBehind { drawLine(hairline, Offset(0f, size.height), Offset(size.width, size.height), 1f) }
+    val barColors = TopAppBarDefaults.topAppBarColors(
+        containerColor = Color.Transparent,
+        scrolledContainerColor = Color.Transparent,
+    )
+    val back: @Composable () -> Unit = {
+        if (onBack != null) {
+            IconButton(onClick = onBack) {
+                Icon(
+                    Icons.AutoMirrored.Rounded.KeyboardArrowLeft,
+                    contentDescription = stringResource(R.string.common_volver),
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(32.dp),
+                )
+            }
+        } else navigationIcon()
+    }
     Scaffold(
         modifier = modifier,
         topBar = {
-            TopAppBar(
-                title = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                navigationIcon = {
-                    if (onBack != null) {
-                        IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_volver))
-                        }
-                    } else navigationIcon()
-                },
-                actions = actions,
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                ),
-            )
+            if (isTab) {
+                TopAppBar(
+                    title = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.headlineSmall) },
+                    navigationIcon = back,
+                    actions = actions,
+                    colors = barColors,
+                    modifier = barModifier,
+                )
+            } else {
+                CenterAlignedTopAppBar(
+                    title = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.titleMedium) },
+                    navigationIcon = back,
+                    actions = actions,
+                    colors = barColors,
+                    modifier = barModifier,
+                )
+            }
         },
         bottomBar = bottomBar,
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        floatingActionButton = floatingActionButton,
+        snackbarHost = { SnackbarHost(snackbarHostState, Modifier.padding(bottom = bottomInset)) },
+        floatingActionButton = { Box(Modifier.padding(bottom = bottomInset)) { floatingActionButton() } },
         contentWindowInsets = if (isTab) WindowInsets(0, 0, 0, 0) else ScaffoldDefaults.contentWindowInsets,
         containerColor = MaterialTheme.colorScheme.background,
-        content = content,
+    ) { pad ->
+        val layout = LocalLayoutDirection.current
+        val padded = PaddingValues(
+            start = pad.calculateStartPadding(layout),
+            top = pad.calculateTopPadding(),
+            end = pad.calculateEndPadding(layout),
+            bottom = pad.calculateBottomPadding() + bottomInset,
+        )
+        Box(Modifier.fillMaxSize().hazeSource(haze)) { content(padded) }
+    }
+}
+
+/**
+ * Buscador al estilo iOS: cápsula gris rellena, sin borde, con la lupa a la izquierda y una «x»
+ * para borrar cuando hay texto. Ocupa menos alto que un campo de formulario y se lee como
+ * herramienta, no como dato a completar.
+ */
+@Composable
+fun SearchField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    modifier: Modifier = Modifier,
+) {
+    TextField(
+        value = value,
+        onValueChange = onValueChange,
+        placeholder = { Text(placeholder, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+        leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
+        trailingIcon = {
+            if (value.isNotEmpty()) {
+                IconButton(onClick = { onValueChange("") }) {
+                    Icon(Icons.Rounded.Clear, contentDescription = stringResource(R.string.matches_borrar_busqueda))
+                }
+            }
+        },
+        singleLine = true,
+        shape = RoundedCornerShape(12.dp),
+        textStyle = MaterialTheme.typography.bodyLarge,
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            focusedLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            unfocusedLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        ),
+        modifier = modifier.fillMaxWidth(),
     )
 }
 
@@ -161,15 +261,19 @@ fun PrototypeBanner(text: String, modifier: Modifier = Modifier) {
     }
 }
 
-/** Título de sección dentro de una lista (en mayúsculas y color suave). */
+/**
+ * Título de sección dentro de una lista, al estilo de las apps de Apple (App Store, Fitness):
+ * texto en negrita y del color principal, con más aire arriba que abajo para que quede pegado
+ * a lo que encabeza (la cercanía indica pertenencia).
+ */
 @Composable
 fun SectionHeader(text: String, modifier: Modifier = Modifier) {
     Text(
-        text.uppercase(),
-        modifier = modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-        style = MaterialTheme.typography.labelMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        letterSpacing = 1.2.sp,
+        text,
+        modifier = modifier.padding(start = 20.dp, end = 20.dp, top = 22.dp, bottom = 8.dp),
+        style = MaterialTheme.typography.titleMedium.copy(fontSize = 20.sp, lineHeight = 25.sp),
+        fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.onSurface,
     )
 }
 

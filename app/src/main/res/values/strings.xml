@@ -183,7 +183,7 @@
     <string name="docs_action_reject">Rechazar</string>
     <string name="docs_reject_title">Rechazar documento</string>
     <string name="docs_upload_title">Subir %1$s</string>
-    <string name="docs_upload_hint">Elige una foto (JPG o PNG) o un PDF de hasta 5 MB. Si el documento vence, escribe la fecha.</string>
+    <string name="docs_upload_hint">Toma una foto clara del documento, elige una de tu galería o sube un PDF de hasta 5 MB. Si el documento vence, escribe la fecha.</string>
     <string name="docs_upload_expiry_label">Vencimiento (DD/MM/AAAA), opcional</string>
     <string name="docs_upload_expiry_invalid">La fecha no es válida</string>
     <string name="docs_upload_expiry_past">La fecha ya pasó</string>
@@ -1164,4 +1164,114 @@
     <string name="roster_guardian">Apoderado: %1$s</string>
     <string name="roster_no_guardian">Sin apoderado aprobado todavía</string>
     <string name="error_timeout">El servidor tardó demasiado en responder. Inténtalo otra vez en un momento.</string>
+
+    <!-- Rediseño: ajustes en Perfil y apariencia -->
+    <string name="settings_title">Ajustes</string>
+    <string name="settings_calendar_sub">Tus partidos ordenados por día</string>
+    <string name="settings_notifications_sub">Qué avisos quieres recibir</string>
+    <string name="settings_appearance">Apariencia</string>
+    <string name="settings_appearance_sub">Claro es el predeterminado. «Sistema» sigue el modo de tu celular.</string>
+    <string name="theme_light">Claro</string>
+    <string name="theme_dark">Oscuro</string>
+    <string name="theme_system">Sistema</string>
+
+    <string name="common_ok">Aceptar</string>
+    <!-- Suscripciones (migración 023, pago simulado) -->
+    <string name="subs_title">Planes</string>
+    <string name="subs_subtitle">Elige el plan de tu academia. Puedes cambiarlo cuando quieras.</string>
+    <string name="subs_choose_first">Tu academia todavía no tiene plan. Elige uno para continuar: el Básico es gratis.</string>
+    <string name="subs_monthly">Mensual</string>
+    <string name="subs_annual_save">Anual · Ahorra 20 %</string>
+    <string name="subs_monthly_word">mensual</string>
+    <string name="subs_annual_word">anual</string>
+    <string name="subs_plan_word">Plan</string>
+    <string name="subs_basic">Básico</string>
+    <string name="subs_black">Black</string>
+    <string name="subs_gold">Gold</string>
+    <string name="subs_current">Tu plan actual</string>
+    <string name="subs_popular">Más elegido</string>
+    <string name="subs_premium">Premium</string>
+    <string name="subs_usd">US$ %1$d</string>
+    <string name="subs_per_month">al mes</string>
+    <string name="subs_free_forever">Gratis, sin fecha de vencimiento</string>
+    <string name="subs_billed_annual">Pago anual de US$ %1$d (12 meses con 20 %% de descuento)</string>
+    <string name="subs_billed_monthly">Se renueva cada mes</string>
+    <string name="subs_renews">Plan %1$s vigente hasta el %2$s</string>
+    <string name="subs_current_button">Plan actual</string>
+    <string name="subs_choose">Elegir %1$s</string>
+    <string name="subs_f_all">Toda la gestión de la academia</string>
+    <string name="subs_f_all_d">Equipos, partidos en vivo, convocatorias, alineaciones, desafíos, documentos y mensualidades</string>
+    <string name="subs_f_no_ai">Sin funciones de inteligencia artificial</string>
+    <string name="subs_f_ai">Resumen del partido con IA</string>
+    <string name="subs_f_ai_black">%1$d usos cada 3 días por entrenador</string>
+    <string name="subs_f_future_ai">Nuevas herramientas de IA a medida que lleguen</string>
+    <string name="subs_f_everything_black">Todo lo del plan Black</string>
+    <string name="subs_f_ai_gold">5 veces más IA</string>
+    <string name="subs_f_ai_gold_d">%1$d usos cada 3 días por entrenador</string>
+    <string name="subs_f_gold_name">Nombre dorado</string>
+    <string name="subs_f_gold_name_d">El nombre de tu academia y de sus equipos brilla en oro en toda la app</string>
+    <string name="subs_f_exclusive">Funciones exclusivas</string>
+    <string name="subs_f_exclusive_d">Próximamente</string>
+    <string name="subs_simulated_note">Proyecto académico: los pagos son una simulación. No se cobra nada ni se piden datos de tarjeta.</string>
+    <string name="subs_simulated_short">Pago simulado: no se cobra nada.</string>
+    <string name="subs_checkout_title">Confirmar plan</string>
+    <string name="subs_line_academy">Academia</string>
+    <string name="subs_line_plan">Plan</string>
+    <string name="subs_line_billing">Forma de pago</string>
+    <string name="subs_line_total">Total hoy</string>
+    <string name="subs_hold_idle">Mantén presionado para pagar US$ %1$d</string>
+    <string name="subs_hold_progress">Sigue presionando… %1$d s</string>
+    <string name="subs_hold_done">Pagando…</string>
+    <string name="subs_paid_title">¡Listo!</string>
+    <string name="subs_paid_body">%1$s ahora tiene el plan %2$s.</string>
+    <string name="subs_done">Continuar</string>
+    <string name="subs_profile_card">Plan de %1$s</string>
+    <string name="subs_profile_none">Sin plan: elige uno</string>
+    <string name="subs_profile_plan">%1$s · %2$s</string>
+    <string name="subs_see_plans">Ver planes</string>
+    <string name="ai_quota_line">IA: te quedan %1$d de %2$d usos (plan %3$s, cada 3 días)</string>
+    <string name="ai_quota_basic_admin">El resumen con IA está en los planes Black y Gold.</string>
+    <string name="ai_quota_basic_dt">El resumen con IA está en los planes Black y Gold. Pídele al administrador de tu academia que cambie de plan.</string>
+    <string name="ai_quota_empty">Usaste tus %1$d resúmenes con IA de estos 3 días. Podrás usar otro el %2$s.</string>
+    <!-- Moderación de comentarios (migración 022) -->
+    <string name="comment_blocked">Tu comentario tenía lenguaje ofensivo y se eliminó automáticamente. Strike %1$d de 3 esta semana.</string>
+    <string name="comment_blocked_banned">Tu comentario tenía lenguaje ofensivo y se eliminó. Llegaste a 3 strikes: no podrás comentar hasta el %1$s.</string>
+    <string name="comment_banned_until">No puedes comentar hasta el %1$s: se eliminaron 3 de tus comentarios en una semana.</string>
+    <string name="comment_report">Reportar comentario</string>
+    <string name="comment_reported">Ya reportaste este comentario</string>
+    <string name="comment_report_title">Reportar comentario</string>
+    <string name="comment_report_send">Reportar</string>
+    <string name="comment_report_sent">Gracias. Revisaremos el comentario: con 3 reportes se elimina.</string>
+    <string name="comment_report_removed">Gracias. El comentario se eliminó por reportes de la comunidad.</string>
+    <string name="report_reason_offensive">Lenguaje ofensivo o insultos</string>
+    <string name="report_reason_harassment">Acoso o bullying</string>
+    <string name="report_reason_hate">Discriminación u odio</string>
+    <string name="report_reason_spam">Spam o publicidad</string>
+    <string name="report_reason_inappropriate">Inapropiado para menores</string>
+    <string name="report_reason_other">Otro motivo</string>
+    <!-- Propuestas del administrador (migración 021) -->
+    <string name="create_match_dt_x">DT: %1$s</string>
+    <string name="create_match_propuesta_ayuda">No diriges este equipo: se enviará como propuesta. El partido se crea recién cuando acepten los dos entrenadores (el de tu equipo y el del rival).</string>
+    <string name="create_match_enviar_propuesta">Enviar propuesta a los DT</string>
+    <string name="create_match_externo_solo_dt">Un partido contra un rival externo lo crea el DT del equipo. Elige un rival registrado para enviar una propuesta.</string>
+    <string name="challenges_proposed_by">Propuesto por %1$s (administración)</string>
+    <string name="challenges_side_home">Local</string>
+    <string name="challenges_side_away">Visitante</string>
+    <string name="challenges_side_ok">%1$s ✓ aceptó</string>
+    <string name="challenges_side_waiting">%1$s · pendiente</string>
+    <string name="create_match_hora">Hora</string>
+    <string name="create_match_duracion_titulo">Duración de cada tiempo</string>
+    <string name="create_match_x_min">%1$d min</string>
+    <string name="create_match_x_jugadores">%1$d vs %1$d</string>
+    <string name="callup_not_saved">No se pudo guardar tu respuesta. Actualiza la pantalla e inténtalo otra vez.</string>
+
+    <!-- Contraseña: ojito para mostrar u ocultar -->
+    <string name="auth_show_password">Mostrar contraseña</string>
+    <string name="auth_hide_password">Ocultar contraseña</string>
+
+    <!-- Documentos: de dónde sale el archivo -->
+    <string name="docs_source_camera">Tomar foto</string>
+    <string name="docs_source_gallery">Elegir de la galería</string>
+    <string name="docs_source_pdf">Elegir un PDF</string>
+    <string name="docs_no_file_chosen">No se eligió ningún archivo. Toca «Subir» para intentarlo otra vez.</string>
 </resources>

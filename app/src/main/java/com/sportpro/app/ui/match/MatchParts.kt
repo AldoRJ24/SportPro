@@ -51,7 +51,7 @@ fun MatchHeader(match: MatchRow, nowMs: Long, modifier: Modifier = Modifier) {
     Card(
         modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurface),
     ) {
         Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             StatusBadge(match, nowMs)
@@ -288,7 +288,7 @@ fun EventButton(name: String, icon: String?, code: String, onClick: () -> Unit, 
         onClick = onClick,
         modifier = modifier.height(92.dp),
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurface),
     ) {
         Column(
             Modifier.fillMaxWidth().padding(8.dp),

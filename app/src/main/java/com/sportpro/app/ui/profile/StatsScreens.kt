@@ -35,7 +35,7 @@ import com.sportpro.app.ui.navigation.LocalAppContainer
 /** Una casilla de estadística: el número grande y debajo su nombre. */
 @Composable
 private fun StatTile(label: String, value: Int, modifier: Modifier = Modifier) {
-    Card(modifier, colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
+    Card(modifier, colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurface)) {
         Column(Modifier.padding(14.dp)) {
             Text(value.toString(), fontSize = 30.sp, fontWeight = FontWeight.Black)
             Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)

@@ -2,6 +2,7 @@ package com.sportpro.app.core.data.repo
 
 import com.sportpro.app.core.data.ChallengeRow
 import com.sportpro.app.core.data.RivalTeam
+import com.sportpro.app.core.data.TeamCoach
 import com.sportpro.app.core.data.decodeRows
 import com.sportpro.app.core.data.decodeScalar
 import io.github.jan.supabase.SupabaseClient
@@ -54,4 +55,11 @@ class ChallengeRepository(private val client: SupabaseClient) {
     /** Mis desafíos recibidos y enviados. */
     suspend fun mine(): List<ChallengeRow> =
         client.postgrest.rpc("my_challenges").decodeRows()
+
+    /**
+     * Entrenador de cada equipo que gestiono (migración 021). El administrador elige el equipo
+     * local viendo quién lo dirige; [TeamCoach.iCoach] = lo dirijo yo (mi lado se acepta solo).
+     */
+    suspend fun managedTeamCoaches(): List<TeamCoach> =
+        client.postgrest.rpc("managed_team_coaches").decodeRows()
 }

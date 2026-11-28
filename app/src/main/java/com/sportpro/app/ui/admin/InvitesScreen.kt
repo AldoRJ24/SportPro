@@ -155,7 +155,7 @@ fun InvitesScreen(kind: String, academyId: String?, academyName: String?, onBack
                     val link = InviteLinks.linkFor(inv.code)
                     Card(
                         Modifier.fillMaxWidth().padding(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurface),
                     ) {
                         Column(
                             Modifier.fillMaxWidth().padding(16.dp),

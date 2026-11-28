@@ -11,6 +11,7 @@ import com.sportpro.app.core.data.NotificationRow
 import com.sportpro.app.core.data.TeamPlayerRow
 import com.sportpro.app.core.data.UserContext
 import com.sportpro.app.core.data.friendlyMessage
+import com.sportpro.app.core.data.parseInstant
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,7 +30,18 @@ data class FamilyUi(
     val notifications: List<NotificationRow> = emptyList(),
     val message: String? = null,
 ) {
-    val pendingCallups: List<Callup> get() = callups.filter { it.status == "pending" && it.match?.status == "scheduled" }
+    /**
+     * Convocatorias por responder: pendientes, de un partido programado y que TODAVÍA no empezó.
+     * Antes no se miraba la fecha y seguían apareciendo «Confirmar / No asistirá» de partidos ya
+     * pasados que nunca se iniciaron en la app.
+     */
+    val pendingCallups: List<Callup> get() {
+        val now = java.time.Instant.now()
+        return callups.filter {
+            it.status == "pending" && it.match?.status == "scheduled" &&
+                (parseInstant(it.match.scheduledAt)?.isAfter(now) ?: true)
+        }
+    }
     val unread: Int get() = notifications.count { it.isUnread }
 }
 
@@ -86,7 +98,14 @@ class FamilyViewModel(private val container: AppContainer) : ViewModel() {
         viewModelScope.launch {
             try {
                 container.club.respondCallup(callup.id, accept)
-                _ui.update { it.copy(message = if (accept) AppText.get(R.string.profile_asistencia_confirmada) else AppText.get(R.string.profile_convocatoria_rechazada)) }
+                // La tarjeta desaparece al instante (sin esperar la recarga): ya no está «pendiente»
+                val newStatus = if (accept) "confirmed" else "declined"
+                _ui.update { s ->
+                    s.copy(
+                        callups = s.callups.map { if (it.id == callup.id) it.copy(status = newStatus) else it },
+                        message = if (accept) AppText.get(R.string.profile_asistencia_confirmada) else AppText.get(R.string.profile_convocatoria_rechazada),
+                    )
+                }
                 load(ctx)
             } catch (e: Exception) {
                 _ui.update { it.copy(message = e.friendlyMessage()) }

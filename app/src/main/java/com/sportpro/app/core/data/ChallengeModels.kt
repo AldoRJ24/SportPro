@@ -22,6 +22,14 @@ data class RivalTeam(
     val reason: String? = null,
 )
 
+/** Entrenador de un equipo que gestiono, como lo devuelve managed_team_coaches. */
+@Serializable
+data class TeamCoach(
+    @SerialName("team_id") val teamId: String,
+    @SerialName("coach_name") val coachName: String? = null,
+    @SerialName("i_coach") val iCoach: Boolean = false,
+)
+
 /** Un desafío recibido o enviado, como lo devuelve my_challenges. */
 @Serializable
 data class ChallengeRow(
@@ -50,6 +58,14 @@ data class ChallengeRow(
     @SerialName("decision_reason") val decisionReason: String? = null,
     @SerialName("match_id") val matchId: String? = null,
     @SerialName("created_at") val createdAt: String? = null,
+    // ---- Aceptación por lado (migración 021) ----
+    /** El entrenador local ya aceptó (en un desafío normal, al enviarlo). */
+    @SerialName("home_accepted") val homeAccepted: Boolean = true,
+    /** El entrenador visitante ya aceptó. */
+    @SerialName("away_accepted") val awayAccepted: Boolean = false,
+    /** true = lo propuso un administrador de academia: deben aceptar los dos DT. */
+    @SerialName("proposed_by_admin") val proposedByAdmin: Boolean = false,
+    @SerialName("proposed_by_name") val proposedByName: String? = null,
 ) {
     val isPending: Boolean get() = status == "pending"
     /** Puedo responderlo: es para mí y sigue pendiente. */

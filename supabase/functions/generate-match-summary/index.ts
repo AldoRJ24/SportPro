@@ -69,6 +69,11 @@ Deno.serve(async (req) => {
     if (oe) return json({ error: `No se pudo verificar el permiso: ${oe.message}` }, 500);
     if (ok !== true) return json({ error: "Solo el DT puede generar el resumen de un partido finalizado" }, 403);
 
+    // 2b) Plan de la academia (migración 023): Básico no tiene IA; Black 3 y Gold 15 usos cada
+    //     3 días por entrenador. Si no hay cupo, el servidor responde con el motivo y la fecha.
+    const { error: qe } = await userClient.rpc("ai_quota_check", { p_match: match_id });
+    if (qe) return json({ error: qe.message }, 402);
+
     // 3) Datos para la IA: SIN nombres (seudónimos J1.. / R1..)
     const { data: payload, error: pe } = await admin.rpc("build_ai_payload", { p_match: match_id });
     if (pe || !payload) return json({ error: "No se pudieron leer los eventos" }, 500);
@@ -120,6 +125,8 @@ Deno.serve(async (req) => {
       p_match: match_id, p_text: rendered, p_model: model,
     });
     if (se) return json({ error: se.message }, 409);
+    // 7) Recién ahora se descuenta el uso: si la IA o el guardado fallaron, no se gastó nada
+    await admin.rpc("ai_usage_record", { p_user: u.user.id, p_match: match_id, p_feature: "match_summary" });
     return json({ summary_id: summaryId, text: rendered });
   } catch (e) {
     return json({ error: String(e) }, 500);

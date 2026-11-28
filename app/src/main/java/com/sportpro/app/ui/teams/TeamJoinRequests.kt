@@ -127,7 +127,7 @@ fun TeamJoinRequestsBlock(onChanged: () -> Unit, modifier: Modifier = Modifier, 
         requests.forEach { r ->
             Card(
                 Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurface),
             ) {
                 Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
@@ -162,7 +162,7 @@ fun TeamJoinRequestsBlock(onChanged: () -> Unit, modifier: Modifier = Modifier, 
 fun TeamInviteCard(code: String?, onRegenerate: () -> Unit, modifier: Modifier = Modifier) {
     Card(
         modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurface),
     ) {
         Column(
             Modifier.fillMaxWidth().padding(14.dp),

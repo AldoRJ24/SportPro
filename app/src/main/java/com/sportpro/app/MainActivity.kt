@@ -12,23 +12,30 @@ import com.sportpro.app.core.TeamLinks
 import io.github.jan.supabase.auth.handleDeeplinks
 import com.sportpro.app.ui.navigation.SportProRoot
 import com.sportpro.app.ui.theme.SportProTheme
+import com.sportpro.app.ui.theme.rememberIsDark
+import androidx.compose.runtime.LaunchedEffect
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Tema claro: iconos oscuros sobre barras del sistema transparentes.
-        enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
-            navigationBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
-        )
+        // Barras del sistema transparentes: la app se dibuja de borde a borde (debajo pasa el vidrio)
+        applySystemBars(dark = false)
         // Solo en el primer arranque (no al rotar la pantalla) se procesan los enlaces que abrieron la app.
         if (savedInstanceState == null) {
             handleInvite(intent)
             handleAuthLink(intent)
         }
         setContent {
-            SportProTheme { SportProRoot() }
+            val dark = rememberIsDark()
+            // Iconos de hora y batería: oscuros en modo claro, claros en modo oscuro
+            LaunchedEffect(dark) { applySystemBars(dark) }
+            SportProTheme(dark = dark) { SportProRoot() }
         }
+    }
+
+    private fun applySystemBars(dark: Boolean) {
+        val style = if (dark) SystemBarStyle.dark(Color.TRANSPARENT) else SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
+        enableEdgeToEdge(statusBarStyle = style, navigationBarStyle = style)
     }
 
     // App ya abierta (singleTask): un enlace nuevo llega por aquí.

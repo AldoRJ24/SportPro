@@ -50,9 +50,10 @@ import com.sportpro.app.ui.components.LoadingBox
 import com.sportpro.app.ui.components.Pill
 import com.sportpro.app.ui.tryouts.TryoutsEntryCard
 import com.sportpro.app.ui.components.SectionHeader
+import com.sportpro.app.ui.components.SearchField
 import com.sportpro.app.ui.components.SpScaffold
+import com.sportpro.app.ui.components.TeamName
 import com.sportpro.app.ui.navigation.LocalAppContainer
-import com.sportpro.app.ui.theme.BrandBlue
 import com.sportpro.app.ui.theme.FavoriteGold
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -158,14 +159,13 @@ fun ExploreScreen(onBell: () -> Unit, onFollowChanged: () -> Unit, onTryouts: ()
                     q.isEmpty() || it.name.lowercase().contains(q) || (it.category ?: "").lowercase().contains(q)
                 }
                 val academies = ui.academies.filter { q.isEmpty() || it.name.lowercase().contains(q) || (it.city ?: "").lowercase().contains(q) }
-                LazyColumn(Modifier.padding(pad), contentPadding = PaddingValues(bottom = 24.dp)) {
+                // contentPadding (y no padding): la lista pasa por debajo de las barras de vidrio
+                LazyColumn(contentPadding = PaddingValues(top = pad.calculateTopPadding(), bottom = pad.calculateBottomPadding() + 24.dp)) {
                     item {
-                        OutlinedTextField(
+                        SearchField(
                             query, { query = it },
-                            leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
-                            placeholder = { Text(stringResource(R.string.explore_buscar_academia_equipo_o_categoria)) },
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth().padding(16.dp),
+                            placeholder = stringResource(R.string.explore_buscar_academia_equipo_o_categoria),
+                            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 12.dp),
                         )
                     }
                     // Avisos de pruebas: pantalla propia con filtros por categoría, posición, fecha y distrito
@@ -185,6 +185,7 @@ fun ExploreScreen(onBell: () -> Unit, onFollowChanged: () -> Unit, onTryouts: ()
                         val following = ui.follows.any { it.academyId == a.id }
                         FollowRowCard(
                             title = a.name,
+                            goldId = a.id,
                             subtitle = listOfNotNull(a.city, if (a.status == "verified") stringResource(R.string.explore_verificada) else null).joinToString(" · "),
                             verified = a.status == "verified",
                             following = following,
@@ -207,6 +208,7 @@ fun ExploreScreen(onBell: () -> Unit, onFollowChanged: () -> Unit, onTryouts: ()
 private fun TeamRowCard(t: TeamRef, ui: ExploreUi, vm: ExploreViewModel, onFollowChanged: () -> Unit) {
     FollowRowCard(
         title = t.name,
+        goldId = t.id,
         subtitle = listOfNotNull(t.category, ui.academies.firstOrNull { it.id == t.academyId }?.name).joinToString(" · "),
         verified = false,
         following = ui.follows.any { it.teamId == t.id },
@@ -229,22 +231,24 @@ private fun FollowRowCard(
     following: Boolean,
     onToggle: () -> Unit,
     crestPath: String? = null,
+    /** Id de la academia o equipo: si es Gold, el nombre sale dorado. */
+    goldId: String? = null,
     favorite: Boolean? = null,
     onFavorite: () -> Unit = {},
 ) {
     Card(
         Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 5.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurface),
     ) {
         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             TeamCrest(title, crestPath, 44.dp)
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(title, style = MaterialTheme.typography.titleSmall)
+                    TeamName(title, id = goldId, style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f, fill = false))
                     if (verified) {
                         Spacer(Modifier.width(6.dp))
-                        Pill("✓", BrandBlue)
+                        Pill("✓", MaterialTheme.colorScheme.primary)
                     }
                 }
                 if (subtitle.isNotBlank()) Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)

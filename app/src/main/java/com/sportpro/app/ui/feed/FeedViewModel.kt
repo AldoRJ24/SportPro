@@ -7,6 +7,8 @@ import androidx.lifecycle.viewModelScope
 import com.sportpro.app.core.AppContainer
 import com.sportpro.app.core.data.FeedPost
 import com.sportpro.app.core.data.PostComment
+import com.sportpro.app.core.data.ReportReason
+import com.sportpro.app.core.data.formatDayTime
 import com.sportpro.app.core.data.friendlyMessage
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -29,6 +31,8 @@ data class FeedUi(
     val comments: List<PostComment> = emptyList(),
     val commentsLoading: Boolean = false,
     val sending: Boolean = false,
+    /** Hasta cuándo no puedo comentar (3 comentarios eliminados en una semana). null = puedo. */
+    val bannedUntil: String? = null,
 ) {
     val openPost: FeedPost? get() = posts.firstOrNull { it.matchId == openMatchId }
 }
@@ -85,6 +89,10 @@ class FeedViewModel(private val container: AppContainer) : ViewModel() {
     fun openComments(post: FeedPost) {
         _ui.update { it.copy(openMatchId = post.matchId, comments = emptyList(), commentsLoading = true) }
         loadComments(post.matchId)
+        // Si estoy suspendido, la caja de texto lo dice antes de que escriba
+        viewModelScope.launch {
+            runCatching { container.feed.myCommentStatus() }.onSuccess { s -> _ui.update { it.copy(bannedUntil = s.bannedUntil) } }
+        }
     }
 
     fun closeComments() {
@@ -111,14 +119,43 @@ class FeedViewModel(private val container: AppContainer) : ViewModel() {
         viewModelScope.launch {
             _ui.update { it.copy(sending = true) }
             try {
-                container.feed.addComment(matchId, body)
+                val r = container.feed.addComment(matchId, body)
                 onSent()
-                updatePost(matchId) { it.copy(comments = it.comments + 1) }
-                loadComments(matchId)
+                if (r.blocked) {
+                    // No se publicó: lenguaje ofensivo. Se informa el strike (y la suspensión si llegó a 3)
+                    _ui.update { it.copy(bannedUntil = r.bannedUntil) }
+                    _messages.tryEmit(
+                        if (r.bannedUntil != null) AppText.get(R.string.comment_blocked_banned, formatDayTime(r.bannedUntil))
+                        else AppText.get(R.string.comment_blocked, (r.strikes ?: 1).coerceAtMost(3)),
+                    )
+                } else {
+                    updatePost(matchId) { it.copy(comments = it.comments + 1) }
+                    loadComments(matchId)
+                }
             } catch (e: Exception) {
                 _messages.tryEmit(e.friendlyMessage())
             } finally {
                 _ui.update { it.copy(sending = false) }
+            }
+        }
+    }
+
+    /** Reporta un comentario ajeno. Si con este llega a 3 reportes, el servidor lo elimina. */
+    fun report(comment: PostComment, reason: ReportReason) {
+        val matchId = _ui.value.openMatchId ?: return
+        viewModelScope.launch {
+            try {
+                val r = container.feed.reportComment(comment.id, reason)
+                if (r.removed) {
+                    _ui.update { s -> s.copy(comments = s.comments.filterNot { it.id == comment.id }) }
+                    updatePost(matchId) { it.copy(comments = (it.comments - 1).coerceAtLeast(0)) }
+                    _messages.tryEmit(AppText.get(R.string.comment_report_removed))
+                } else {
+                    _ui.update { s -> s.copy(comments = s.comments.map { if (it.id == comment.id) it.copy(reportedByMe = true) else it }) }
+                    _messages.tryEmit(AppText.get(R.string.comment_report_sent))
+                }
+            } catch (e: Exception) {
+                _messages.tryEmit(e.friendlyMessage())
             }
         }
     }

@@ -3,6 +3,10 @@ package com.sportpro.app.core.data.repo
 import com.sportpro.app.core.data.FeedPost
 import com.sportpro.app.core.data.LikeResult
 import com.sportpro.app.core.data.PostComment
+import com.sportpro.app.core.data.CommentResult
+import com.sportpro.app.core.data.CommentStatus
+import com.sportpro.app.core.data.ReportReason
+import com.sportpro.app.core.data.ReportResult
 import com.sportpro.app.core.data.decodeRows
 import com.sportpro.app.core.data.decodeScalar
 import io.github.jan.supabase.SupabaseClient
@@ -41,13 +45,24 @@ class FeedRepository(private val client: SupabaseClient) {
     suspend fun comments(matchId: String): List<PostComment> =
         client.postgrest.rpc("get_post_comments", buildJsonObject { put("p_match", matchId) }).decodeRows()
 
-    // Comentar: el servidor valida longitud (1–500), anti-spam y avisa a quien publicó.
-    suspend fun addComment(matchId: String, body: String) {
+    // Comentar: el servidor valida longitud (1–500), anti-spam, suspensión y lenguaje ofensivo.
+    // Un comentario ofensivo no es un error: vuelve con blocked = true y el strike ya registrado.
+    suspend fun addComment(matchId: String, body: String): CommentResult =
         client.postgrest.rpc("add_post_comment", buildJsonObject {
             put("p_match", matchId)
             put("p_body", body)
-        })
-    }
+        }).decodeScalar()
+
+    // Reportar un comentario ajeno con un motivo. Con 3 reportes de personas distintas se elimina.
+    suspend fun reportComment(commentId: String, reason: ReportReason): ReportResult =
+        client.postgrest.rpc("report_post_comment", buildJsonObject {
+            put("p_comment", commentId)
+            put("p_reason", reason.code)
+        }).decodeScalar()
+
+    // Strikes de la semana y suspensión vigente (para avisar antes de que escriba)
+    suspend fun myCommentStatus(): CommentStatus =
+        client.postgrest.rpc("my_comment_status").decodeScalar()
 
     // Eliminar: mi comentario, o cualquiera si modero la publicación. Queda en la auditoría.
     suspend fun deleteComment(commentId: String) {

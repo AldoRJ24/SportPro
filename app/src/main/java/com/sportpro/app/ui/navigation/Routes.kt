@@ -49,3 +49,6 @@ import kotlinx.serialization.Serializable
 @Serializable data object TryoutsRoute
 @Serializable data class TryoutDetailRoute(val tryoutId: String)
 @Serializable data object CreateTryoutRoute
+
+// Planes de la academia (migración 023). required = la academia aún no eligió plan
+@Serializable data class SubscriptionRoute(val academyId: String, val name: String, val required: Boolean = false)

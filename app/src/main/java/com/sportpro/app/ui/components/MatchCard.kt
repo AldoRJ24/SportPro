@@ -65,7 +65,7 @@ fun MatchCard(
             .semantics { contentDescription = a11y }
             .combinedClickable(onClick = onClick, onLongClick = onLongClick),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurface),
     ) {
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -97,13 +97,13 @@ fun MatchCard(
             }
             Spacer(Modifier.height(12.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                TeamColumn(match.homeName, match.home?.crestPath, Modifier.weight(1f))
+                TeamColumn(match.homeName, match.home?.crestPath, match.home?.id, Modifier.weight(1f))
                 Text(
                     if (match.isScheduled) "vs" else "${match.homeScore} - ${match.awayScore}",
                     style = if (match.isScheduled) MaterialTheme.typography.titleLarge else ScoreStyle,
                     modifier = Modifier.padding(horizontal = 8.dp),
                 )
-                TeamColumn(match.awayName, match.away?.crestPath, Modifier.weight(1f))
+                TeamColumn(match.awayName, match.away?.crestPath, match.away?.id, Modifier.weight(1f))
             }
             if (!match.isScheduled) {
                 Spacer(Modifier.height(6.dp))
@@ -121,17 +121,17 @@ fun MatchCard(
 
 /** Columna de un equipo dentro de la tarjeta: escudo arriba y nombre debajo. */
 @Composable
-private fun TeamColumn(name: String, crestPath: String?, modifier: Modifier = Modifier) {
+private fun TeamColumn(name: String, crestPath: String?, teamId: String?, modifier: Modifier = Modifier) {
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         // Foto de la academia del equipo (o iniciales; el rival externo no tiene foto)
         TeamCrest(name, crestPath, 52.dp)
         Spacer(Modifier.height(6.dp))
-        Text(
+        // Dorado animado si el equipo es de una academia Gold
+        TeamName(
             name,
-            style = MaterialTheme.typography.labelLarge,
-            textAlign = TextAlign.Center,
+            id = teamId,
+            style = MaterialTheme.typography.labelLarge.copy(textAlign = TextAlign.Center),
             maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
         )
     }
 }

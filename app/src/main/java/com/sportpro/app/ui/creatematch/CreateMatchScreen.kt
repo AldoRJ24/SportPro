@@ -27,7 +27,6 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -39,11 +38,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.sportpro.app.ui.components.DATE_MASK
+import com.sportpro.app.ui.components.CapsuleSlider
+import com.sportpro.app.ui.components.DateField
+import com.sportpro.app.ui.components.TimeField
+import com.sportpro.app.ui.components.toDateDigits
+import com.sportpro.app.ui.components.toTimeDigits
+import androidx.compose.ui.res.painterResource
 import com.sportpro.app.ui.components.EmptyState
-import com.sportpro.app.ui.components.MaskedDigitsField
-import com.sportpro.app.ui.components.TIME_MASK
-import com.sportpro.app.ui.components.dateHint
 import com.sportpro.app.ui.components.parseDateDigits
 import com.sportpro.app.ui.components.parseTimeDigits
 import com.sportpro.app.ui.components.SpScaffold
@@ -66,7 +67,8 @@ fun CreateMatchScreen(
     val vm: CreateMatchViewModel = viewModel { CreateMatchViewModel(container) }
     val f by vm.form.collectAsStateWithLifecycle()
     val teams = ctx?.managedTeams.orEmpty()
-    val managedIds = remember(teams) { teams.map { it.id }.toSet() }
+    // Equipos donde soy DT. Los demás que gestiono (como administrador) van como propuesta a su DT.
+    val staffIds = ctx?.staffTeamIds.orEmpty()
 
     SpScaffold(title = stringResource(R.string.create_match_nuevo_partido), onBack = onBack) { pad ->
         if (teams.isEmpty()) {
@@ -80,7 +82,15 @@ fun CreateMatchScreen(
             Text(stringResource(R.string.create_match_tu_equipo_local), style = MaterialTheme.typography.titleMedium)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 teams.forEach { t ->
-                    FilterChip(selected = f.homeTeamId == t.id, onClick = { vm.selectHome(t) }, label = { Text("${t.name} · ${t.category ?: ""}") })
+                    // Si no lo dirijo yo, se muestra su entrenador: a él le llegará la propuesta
+                    val coach = f.coaches[t.id]?.takeIf { t.id !in staffIds }?.coachName
+                    FilterChip(
+                        selected = f.homeTeamId == t.id,
+                        onClick = { vm.selectHome(t) },
+                        label = {
+                            Text(listOfNotNull(t.name, t.category, coach?.let { stringResource(R.string.create_match_dt_x, it) }).joinToString(" · "))
+                        },
+                    )
                 }
             }
 
@@ -132,49 +142,48 @@ fun CreateMatchScreen(
             }
 
             Text(stringResource(R.string.create_match_formato_jugadores_en_cancha_por), style = MaterialTheme.typography.titleMedium)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            // En varias filas si no entran (con letra grande los chips ya no se aprietan ni se cortan)
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf(5, 7, 9, 11).forEach { n ->
                     FilterChip(
                         selected = !f.customFormat && f.formatPlayers == n,
-                        onClick = { vm.update { it.copy(formatPlayers = n, customFormat = false) } },
-                        label = { Text("$n") },
+                        onClick = { vm.setFormat(n, custom = false) },
+                        label = { Text(stringResource(R.string.create_match_x_jugadores, n)) },
                     )
                 }
-                FilterChip(selected = f.customFormat, onClick = { vm.update { it.copy(customFormat = true) } }, label = { Text(stringResource(R.string.create_match_otro)) })
+                FilterChip(selected = f.customFormat, onClick = { vm.setFormat(f.formatPlayers, custom = true) }, label = { Text(stringResource(R.string.create_match_otro)) })
             }
             if (f.customFormat) {
-                Text(stringResource(R.string.create_match_x_vs_x, f.formatPlayers, f.formatPlayers))
-                Slider(
-                    value = f.formatPlayers.toFloat(),
-                    onValueChange = { v -> vm.update { it.copy(formatPlayers = v.toInt()) } },
-                    valueRange = 5f..11f,
-                    steps = 5,
+                CapsuleSlider(
+                    value = f.formatPlayers,
+                    range = 5..11,
+                    onValueChange = { n -> vm.setFormat(n, custom = true) },
+                    valueLabel = stringResource(R.string.create_match_x_jugadores, f.formatPlayers),
                 )
             }
-            Text(stringResource(R.string.create_match_duracion_de_cada_tiempo_x, f.halfMinutes), style = MaterialTheme.typography.titleMedium)
-            Slider(
-                value = f.halfMinutes.toFloat(),
-                onValueChange = { v -> vm.update { it.copy(halfMinutes = v.toInt()) } },
-                valueRange = 5f..45f,
+            Text(stringResource(R.string.create_match_duracion_titulo), style = MaterialTheme.typography.titleMedium)
+            // Barra tipo «brillo de One UI»: se desliza con el dedo y hace «tic» en cada minuto
+            CapsuleSlider(
+                value = f.halfMinutes,
+                range = 5..45,
+                onValueChange = vm::setHalfMinutes,
+                valueLabel = stringResource(R.string.create_match_x_min, f.halfMinutes),
+                icon = painterResource(R.drawable.ic_clock),
+                accessibilityLabel = stringResource(R.string.create_match_duracion_de_cada_tiempo_x, f.halfMinutes),
             )
 
+            // Fecha con calendario y hora con reloj: se tocan, no hay que escribir dígitos
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
-                MaskedDigitsField(
-                    value = f.dateDigits,
-                    onValueChange = { v -> vm.update { it.copy(dateDigits = v) } },
-                    mask = DATE_MASK,
+                DateField(
+                    date = parseDateDigits(f.dateDigits),
+                    onDate = { d -> vm.update { it.copy(dateDigits = d.toDateDigits()) } },
                     label = stringResource(R.string.create_match_fecha),
-                    isError = f.dateDigits.length == 8 && parseDateDigits(f.dateDigits) == null,
-                    supportingText = dateHint(f.dateDigits),
-                    modifier = Modifier.weight(1.4f),
+                    modifier = Modifier.weight(1.35f),
                 )
-                MaskedDigitsField(
-                    value = f.timeDigits,
-                    onValueChange = { v -> vm.update { it.copy(timeDigits = v) } },
-                    mask = TIME_MASK,
-                    label = stringResource(R.string.create_match_hora_24_h),
-                    isError = f.timeDigits.length == 4 && parseTimeDigits(f.timeDigits) == null,
-                    supportingText = if (f.timeDigits.length < 4) "HH:MM" else null,
+                TimeField(
+                    time = parseTimeDigits(f.timeDigits),
+                    onTime = { t -> vm.update { it.copy(timeDigits = t.toTimeDigits()) } },
+                    label = stringResource(R.string.create_match_hora),
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -190,19 +199,32 @@ fun CreateMatchScreen(
             }
             if (f.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
             f.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-            // Contra el equipo de otro entrenador no se crea el partido: se le envía un desafío
-            val challenge = f.isChallenge(managedIds)
-            if (challenge) {
+            // Contra el equipo de otro entrenador no se crea el partido: se le envía un desafío.
+            // Si soy administrador y no dirijo el equipo local, es una propuesta que aceptan los dos DT.
+            val adminProposal = f.isAdminProposal(staffIds)
+            val challenge = f.needsApproval(staffIds)
+            if (adminProposal) {
+                Text(
+                    stringResource(R.string.create_match_propuesta_ayuda),
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            } else if (challenge) {
                 Text(
                     stringResource(R.string.create_match_desafio_ayuda, f.rivalTeam?.coachName ?: stringResource(R.string.create_match_el_entrenador_rival)),
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
             Button(
-                onClick = { vm.create(managedIds, onCreated, onChallengeSent) },
+                onClick = { vm.create(staffIds, onCreated, onChallengeSent) },
                 enabled = !f.busy,
                 modifier = Modifier.fillMaxWidth().height(54.dp),
-            ) { Text(stringResource(if (challenge) R.string.create_match_enviar_desafio else R.string.create_match_crear_y_preparar_convocatoria)) }
+            ) {
+                Text(stringResource(when {
+                    adminProposal -> R.string.create_match_enviar_propuesta
+                    challenge -> R.string.create_match_enviar_desafio
+                    else -> R.string.create_match_crear_y_preparar_convocatoria
+                }))
+            }
             OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.create_match_cancelar)) }
         }
     }
@@ -246,7 +268,7 @@ private fun RegisteredRivalPicker(
             Card(
                 onClick = { onAcademy(a.id) },
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurface),
             ) {
                 Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                     TeamCrest(a.name, a.crestPath, 40.dp)

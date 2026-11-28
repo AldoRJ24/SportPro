@@ -51,7 +51,6 @@ import com.sportpro.app.ui.components.Pill
 import com.sportpro.app.ui.navigation.LocalAppContainer
 import com.sportpro.app.ui.session.SessionViewModel
 import com.sportpro.app.ui.theme.ErrorRed
-import com.sportpro.app.ui.theme.BrandBlue
 import com.sportpro.app.ui.theme.WarnAmber
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -109,7 +108,7 @@ fun GuardianLinkScreen(session: SessionViewModel) {
         Modifier.fillMaxSize().safeDrawingPadding().imePadding().verticalScroll(rememberScrollState()).padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        Text(stringResource(R.string.guardian_link_sportpro), color = BrandBlue, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+        Text(stringResource(R.string.guardian_link_sportpro), color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
         Text(stringResource(R.string.guardian_link_vincula_a_tu_apoderado), style = MaterialTheme.typography.headlineSmall)
         Text(
             stringResource(R.string.guardian_link_hola_x_como_eres_menor, ctx?.displayName ?: ""),
@@ -118,7 +117,7 @@ fun GuardianLinkScreen(session: SessionViewModel) {
         )
 
         if (pending) {
-            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant), modifier = Modifier.fillMaxWidth()) {
+            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurface), modifier = Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Pill(stringResource(R.string.guardian_link_solicitud_enviada), WarnAmber)
                     Text(
@@ -144,7 +143,7 @@ fun GuardianLinkScreen(session: SessionViewModel) {
                     style = MaterialTheme.typography.bodyMedium,
                 )
             }
-            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant), modifier = Modifier.fillMaxWidth()) {
+            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurface), modifier = Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(stringResource(R.string.guardian_link_codigo_del_apoderado), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     OutlinedTextField(

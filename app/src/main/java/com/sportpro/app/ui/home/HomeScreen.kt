@@ -23,7 +23,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sportpro.app.R
 import com.sportpro.app.core.data.UserContext
 import com.sportpro.app.ui.components.BellAction
-import com.sportpro.app.ui.components.CreateAction
 import com.sportpro.app.ui.components.EmptyState
 import com.sportpro.app.ui.components.SpScaffold
 import com.sportpro.app.ui.components.rememberNowMs
@@ -42,7 +41,6 @@ import kotlinx.coroutines.delay
 fun HomeScreen(
     ctx: UserContext?,
     onOpenMatch: (String) -> Unit,
-    onCreate: (() -> Unit)?,
     onBell: () -> Unit,
 ) {
     val now = rememberNowMs()
@@ -70,7 +68,6 @@ fun HomeScreen(
     SpScaffold(
         title = stringResource(R.string.home_sportpro),
         isTab = true,
-        navigationIcon = { CreateAction(onCreate) },
         actions = { BellAction(onBell) },
         snackbarHostState = snack,
     ) { pad ->
@@ -80,14 +77,18 @@ fun HomeScreen(
                 pulling = true
                 feedVm.load()
             },
-            modifier = Modifier.padding(pad),
+            // El indicador de recarga baja desde debajo de la barra superior, no desde el borde
+            modifier = Modifier.padding(top = pad.calculateTopPadding()),
         ) {
-            LazyColumn(contentPadding = PaddingValues(bottom = 24.dp)) {
+            // La lista empieza debajo de la barra superior y termina sobre la inferior, pero pasa
+            // por detrás de ambas al deslizar: así se ve el efecto de vidrio
+            LazyColumn(contentPadding = PaddingValues(bottom = pad.calculateBottomPadding() + 24.dp)) {
                 item {
                     Text(
                         stringResource(R.string.home_hola_x, ctx?.displayName ?: ""),
                         style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 4.dp, bottom = 10.dp),
                     )
                 }
                 if (feed.posts.isEmpty() && !feed.loading) {
@@ -122,6 +123,8 @@ fun HomeScreen(
                 onSend = feedVm::send,
                 onDelete = feedVm::delete,
                 onToggleEnabled = { feedVm.setCommentsEnabled(p, it) },
+                onReport = feedVm::report,
+                bannedUntil = feed.bannedUntil,
             )
         }
     }

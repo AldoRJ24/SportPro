@@ -51,7 +51,6 @@ import com.sportpro.app.ui.navigation.LocalAppContainer
 import com.sportpro.app.ui.profile.CallupCard
 import com.sportpro.app.ui.profile.FamilyViewModel
 import com.sportpro.app.ui.session.SessionViewModel
-import com.sportpro.app.ui.theme.BrandBlue
 import java.time.LocalDate
 
 /**
@@ -177,7 +176,7 @@ private fun NotificationLine(n: NotificationRow, opens: Boolean, onClick: () -> 
         verticalAlignment = Alignment.Top,
     ) {
         if (n.isUnread) {
-            Spacer(Modifier.padding(top = 6.dp).size(8.dp).clip(CircleShape).background(BrandBlue))
+            Spacer(Modifier.padding(top = 6.dp).size(8.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary))
         } else {
             Spacer(Modifier.size(8.dp))
         }

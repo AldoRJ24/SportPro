@@ -37,19 +37,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sportpro.app.ui.components.DATE_MASK
 import com.sportpro.app.ui.components.MaskedDigitsField
+import com.sportpro.app.ui.components.PasswordField
 import com.sportpro.app.ui.components.Pill
 import com.sportpro.app.ui.components.dateHint
 import com.sportpro.app.ui.components.parseDateDigits
 import com.sportpro.app.ui.components.scanQr
 import com.sportpro.app.ui.theme.ErrorRed
-import com.sportpro.app.ui.theme.BrandBlue
 import com.sportpro.app.ui.theme.WarnAmber
 
 @Composable
@@ -64,7 +63,7 @@ private fun AuthFrame(content: @Composable ColumnScope.() -> Unit) {
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Spacer(Modifier.height(16.dp))
-        Text(stringResource(R.string.auth_sportpro), fontSize = 40.sp, fontWeight = FontWeight.Black, color = BrandBlue)
+        Text(stringResource(R.string.auth_sportpro), fontSize = 40.sp, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary)
         Text(
             stringResource(R.string.auth_gestion_de_academias_y_partidos),
             style = MaterialTheme.typography.bodyMedium,
@@ -79,7 +78,7 @@ private fun AuthFrame(content: @Composable ColumnScope.() -> Unit) {
 private fun Messages(ui: AuthUiState) {
     if (ui.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
     ui.error?.let { Text(it, color = ErrorRed, style = MaterialTheme.typography.bodyMedium) }
-    ui.info?.let { Text(it, color = BrandBlue, style = MaterialTheme.typography.bodyMedium) }
+    ui.info?.let { Text(it, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodyMedium) }
 }
 
 @Composable
@@ -95,12 +94,7 @@ fun LoginScreen(vm: AuthViewModel, onRegister: () -> Unit) {
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
             modifier = Modifier.fillMaxWidth(),
         )
-        OutlinedTextField(
-            password, { password = it }, label = { Text(stringResource(R.string.auth_contrasena)) }, singleLine = true,
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            modifier = Modifier.fillMaxWidth(),
-        )
+        PasswordField(password, { password = it }, stringResource(R.string.auth_contrasena))
         Messages(ui)
         Button(
             onClick = { vm.signIn(email, password) },
@@ -129,8 +123,8 @@ private fun TypeCard(title: String, subtitle: String, selected: Boolean, onClick
         onClick = onClick,
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
-        border = if (selected) BorderStroke(2.dp, BrandBlue) else null,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        border = if (selected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurface),
     ) {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(title, style = MaterialTheme.typography.titleMedium)
@@ -160,7 +154,7 @@ fun RegisterScreen(vm: AuthViewModel, onBackToLogin: () -> Unit) {
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Pill(stringResource(R.string.auth_invitacion_x, invite.code.orEmpty()), BrandBlue)
+                    Pill(stringResource(R.string.auth_invitacion_x, invite.code.orEmpty()), MaterialTheme.colorScheme.primary)
                     Text(
                         if (kind == "adm") stringResource(R.string.auth_te_estas_registrando_como_administrador)
                         else stringResource(R.string.auth_te_estas_registrando_como_entrenador, invite.check?.academyName ?: stringResource(R.string.auth_la_academia)),
@@ -193,7 +187,7 @@ fun RegisterScreen(vm: AuthViewModel, onBackToLogin: () -> Unit) {
                 Text(stringResource(R.string.auth_te_invitaron_como_administrador_o))
             }
             if (showInviteBox || invite.error != null) {
-                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
+                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurface)) {
                     Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         OutlinedTextField(
                             typedCode, { typedCode = it.uppercase().take(20) },
@@ -237,12 +231,7 @@ fun RegisterScreen(vm: AuthViewModel, onBackToLogin: () -> Unit) {
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
             modifier = Modifier.fillMaxWidth(),
         )
-        OutlinedTextField(
-            f.password, { v -> vm.updateForm { it.copy(password = v) } }, label = { Text(stringResource(R.string.auth_contrasena_min_6)) }, singleLine = true,
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            modifier = Modifier.fillMaxWidth(),
-        )
+        PasswordField(f.password, { v -> vm.updateForm { it.copy(password = v) } }, stringResource(R.string.auth_contrasena_min_6))
         Messages(ui)
         Button(
             onClick = { vm.signUp(onDone = onBackToLogin) },

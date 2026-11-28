@@ -36,6 +36,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.PlatformTextStyle
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.LineHeightStyle
 import com.sportpro.app.R
 import com.sportpro.app.core.data.LiveLineup
 import com.sportpro.app.core.data.LiveSide
@@ -48,7 +53,6 @@ import com.sportpro.app.ui.components.SectionHeader
 import com.sportpro.app.ui.components.TeamCrest
 import com.sportpro.app.ui.components.TokenInfo
 import com.sportpro.app.ui.components.tokenSizeFor
-import com.sportpro.app.ui.theme.BrandBlue
 import com.sportpro.app.ui.theme.ErrorRed
 import com.sportpro.app.ui.theme.Ink
 import com.sportpro.app.ui.theme.SuccessGreen
@@ -188,20 +192,38 @@ fun BoxScope.PlayerEventBadges(stats: PlayerMatchStats?, isMvp: Boolean) {
     if (isMvp) MvpStar(18.dp, Modifier.align(Alignment.BottomStart).offset(x = (-6).dp, y = 2.dp))
 }
 
-// Círculo oscuro con el ícono del evento y, si hay más de uno, el número al lado.
+/**
+ * Ícono del evento en una cápsula oscura y, si hay más de uno, el número DENTRO de la misma
+ * cápsula («⚽ 2»). Antes el número iba en un círculo aparte de 14 dp con letra en sp: con la letra
+ * del celular agrandada no cabía y quedaba descuadrado. Ahora el tamaño del número se fija en dp
+ * (no crece con la letra del sistema) y se recorta el espacio extra de la fuente para que quede
+ * centrado de verdad en la cápsula.
+ */
 @Composable
 private fun CountBadge(icon: Int, count: Int, background: Color) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.size(16.dp).clip(CircleShape).background(background), contentAlignment = Alignment.Center) {
-            Icon(painterResource(icon), contentDescription = null, tint = Color.White, modifier = Modifier.size(11.dp))
-        }
+    val numberSize = with(LocalDensity.current) { 10.dp.toSp() }
+    Row(
+        Modifier
+            .height(16.dp)
+            .clip(RoundedCornerShape(50))
+            .background(background)
+            .padding(start = 2.5.dp, end = if (count > 1) 4.dp else 2.5.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(painterResource(icon), contentDescription = null, tint = Color.White, modifier = Modifier.size(11.dp))
         if (count > 1) {
-            Box(
-                Modifier.padding(start = 1.dp).size(14.dp).clip(CircleShape).background(background),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text("$count", color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold)
-            }
+            Spacer(Modifier.width(2.dp))
+            Text(
+                "$count",
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                style = TextStyle(
+                    fontSize = numberSize,
+                    lineHeight = numberSize,
+                    platformStyle = PlatformTextStyle(includeFontPadding = false),
+                    lineHeightStyle = LineHeightStyle(LineHeightStyle.Alignment.Center, LineHeightStyle.Trim.Both),
+                ),
+            )
         }
     }
 }
@@ -215,7 +237,7 @@ private fun CardMark(icon: Int) {
 /** Estrella azul del MVP. */
 @Composable
 fun MvpStar(size: Dp, modifier: Modifier = Modifier) {
-    Box(modifier.size(size).clip(CircleShape).background(BrandBlue), contentAlignment = Alignment.Center) {
+    Box(modifier.size(size).clip(CircleShape).background(MaterialTheme.colorScheme.primary), contentAlignment = Alignment.Center) {
         Icon(Icons.Filled.Star, contentDescription = stringResource(R.string.live_mvp_short), tint = Color.White, modifier = Modifier.size(size * 0.7f))
     }
 }

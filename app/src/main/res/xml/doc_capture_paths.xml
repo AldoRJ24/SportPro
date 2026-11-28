@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Carpeta de la caché donde la cámara deja la foto del documento antes de subirla -->
+<paths>
+    <cache-path name="doc_capture" path="doc_capture/" />
+</paths>

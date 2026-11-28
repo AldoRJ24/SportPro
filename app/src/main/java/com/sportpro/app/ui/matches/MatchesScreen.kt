@@ -44,12 +44,12 @@ import com.sportpro.app.core.data.MatchRow
 import com.sportpro.app.core.data.MatchStatusFilter
 import com.sportpro.app.core.data.lineupsPending
 import com.sportpro.app.ui.components.BellAction
-import com.sportpro.app.ui.components.CreateAction
 import com.sportpro.app.ui.components.EmptyState
 import com.sportpro.app.ui.components.ErrorBox
 import com.sportpro.app.ui.components.LiveStrip
 import com.sportpro.app.ui.components.LoadingBox
 import com.sportpro.app.ui.components.MatchCard
+import com.sportpro.app.ui.components.SearchField
 import com.sportpro.app.ui.components.SectionHeader
 import com.sportpro.app.ui.components.SpScaffold
 import com.sportpro.app.ui.components.rememberNowMs
@@ -94,14 +94,15 @@ fun MatchesScreen(
     SpScaffold(
         title = stringResource(R.string.matches_partidos),
         isTab = true,
-        navigationIcon = { CreateAction(onCreate) },
+        // El «+» para crear partidos ahora vive en el centro de la barra inferior
         actions = { BellAction(onBell) },
         snackbarHostState = snack,
     ) { pad ->
         when {
             ui.loading && ui.all.isEmpty() -> LoadingBox(Modifier.padding(pad))
             ui.error != null && ui.all.isEmpty() -> ErrorBox(ui.error!!, onRetry = { vm.refresh() }, modifier = Modifier.padding(pad))
-            else -> Column(Modifier.padding(pad).fillMaxSize()) {
+            // Buscador y filtros quedan fijos bajo la barra superior; la lista pasa por debajo de la inferior
+            else -> Column(Modifier.padding(top = pad.calculateTopPadding()).fillMaxSize()) {
                 // Acceso a los desafíos entre equipos (solo DT y administradores)
                 if (onChallenges != null) {
                     TextButton(onClick = onChallenges, modifier = Modifier.padding(horizontal = 8.dp)) {
@@ -118,7 +119,7 @@ fun MatchesScreen(
                     onRefresh = { vm.refresh() },
                     modifier = Modifier.fillMaxSize(),
                 ) {
-                    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 24.dp)) {
+                    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = pad.calculateBottomPadding() + 24.dp)) {
                         when {
                             // No hay ningún partido «mío» todavía
                             ui.all.isEmpty() -> item {
@@ -171,21 +172,11 @@ private fun FilterBar(
     onStatus: (MatchStatusFilter) -> Unit,
 ) {
     Column(Modifier.fillMaxWidth()) {
-        OutlinedTextField(
+        SearchField(
             value = filter.query,
             onValueChange = onQuery,
-            leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
-            trailingIcon = {
-                if (filter.query.isNotEmpty()) {
-                    IconButton(onClick = { onQuery("") }) {
-                        Icon(Icons.Filled.Clear, contentDescription = stringResource(R.string.matches_borrar_busqueda))
-                    }
-                }
-            },
-            placeholder = { Text(stringResource(R.string.matches_buscar)) },
-            singleLine = true,
-            shape = RoundedCornerShape(14.dp),
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+            placeholder = stringResource(R.string.matches_buscar),
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 8.dp),
         )
         // Fila 1: de quién es el partido (solo se ofrecen los motivos que aplican a este usuario)
         ChipRow {

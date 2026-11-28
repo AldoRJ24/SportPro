@@ -1,6 +1,8 @@
 package com.sportpro.app.ui.docs
 
+import android.util.Log
 import androidx.annotation.StringRes
+import com.sportpro.app.core.AppText
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sportpro.app.R
@@ -71,6 +73,8 @@ class PlayerDocsViewModel(private val container: AppContainer, private val playe
                 block()
                 UiMessage(res = done)
             } catch (e: Exception) {
+                // El detalle técnico va al log (Logcat) para poder diagnosticar; la persona ve el mensaje amable
+                Log.w(TAG, "Falló la acción de documentos", e)
                 UiMessage(text = e.friendlyMessage())
             }
             _ui.update { it.copy(busy = false, message = message) }
@@ -100,7 +104,14 @@ class PlayerDocsViewModel(private val container: AppContainer, private val playe
     }
 
     /** Mensaje local de la pantalla (por ejemplo «el archivo pesa más de 5 MB»). */
-    fun notify(@StringRes res: Int) = _ui.update { it.copy(message = UiMessage(res = res)) }
+    fun notify(@StringRes res: Int) {
+        Log.w(TAG, "Aviso local de documentos: ${AppText.get(res)}")
+        _ui.update { it.copy(message = UiMessage(res = res)) }
+    }
+
+    private companion object {
+        const val TAG = "SportProDocs"
+    }
 
     fun consumeUrl() = _ui.update { it.copy(openUrl = null) }
     fun consumeMessage() = _ui.update { it.copy(message = null) }

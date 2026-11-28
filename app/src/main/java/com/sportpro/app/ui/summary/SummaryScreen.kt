@@ -23,6 +23,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
+import com.sportpro.app.core.data.AiQuota
+import com.sportpro.app.core.data.formatDayTime
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -163,9 +166,26 @@ fun SummaryScreen(matchId: String, onBack: () -> Unit) {
                 Pill(stringResource(R.string.summary_regeneraciones_restantes_x, ui.remaining.coerceAtLeast(0)), MaterialTheme.colorScheme.secondary)
             }
             if (ui.generating || ui.loading) LinearProgressIndicator(Modifier.fillMaxWidth())
+            // Cupo de IA según el plan de la academia (lo calcula el servidor; se recarga tras generar)
+            val quota by produceState<AiQuota?>(null, ui.summary?.aiText, ui.generating) {
+                if (!ui.generating) value = runCatching { container.subscriptions.aiQuota(matchId) }.getOrNull()
+            }
+            quota?.let { q ->
+                val planName = q.plan.replaceFirstChar { it.uppercase() }
+                Text(
+                    when {
+                        q.limit == 0 && q.isAdmin -> stringResource(R.string.ai_quota_basic_admin)
+                        q.limit == 0 -> stringResource(R.string.ai_quota_basic_dt)
+                        q.remaining == 0 -> stringResource(R.string.ai_quota_empty, q.limit, formatDayTime(q.nextFreeAt))
+                        else -> stringResource(R.string.ai_quota_line, q.remaining, q.limit, planName)
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (q.remaining == 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
             Button(
                 onClick = vm::generate,
-                enabled = !ui.generating && !ui.approved && ui.remaining > 0,
+                enabled = !ui.generating && !ui.approved && ui.remaining > 0 && (quota?.remaining ?: 1) > 0,
                 modifier = Modifier.fillMaxWidth(),
             ) { Text(if (ui.summary == null) stringResource(R.string.summary_generar_borrador) else stringResource(R.string.summary_regenerar)) }
             OutlinedTextField(

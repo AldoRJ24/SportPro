@@ -246,7 +246,7 @@ fun AcademyTeamsScreen(
                 val staff = ui.staff.filter { it.teamId == team.id }
                 Card(
                     Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 5.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurface),
                 ) {
                     Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {

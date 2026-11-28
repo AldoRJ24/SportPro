@@ -186,7 +186,7 @@ private fun TryoutCard(t: Tryout, onClick: () -> Unit) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     Card(
         Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 5.dp).clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurface),
     ) {
         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.Top) {
             TeamCrest(t.academyName, t.crestPath, 44.dp)
@@ -237,7 +237,7 @@ private fun MyApplicationRow(a: MyTryoutApplication, onClick: () -> Unit) {
     val (statusText, statusColor) = applicationStatus(a.status)
     Card(
         Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp).clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurface),
     ) {
         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
@@ -259,7 +259,7 @@ private fun MyApplicationRow(a: MyTryoutApplication, onClick: () -> Unit) {
 fun TryoutsEntryCard(onClick: () -> Unit, modifier: Modifier = Modifier) {
     Card(
         modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 5.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurface),
     ) {
         Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {

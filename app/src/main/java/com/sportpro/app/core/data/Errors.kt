@@ -12,6 +12,9 @@ fun Throwable.isServerAnswer(): Boolean = this is RestException
 /** Violación de clave única (23505): sirve para tratar un evento reenviado como ya guardado (idempotencia). */
 fun Throwable.isDuplicate(): Boolean = this is PostgrestRestException && this.code == "23505"
 
+/** Error que la propia app detecta y explica (no es de red ni del servidor): se muestra tal cual. */
+class AppMessageException(message: String) : Exception(message)
+
 /** Mensaje para la persona, en español. Los errores de negocio ya vienen en español desde las funciones SQL; aquí solo se traducen los errores técnicos. */
 fun Throwable.friendlyMessage(): String {
     val raw = when (this) {
@@ -22,6 +25,7 @@ fun Throwable.friendlyMessage(): String {
     return when {
         // El servidor no alcanzó a responder a tiempo: no es lo mismo que no tener internet
         this is HttpRequestTimeoutException -> AppText.get(R.string.error_timeout)
+        this is AppMessageException -> raw
         this !is RestException -> AppText.get(R.string.error_no_connection)
         "invalid login credentials" in lower || "invalid_credentials" in lower -> AppText.get(R.string.error_bad_credentials)
         "email not confirmed" in lower -> AppText.get(R.string.error_email_not_confirmed)

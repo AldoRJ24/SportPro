@@ -32,7 +32,6 @@ import com.sportpro.app.core.data.GuardianRequest
 import com.sportpro.app.core.data.formatDayTime
 import com.sportpro.app.ui.components.copyToClipboard
 import com.sportpro.app.ui.components.Crest
-import com.sportpro.app.ui.theme.BrandBlue
 
 fun shareText(context: Context, subject: String, text: String) {
     val send = Intent(Intent.ACTION_SEND).apply {
@@ -50,7 +49,7 @@ fun FamilyCodeCard(code: String?, modifier: Modifier = Modifier) {
     Card(
         modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurface),
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(stringResource(R.string.family_cards_mi_codigo_familiar), style = MaterialTheme.typography.titleMedium)
@@ -68,7 +67,7 @@ fun FamilyCodeCard(code: String?, modifier: Modifier = Modifier) {
                     Text(code ?: "…", fontSize = 26.sp, fontWeight = FontWeight.Black, letterSpacing = 2.sp)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         TextButton(onClick = { code?.let { copyToClipboard(context, it) } }, enabled = code != null) {
-                            Text(stringResource(R.string.family_cards_copiar_codigo), color = BrandBlue)
+                            Text(stringResource(R.string.family_cards_copiar_codigo), color = MaterialTheme.colorScheme.primary)
                         }
                         TextButton(
                             onClick = {
@@ -78,7 +77,7 @@ fun FamilyCodeCard(code: String?, modifier: Modifier = Modifier) {
                                 }
                             },
                             enabled = code != null,
-                        ) { Text(stringResource(R.string.family_cards_compartir), color = BrandBlue) }
+                        ) { Text(stringResource(R.string.family_cards_compartir), color = MaterialTheme.colorScheme.primary) }
                     }
                 }
             }
@@ -90,7 +89,7 @@ fun FamilyCodeCard(code: String?, modifier: Modifier = Modifier) {
 fun GuardianRequestCard(request: GuardianRequest, onAccept: () -> Unit, onReject: () -> Unit, modifier: Modifier = Modifier) {
     Card(
         modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurface),
     ) {
         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             Crest(request.playerName, 44.dp)

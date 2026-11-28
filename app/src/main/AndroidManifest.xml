@@ -66,6 +66,18 @@
                     android:scheme="sportpro" />
             </intent-filter>
         </activity>
+
+        <!-- Foto de un documento tomada con la cámara del sistema: la cámara guarda la imagen en
+             la caché privada de la app a través de este proveedor (no hace falta permiso de cámara) -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.docprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/doc_capture_paths" />
+        </provider>
     </application>
 
 </manifest>

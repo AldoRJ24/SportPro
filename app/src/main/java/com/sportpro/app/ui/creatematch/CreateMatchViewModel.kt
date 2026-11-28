@@ -12,6 +12,7 @@ import com.sportpro.app.core.data.Formations
 import com.sportpro.app.core.data.Position
 import com.sportpro.app.core.data.RivalTeam
 import com.sportpro.app.core.data.TeamRef
+import com.sportpro.app.core.data.TeamCoach
 import com.sportpro.app.core.data.friendlyMessage
 import com.sportpro.app.ui.components.parseDateDigits
 import com.sportpro.app.ui.components.parseTimeDigits
@@ -41,6 +42,13 @@ data class CreateMatchForm(
     val timeDigits: String = LocalTime.now().toTimeDigits(),
     val venue: String = "",
     val visibility: String = "followers",
+    /**
+     * true cuando la persona eligió el formato / la duración a mano. Desde ese momento, cambiar de
+     * equipo local ya NO los reemplaza por los del equipo (antes sí: elegías 5 vs 5, tocabas tu
+     * equipo y volvía en silencio a su formato por defecto, por ejemplo 11).
+     */
+    val formatChosen: Boolean = false,
+    val minutesChosen: Boolean = false,
     val busy: Boolean = false,
     val error: String? = null,
     // ---- Rival registrado en SportPro: academia → equipo (migración 015) ----
@@ -52,6 +60,8 @@ data class CreateMatchForm(
     /** Equipos de la academia elegida, con su entrenador y si están en mi división. */
     val rivalTeams: List<RivalTeam> = emptyList(),
     val rivalsLoading: Boolean = false,
+    /** Entrenador de cada equipo que gestiono (para que el administrador sepa a quién le propone). */
+    val coaches: Map<String, TeamCoach> = emptyMap(),
 ) {
     /** Academias que pasan el buscador. */
     val shownAcademies: List<AcademyRef> get() = Challenges.filterAcademies(academies, academyQuery)
@@ -64,6 +74,18 @@ data class CreateMatchForm(
      */
     fun isChallenge(managedTeamIds: Set<String>): Boolean =
         !externalRival && awayTeamId != null && awayTeamId !in managedTeamIds
+
+    /**
+     * true = el partido necesita que lo acepte algún entrenador antes de crearse:
+     *  - el rival registrado no es un equipo que yo dirija (desafío normal), o
+     *  - yo soy administrador y NO dirijo el equipo local: su DT debe aceptar (propuesta).
+     * [staffTeamIds] son los equipos donde soy DT (staff), no todos los que administro.
+     */
+    fun needsApproval(staffTeamIds: Set<String>): Boolean =
+        isChallenge(staffTeamIds) || (homeTeamId != null && homeTeamId !in staffTeamIds)
+
+    /** Propuesta de administrador: el equipo local no lo dirijo yo. */
+    fun isAdminProposal(staffTeamIds: Set<String>): Boolean = homeTeamId != null && homeTeamId !in staffTeamIds
 
     val filledRoster: List<ExternalDraft> get() = externalRoster.filter { it.name.isNotBlank() || it.jersey.isNotBlank() }
     val externalStarters: List<ExternalDraft> get() = filledRoster.filter { it.starter }
@@ -119,7 +141,18 @@ class CreateMatchViewModel(private val container: AppContainer) : ViewModel() {
     fun update(transform: (CreateMatchForm) -> CreateMatchForm) =
         _form.update { transform(it).withRosterSize().copy(error = null) }
 
-    init { loadAcademies() }
+    init {
+        loadAcademies()
+        loadCoaches()
+    }
+
+    // Quién dirige cada equipo que gestiono: el admin elige el equipo viendo a su entrenador
+    private fun loadCoaches() {
+        viewModelScope.launch {
+            runCatching { container.challenges.managedTeamCoaches() }
+                .onSuccess { list -> _form.update { it.copy(coaches = list.associateBy { c -> c.teamId }) } }
+        }
+    }
 
     // Academias que el usuario puede ver (verificadas y la suya), para elegir rival registrado.
     private fun loadAcademies() {
@@ -137,12 +170,22 @@ class CreateMatchViewModel(private val container: AppContainer) : ViewModel() {
     fun selectHome(team: TeamRef) {
         update {
             it.copy(
-                homeTeamId = team.id, formatPlayers = team.defaultFormatPlayers, halfMinutes = team.halfMinutes,
+                homeTeamId = team.id,
+                // Los valores del equipo solo se sugieren si la persona aún no eligió los suyos
+                formatPlayers = if (it.formatChosen) it.formatPlayers else team.defaultFormatPlayers,
+                halfMinutes = if (it.minutesChosen) it.halfMinutes else team.halfMinutes,
                 awayTeamId = null, rivalTeams = emptyList(),
             )
         }
         _form.value.rivalAcademyId?.let { loadRivals(team.id, it) }
     }
+
+    /** Formato elegido a mano (5 a 11). [custom] = viene del deslizador «Otro». */
+    fun setFormat(players: Int, custom: Boolean) =
+        update { it.copy(formatPlayers = players.coerceIn(5, 11), customFormat = custom, formatChosen = true) }
+
+    /** Minutos de cada tiempo elegidos a mano. */
+    fun setHalfMinutes(minutes: Int) = update { it.copy(halfMinutes = minutes.coerceIn(5, 45), minutesChosen = true) }
 
     fun setAcademyQuery(query: String) = update { it.copy(academyQuery = query.take(40)) }
 
@@ -203,7 +246,7 @@ class CreateMatchViewModel(private val container: AppContainer) : ViewModel() {
      * [managedTeamIds]: equipos que gestiona el usuario. Si el rival registrado NO es suyo, en vez
      * de crear el partido se envía un desafío y se llama a [onChallengeSent].
      */
-    fun create(managedTeamIds: Set<String>, onCreated: (String) -> Unit, onChallengeSent: () -> Unit) {
+    fun create(staffTeamIds: Set<String>, onCreated: (String) -> Unit, onChallengeSent: () -> Unit) {
         val f = _form.value
         val date = parseDateDigits(f.dateDigits)
         val time = parseTimeDigits(f.timeDigits)
@@ -212,10 +255,15 @@ class CreateMatchViewModel(private val container: AppContainer) : ViewModel() {
             _form.update { it.copy(error = error) }
             return
         }
+        // Un rival externo no tiene entrenador que acepte: ese partido lo crea el DT del equipo local
+        if (f.externalRival && f.isAdminProposal(staffTeamIds)) {
+            _form.update { it.copy(error = AppText.get(R.string.create_match_externo_solo_dt)) }
+            return
+        }
         // Fecha y hora locales (DD/MM/AAAA + HH:MM) → instante con zona horaria (ISO-8601) para el servidor.
         val start = LocalDateTime.of(date!!, time!!).atZone(ZoneId.systemDefault())
         val iso = start.toOffsetDateTime().toString()
-        if (f.isChallenge(managedTeamIds)) {
+        if (f.needsApproval(staffTeamIds)) {
             // Las alineaciones se cierran 1 hora antes: el servidor exige esa anticipación
             if (start.toInstant().isBefore(Instant.now().plusSeconds(3600))) {
                 _form.update { it.copy(error = AppText.get(R.string.create_match_desafio_con_una_hora)) }

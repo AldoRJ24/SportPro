@@ -21,6 +21,10 @@ import com.sportpro.app.core.data.TeamStats
 import com.sportpro.app.core.data.UserContext
 import com.sportpro.app.core.data.decodeRows
 import com.sportpro.app.core.data.decodeScalar
+import com.sportpro.app.core.data.AppMessageException
+import com.sportpro.app.core.AppText
+import com.sportpro.app.R
+import kotlinx.serialization.json.JsonObject
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
@@ -182,10 +186,17 @@ class ClubRepository(private val client: SupabaseClient) {
             .decodeRows()
     }
 
+    /**
+     * Confirma o rechaza una convocatoria. Se pide que el servidor devuelva la fila cambiada: si la
+     * política de la tabla no dejó actualizarla, PostgREST no da error (solo cambia 0 filas), y antes
+     * la app decía «confirmado» aunque no se hubiera guardado nada. Ahora eso se avisa.
+     */
     suspend fun respondCallup(callupId: String, accept: Boolean) {
-        client.from("match_callups").update(buildJsonObject { put("status", if (accept) "confirmed" else "declined") }) {
+        val changed = client.from("match_callups").update(buildJsonObject { put("status", if (accept) "confirmed" else "declined") }) {
+            select(Columns.raw("id"))
             filter { eq("id", callupId) }
-        }
+        }.decodeList<JsonObject>()
+        if (changed.isEmpty()) throw AppMessageException(AppText.get(R.string.callup_not_saved))
     }
 
     // ---- Estadísticas (US-11) ----

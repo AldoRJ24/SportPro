@@ -8,7 +8,10 @@ import android.graphics.ImageDecoder
 import android.net.Uri
 import java.io.ByteArrayOutputStream
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.FileProvider
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -106,15 +109,16 @@ private fun PrivacyNotice(modifier: Modifier = Modifier) {
  * que Storage rechazaría. Se lee como máximo 5 MB + 1 byte: basta para saber si se pasa.
  */
 private fun readPickedFile(context: Context, uri: Uri): Pair<Pair<ByteArray, String>?, Int?> {
-    val mime = context.contentResolver.getType(uri)
-    if (mime == null || mime !in Docs.MIME_TYPES) return null to R.string.docs_error_format
-    // Las fotos del celular suelen pesar más de 5 MB: se reducen a 2000 px como máximo y se
-    // guardan en JPEG. Así entran en el límite, se suben rápido y el texto sigue siendo legible.
+    val mime = context.contentResolver.getType(uri) ?: return null to R.string.docs_error_format
+    // Las fotos del celular suelen pesar más de 5 MB (y la galería puede entregar HEIC): se
+    // reducen a 2000 px como máximo y se guardan en JPEG. Así entran en el límite, se suben rápido
+    // y el texto sigue siendo legible. Cualquier formato de foto que Android sepa abrir sirve.
     if (mime.startsWith("image/")) {
         val jpeg = try { shrinkImageToJpeg(context, uri) } catch (e: Exception) { null }
             ?: return null to R.string.docs_error_read
         return if (Docs.isSizeOk(jpeg.size)) (jpeg to "image/jpeg") to null else null to R.string.docs_error_size
     }
+    if (mime !in Docs.MIME_TYPES) return null to R.string.docs_error_format
     val bytes = try {
         context.contentResolver.openInputStream(uri)?.use { input ->
             val buffer = ByteArray(Docs.MAX_BYTES + 1)
@@ -181,21 +185,46 @@ fun PlayerDocsScreen(playerId: String, name: String, onBack: () -> Unit) {
     var askExpiryFor by rememberSaveable { mutableStateOf<String?>(null) }
     var rejecting by remember { mutableStateOf<PlayerDoc?>(null) }
 
-    // Selector de archivos del sistema: no necesita permiso de almacenamiento, la app solo
-    // recibe el archivo que la persona eligió.
-    val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+    // Foto que está tomando la cámara (ruta en la caché). Se guarda con rememberSaveable porque la
+    // cámara es otra app: mientras está abierta, Android puede cerrar SportPro para liberar memoria.
+    var capturePath by rememberSaveable { mutableStateOf<String?>(null) }
+
+    /**
+     * Lo que devuelve cualquiera de los tres orígenes llega aquí. Si la persona cierra el selector
+     * sin elegir nada, se le avisa (antes no pasaba nada y parecía que la app había fallado).
+     */
+    fun onPicked(uri: Uri?, cleanup: (() -> Unit)? = null) {
         val type = uploadType
         val expiry = uploadExpiry
         uploadType = null
         uploadExpiry = null
-        if (uri == null || type == null) return@rememberLauncherForActivityResult
+        if (uri == null || type == null) {
+            cleanup?.invoke()
+            vm.notify(R.string.docs_no_file_chosen)
+            return
+        }
         scope.launch {
-            // Leer el archivo puede tardar: se hace fuera del hilo de la interfaz
+            // Leer y comprimir el archivo puede tardar: se hace fuera del hilo de la interfaz
             val (file, error) = withContext(Dispatchers.IO) { readPickedFile(context, uri) }
+            cleanup?.invoke()
             if (file == null) vm.notify(error ?: R.string.docs_error_read)
             else vm.upload(type, file.first, file.second, expiry)
         }
     }
+
+    // 1) Cámara del sistema: guarda la foto en nuestra caché (no necesita permiso de cámara)
+    val camera = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok: Boolean ->
+        val path = capturePath
+        capturePath = null
+        val photo = path?.let { java.io.File(it) }
+        val uri = if (ok && photo != null && photo.length() > 0) captureUri(context, photo) else null
+        // La foto temporal se borra apenas se leyó: el original solo queda en Storage
+        onPicked(uri) { photo?.delete() }
+    }
+    // 2) Galería: el selector de fotos de Android (muestra las fotos directamente, sin carpetas)
+    val gallery = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri: Uri? -> onPicked(uri) }
+    // 3) PDF: el selector de archivos del sistema, filtrado a PDF
+    val pdf = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? -> onPicked(uri) }
 
     // Abrir el archivo con la URL firmada (en el navegador o en el visor de PDF / fotos)
     LaunchedEffect(ui.openUrl) {
@@ -247,11 +276,19 @@ fun PlayerDocsScreen(playerId: String, name: String, onBack: () -> Unit) {
         UploadDialog(
             typeLabel = docTypeLabel(type),
             onDismiss = { askExpiryFor = null },
-            onChoose = { expiryIso ->
+            onChoose = { expiryIso, source ->
                 askExpiryFor = null
                 uploadType = type
                 uploadExpiry = expiryIso
-                picker.launch(Docs.MIME_TYPES.toTypedArray())
+                when (source) {
+                    UploadSource.CAMERA -> {
+                        val photo = newCaptureFile(context)
+                        capturePath = photo.absolutePath
+                        camera.launch(captureUri(context, photo))
+                    }
+                    UploadSource.GALLERY -> gallery.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                    UploadSource.PDF -> pdf.launch(arrayOf("application/pdf"))
+                }
             },
         )
     }
@@ -296,7 +333,7 @@ private fun DocCard(
     val someone = stringResource(R.string.docs_someone)
     Card(
         Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 5.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurface),
     ) {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -340,12 +377,26 @@ private fun DocCard(
     }
 }
 
+/** De dónde sale el archivo: foto nueva con la cámara, foto de la galería o un PDF. */
+private enum class UploadSource { CAMERA, GALLERY, PDF }
+
+/** Archivo vacío en la caché donde la cámara guardará la foto. */
+private fun newCaptureFile(context: Context): java.io.File {
+    val dir = java.io.File(context.cacheDir, "doc_capture").apply { mkdirs() }
+    return java.io.File(dir, "doc_" + System.currentTimeMillis() + ".jpg")
+}
+
+/** Dirección segura (content://) de ese archivo para que la cámara pueda escribir en él. */
+private fun captureUri(context: Context, file: java.io.File): Uri =
+    FileProvider.getUriForFile(context, context.packageName + ".docprovider", file)
+
 /**
- * Antes de elegir el archivo se pregunta el vencimiento (opcional).
- * [onChoose] recibe la fecha en formato ISO (2027-03-15) o null si no vence.
+ * Antes de elegir el archivo se pregunta el vencimiento (opcional) y de dónde sale.
+ * [onChoose] recibe la fecha en formato ISO (2027-03-15) o null si no vence, y el origen.
+ * «Tomar foto» va primero: para un DNI o una ficha en papel es lo más directo.
  */
 @Composable
-private fun UploadDialog(typeLabel: String, onDismiss: () -> Unit, onChoose: (String?) -> Unit) {
+private fun UploadDialog(typeLabel: String, onDismiss: () -> Unit, onChoose: (String?, UploadSource) -> Unit) {
     var digits by rememberSaveable { mutableStateOf("") }
     val date: LocalDate? = if (digits.length == 8) parseDateDigits(digits) else null
     // Vacío = sin vencimiento (válido). Con 8 dígitos debe ser una fecha real y no pasada.
@@ -379,11 +430,21 @@ private fun UploadDialog(typeLabel: String, onDismiss: () -> Unit, onChoose: (St
             }
         },
         confirmButton = {
-            TextButton(onClick = { onChoose(date?.toString()) }, enabled = error == null) {
-                Text(stringResource(R.string.docs_upload_choose))
+            // Tres orígenes uno debajo de otro, todos del mismo ancho (como una hoja de acciones de iOS)
+            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                val ok = error == null
+                Button(onClick = { onChoose(date?.toString(), UploadSource.CAMERA) }, enabled = ok, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.docs_source_camera))
+                }
+                FilledTonalButton(onClick = { onChoose(date?.toString(), UploadSource.GALLERY) }, enabled = ok, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.docs_source_gallery))
+                }
+                FilledTonalButton(onClick = { onChoose(date?.toString(), UploadSource.PDF) }, enabled = ok, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.docs_source_pdf))
+                }
+                TextButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.common_cancel)) }
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }
 
@@ -435,7 +496,7 @@ private fun TeamDocRow(row: DocTeamRow, onClick: () -> Unit) {
     val small = MaterialTheme.typography.bodySmall
     Card(
         Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp).clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurface),
     ) {
         Row(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
             Text("${row.jerseyNumber ?: "-"}", style = MaterialTheme.typography.titleSmall, modifier = Modifier.width(32.dp))

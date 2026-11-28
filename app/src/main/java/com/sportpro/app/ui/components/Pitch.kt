@@ -45,8 +45,6 @@ import com.sportpro.app.core.data.PitchFormations
 import com.sportpro.app.core.data.Position
 import com.sportpro.app.core.data.SlotAssignment
 import com.sportpro.app.ui.theme.BrandBlue
-import com.sportpro.app.ui.theme.Ink
-import com.sportpro.app.ui.theme.InkSoft
 import com.sportpro.app.ui.theme.PitchGreen
 import com.sportpro.app.ui.theme.PitchGreenStripe
 import com.sportpro.app.ui.theme.PitchLine
@@ -156,7 +154,7 @@ fun PlayerToken(
                 Text(
                     "$it",
                     style = MaterialTheme.typography.labelSmall,
-                    color = if (onPitch) Color.White.copy(alpha = 0.75f) else InkSoft,
+                    color = if (onPitch) Color.White.copy(alpha = 0.75f) else MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Spacer(Modifier.width(3.dp))
             }
@@ -164,7 +162,7 @@ fun PlayerToken(
                 PitchFormations.pitchName(info.name),
                 style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.SemiBold,
-                color = if (onPitch) Color.White else Ink,
+                color = if (onPitch) Color.White else MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )

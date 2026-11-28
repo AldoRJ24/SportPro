@@ -32,6 +32,13 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.RadioButton
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.res.painterResource
+import androidx.compose.foundation.layout.size
+import com.sportpro.app.core.data.ReportReason
+import com.sportpro.app.core.data.formatDayTime
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -89,7 +96,7 @@ fun PostCard(
     Card(
         modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurface),
     ) {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             // Cabecera: quién publicó, academia, hace cuánto y para quién es visible
@@ -180,10 +187,14 @@ fun CommentsSheet(
     onSend: (String, () -> Unit) -> Unit,
     onDelete: (PostComment) -> Unit,
     onToggleEnabled: (Boolean) -> Unit,
+    onReport: (PostComment, ReportReason) -> Unit = { _, _ -> },
+    /** Suspensión vigente para comentar (null = puede comentar). */
+    bannedUntil: String? = null,
 ) {
     val sheet = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var text by rememberSaveable(post.matchId) { mutableStateOf("") }
     var confirm by remember { mutableStateOf<PostComment?>(null) }
+    var reporting by remember { mutableStateOf<PostComment?>(null) }
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheet) {
         Column(
             Modifier
@@ -238,6 +249,17 @@ fun CommentsSheet(
                             }
                             Text(c.body, style = MaterialTheme.typography.bodyMedium)
                         }
+                        // Banderita para reportar comentarios ajenos (una vez por persona)
+                        if (c.canReport) {
+                            IconButton(onClick = { reporting = c }, enabled = !c.reportedByMe) {
+                                Icon(
+                                    painterResource(R.drawable.ic_flag),
+                                    contentDescription = stringResource(if (c.reportedByMe) R.string.comment_reported else R.string.comment_report),
+                                    tint = if (c.reportedByMe) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(20.dp),
+                                )
+                            }
+                        }
                         if (c.canDelete) {
                             IconButton(onClick = { confirm = c }) {
                                 Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.post_card_eliminar_comentario), tint = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -247,7 +269,14 @@ fun CommentsSheet(
                 }
             }
             Spacer(Modifier.height(8.dp))
-            if (post.commentsEnabled) {
+            if (post.commentsEnabled && bannedUntil != null) {
+                // Suspendido: no se muestra la caja de texto, se explica hasta cuándo
+                Text(
+                    stringResource(R.string.comment_banned_until, formatDayTime(bannedUntil)),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            } else if (post.commentsEnabled) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     OutlinedTextField(
                         value = text,
@@ -269,6 +298,16 @@ fun CommentsSheet(
             Spacer(Modifier.height(12.dp))
         }
     }
+    reporting?.let { c ->
+        ReportDialog(
+            comment = c,
+            onDismiss = { reporting = null },
+            onSend = { reason ->
+                onReport(c, reason)
+                reporting = null
+            },
+        )
+    }
     confirm?.let { c ->
         AlertDialog(
             onDismissRequest = { confirm = null },
@@ -289,3 +328,55 @@ fun CommentsSheet(
         )
     }
 }
+
+/**
+ * Reportar un comentario: se elige UN motivo (obligatorio) y se envía. Con 3 reportes de
+ * personas distintas el servidor lo elimina y le avisa al autor.
+ */
+@Composable
+private fun ReportDialog(comment: PostComment, onDismiss: () -> Unit, onSend: (ReportReason) -> Unit) {
+    var reason by remember { mutableStateOf<ReportReason?>(null) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.comment_report_title)) },
+        text = {
+            Column {
+                Text(
+                    "«" + comment.body.take(120) + "»",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.height(8.dp))
+                ReportReason.entries.forEach { r ->
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .selectable(selected = reason == r, onClick = { reason = r }, role = Role.RadioButton)
+                            .padding(vertical = 2.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        RadioButton(selected = reason == r, onClick = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text(reportReasonLabel(r), style = MaterialTheme.typography.bodyLarge)
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { reason?.let(onSend) }, enabled = reason != null) { Text(stringResource(R.string.comment_report_send)) }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.post_card_cancelar)) } },
+    )
+}
+
+@Composable
+private fun reportReasonLabel(r: ReportReason): String = stringResource(
+    when (r) {
+        ReportReason.OFFENSIVE -> R.string.report_reason_offensive
+        ReportReason.HARASSMENT -> R.string.report_reason_harassment
+        ReportReason.HATE -> R.string.report_reason_hate
+        ReportReason.SPAM -> R.string.report_reason_spam
+        ReportReason.INAPPROPRIATE -> R.string.report_reason_inappropriate
+        ReportReason.OTHER -> R.string.report_reason_other
+    },
+)

@@ -73,6 +73,8 @@ dependencies {
     implementation(libs.androidx.compose.material.icons.core)
     implementation(libs.zxing.core)
     implementation(libs.play.services.code.scanner)
+    // Vidrio translúcido: desenfoca lo que pasa por detrás de las barras y hojas (estilo iOS)
+    implementation(libs.haze)
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
