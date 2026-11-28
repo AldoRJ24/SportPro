@@ -7,6 +7,7 @@ import com.sportpro.app.core.data.repo.AccountRepository
 import com.sportpro.app.core.data.repo.AuthRepository
 import com.sportpro.app.core.data.repo.ChallengeRepository
 import com.sportpro.app.core.data.repo.SubscriptionRepository
+import com.sportpro.app.core.data.repo.VoiceRepository
 import com.sportpro.app.core.data.repo.ClubRepository
 import com.sportpro.app.core.data.repo.DocumentRepository
 import com.sportpro.app.core.data.repo.FeeRepository
@@ -37,5 +38,6 @@ class AppContainer(context: Context) {
     val tryouts: TryoutRepository = TryoutRepository(client)
     val challenges: ChallengeRepository = ChallengeRepository(client)
     val subscriptions: SubscriptionRepository = SubscriptionRepository(client)
+    val voice: VoiceRepository = VoiceRepository(client)
     val queue: PendingEventQueue = PendingEventQueue(context.applicationContext, matches, appScope)
 }

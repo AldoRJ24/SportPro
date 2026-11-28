@@ -78,6 +78,7 @@ import com.sportpro.app.ui.tryouts.publishableAcademies
 import com.sportpro.app.ui.session.SessionViewModel
 import com.sportpro.app.ui.summary.SummaryScreen
 import com.sportpro.app.ui.subscription.SubscriptionScreen
+import com.sportpro.app.ui.voice.VoiceAssistantScreen
 import com.sportpro.app.ui.components.GoldNames
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -300,6 +301,7 @@ fun MainShell(session: SessionViewModel) {
                 composable<CreateMatchRoute> {
                     CreateMatchScreen(
                         session = session,
+                        onVoice = { nav.navigate(VoiceAssistantRoute) { popUpTo<CreateMatchRoute> { inclusive = true } } },
                         onBack = { nav.popBackStack() },
                         onCreated = { id ->
                             matchesVm.refresh(true)
@@ -395,6 +397,17 @@ fun MainShell(session: SessionViewModel) {
                 }
                 composable<EditProfileRoute> { EditProfileScreen(session, onBack = { nav.popBackStack() }) }
                 composable<JoinTeamRoute> { JoinTeamScreen(session, onBack = { nav.popBackStack() }) }
+                composable<VoiceAssistantRoute> {
+                    VoiceAssistantScreen(
+                        session = session,
+                        onBack = { nav.popBackStack() },
+                        onMatchCreated = { id ->
+                            matchesVm.refresh(true)
+                            nav.navigate(MatchSetupRoute(id)) { popUpTo<VoiceAssistantRoute> { inclusive = true } }
+                        },
+                        onSent = { nav.navigate(ChallengesRoute) { popUpTo<VoiceAssistantRoute> { inclusive = true } } },
+                    )
+                }
                 composable<SubscriptionRoute> { entry ->
                     val r = entry.toRoute<SubscriptionRoute>()
                     SubscriptionScreen(r.academyId, r.name, r.required, onBack = { nav.popBackStack() })

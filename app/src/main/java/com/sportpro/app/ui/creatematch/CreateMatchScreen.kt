@@ -21,6 +21,11 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.LinearProgressIndicator
@@ -61,6 +66,8 @@ fun CreateMatchScreen(
     onCreated: (String) -> Unit,
     /** Se envió un desafío al entrenador rival (aún no hay partido): se abre la lista de desafíos. */
     onChallengeSent: () -> Unit,
+    /** Abre el modo manos libres (crear el partido conversando). */
+    onVoice: () -> Unit = {},
 ) {
     val container = LocalAppContainer.current
     val ctx by session.context.collectAsStateWithLifecycle()
@@ -70,7 +77,15 @@ fun CreateMatchScreen(
     // Equipos donde soy DT. Los demás que gestiono (como administrador) van como propuesta a su DT.
     val staffIds = ctx?.staffTeamIds.orEmpty()
 
-    SpScaffold(title = stringResource(R.string.create_match_nuevo_partido), onBack = onBack) { pad ->
+    SpScaffold(
+        title = stringResource(R.string.create_match_nuevo_partido),
+        onBack = onBack,
+        actions = {
+            IconButton(onClick = onVoice) {
+                Icon(painterResource(R.drawable.ic_mic), contentDescription = stringResource(R.string.voice_open), tint = MaterialTheme.colorScheme.primary)
+            }
+        },
+    ) { pad ->
         if (teams.isEmpty()) {
             EmptyState(stringResource(R.string.create_match_no_gestionas_equipos), stringResource(R.string.create_match_solo_el_dt_o_el), Modifier.padding(pad))
             return@SpScaffold
@@ -79,6 +94,12 @@ fun CreateMatchScreen(
             Modifier.padding(pad).imePadding().verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            // Atajo bien visible al modo manos libres
+            FilledTonalButton(onClick = onVoice, modifier = Modifier.fillMaxWidth().height(50.dp)) {
+                Icon(painterResource(R.drawable.ic_mic), contentDescription = null, modifier = Modifier.size(20.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(stringResource(R.string.voice_open))
+            }
             Text(stringResource(R.string.create_match_tu_equipo_local), style = MaterialTheme.typography.titleMedium)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 teams.forEach { t ->

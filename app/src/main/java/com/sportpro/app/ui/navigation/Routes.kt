@@ -52,3 +52,6 @@ import kotlinx.serialization.Serializable
 
 // Planes de la academia (migración 023). required = la academia aún no eligió plan
 @Serializable data class SubscriptionRoute(val academyId: String, val name: String, val required: Boolean = false)
+
+// Modo manos libres: crear un partido conversando (migración 024)
+@Serializable data object VoiceAssistantRoute
